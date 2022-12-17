@@ -2,12 +2,50 @@
 
 using namespace std;
 
+map<pair<int, int>, int> tuple_to_pair(vector<tuple<int, int, int>> A);
+vector<tuple<int, int, int>> pair_to_tuple(map<pair<int, int>, int> A);
+void print_pair(map<pair<int, int>, int> A);
+void print_tuple(vector<tuple<int, int, int>> A);
 vector<tuple<int, int, int>> sparse_multiplication(int n, vector<tuple<int, int, int>> a, int m, vector<tuple<int, int, int>> b);
 void unweighted_Coppersmith_power(vector<tuple<int, int, int>> &len, int n, int max, int select2);
 int unweighted_assignment(vector<tuple<int, int, int>> &A, vector<tuple<int, int, int>> &B, vector<tuple<int, int, int>> &len, long long k, int max, int select);
-void print(int n, vector<tuple<int, int, int>> A);
 
-void print(int n, vector<tuple<int, int, int>> A) {
+// change vector<tuple<int, int, int>> to map<pair<int, int>, int>
+map<pair<int, int>, int> tuple_to_pair(vector<tuple<int, int, int>> A) {
+    map<pair<int, int>, int> res;
+    for (auto it : A) {
+        res[make_pair(get<0>(it), get<1>(it))] = get<2>(it);
+    }
+    return res;
+}
+
+// change map<pair<int, int>, int> to vector<tuple<int, int, int>>
+vector<tuple<int, int, int>> pair_to_tuple(map<pair<int, int>, int> A) {
+    vector<tuple<int, int, int>> res;
+    for (auto it : A) {
+        if (it.second) {
+            res.emplace_back(make_tuple(it.first.first, it.first.second, it.second));
+        }
+    }
+    return res;
+}
+
+// Output the pair type as an adjacency matrix
+void print_pair(int n, map<pair<int, int>, int> A) {
+    cout << "\n ===== output adjacency matrix:\n";
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (A[make_pair(i, j)]) cout << setw(7) << A[make_pair(i, j)] << ' ';
+            else cout << setw(7) << 0 << ' ';
+        }
+        cout << '\n';
+    }
+    cout << " === end of adjacency matrix output\n\n";
+}
+
+// Output the tuple type as an adjacency matrix
+void print_tuple(int n, vector<tuple<int, int, int>> A) {
+    cout << "\n ===== output adjacency matrix:\n";
     map<pair<int, int>, int> tmp;
     for (auto it : A) {
         n = max({n, get<0>(it), get<1>(it)});
@@ -16,14 +54,15 @@ void print(int n, vector<tuple<int, int, int>> A) {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             if (tmp[make_pair(i, j)]) {
-                cout << setw(7) << tmp[make_pair(i, j)];
-            } else cout << setw(7) << 0;
+                cout << setw(7) << tmp[make_pair(i, j)] << ' ';
+            } else cout << setw(7) << 0 << ' ';
         }
         cout << '\n';
     }
-    cout << '\n';
+    cout << " === end of adjacency matrix output\n\n";
 }
 
+// sparse matrix multiplication
 vector<tuple<int, int, int>> sparse_multiplication(int n, vector<tuple<int, int, int>> a, int m, vector<tuple<int, int, int>> b) {
     vector<tuple<int, int, int>> c;
     map<pair<int, int>, int> tmp;
@@ -42,6 +81,7 @@ vector<tuple<int, int, int>> sparse_multiplication(int n, vector<tuple<int, int,
     return c;
 }
 
+// read in unweighted graph from dataset
 int unweighted_assignment(vector<tuple<int, int, int>> &A, vector<tuple<int, int, int>> &B, vector<tuple<int, int, int>> &len, long long k, int max, int select) {
     //输入邻接矩阵
 
@@ -73,6 +113,7 @@ int unweighted_assignment(vector<tuple<int, int, int>> &A, vector<tuple<int, int
     return k;
 }
 
+// DAWN - Unweighted graph
 void unweighted_Coppersmith_power(vector<tuple<int, int, int>> &len, int n, int max, int select) {
     //初始化矩阵A与矩阵B
     vector<tuple<int, int, int>> A;
@@ -97,20 +138,11 @@ void unweighted_Coppersmith_power(vector<tuple<int, int, int>> &len, int n, int 
     while (1) {
         ++dim;
         B = sparse_multiplication(B.size(), B, A.size(), A);
-        // ==
-        map<pair<int, int>, int> a;
-        for (auto it : A) {
-            a[make_pair(get<0>(it), get<1>(it))] = get<2>(it);
-        }
-        map<pair<int, int>, int> b;
-        for (auto it : B) {
-            b[make_pair(get<0>(it), get<1>(it))] = get<2>(it);
-        }
-        map<pair<int, int>, int> l;
-        for (auto it : len) {
-            l[make_pair(get<0>(it), get<1>(it))] = get<2>(it);
-        }
-        // ==
+
+        map<pair<int, int>, int> a = tuple_to_pair(A);
+        map<pair<int, int>, int> b = tuple_to_pair(B);
+        map<pair<int, int>, int> l = tuple_to_pair(len);
+
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
                 if (b[make_pair(i, j)] != 0 && l[make_pair(i, j)] == 0 && i != j) {
@@ -121,14 +153,10 @@ void unweighted_Coppersmith_power(vector<tuple<int, int, int>> &len, int n, int 
             }
             if (k > k_max - 1) break;
         }
-        // ==
+
         len.clear();
-        for (auto it : l) {
-            if (it.second) {
-                len.emplace_back(make_tuple(it.first.first, it.first.second, it.second));
-            }
-        }
-        // ==
+        len = pair_to_tuple(l);
+
         if (k > k_max - 1) break;
         if (k_diameter == dim) break;
         k_last = k;
@@ -152,6 +180,6 @@ int main() {
     cout << "请选择图的类型：1-无向  2-有向\n";
     cin >> select2;
     unweighted_Coppersmith_power(len, n, max, select2);
-    print(n, len);
+    print_tuple(n, len);
     return 0;
 }
