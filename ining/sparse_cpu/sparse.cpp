@@ -2,6 +2,8 @@
 
 using namespace std;
 
+string path = "";
+
 map<pair<int, int>, int> tuple_to_pair(vector<tuple<int, int, int>> A);
 vector<tuple<int, int, int>> pair_to_tuple(map<pair<int, int>, int> A);
 void print_pair(map<pair<int, int>, int> A);
@@ -92,24 +94,41 @@ int unweighted_assignment(vector<tuple<int, int, int>> &A, vector<tuple<int, int
 //    cout << path << '\n';
 //修改读入流
 
-    //输入
-    cout << "input A: \n";
-    for (int i = 0; i < max; ++i) {
-        for (int j = 0; j < max; ++j) {
-            int tmp = 0;
-            cin >> tmp;
-            if (tmp == 1) {
-                A.emplace_back(make_tuple(i, j, 1));
-                B.emplace_back(make_tuple(i, j, 1));
-                len.emplace_back(make_tuple(i, j, 1));
-                if (select == 1) {
-                    A.emplace_back(make_tuple(j, i, 1));
-                    B.emplace_back(make_tuple(j, i, 1));
-                    len.emplace_back(make_tuple(j, i, 1));
-                }
-            } 
+    ifstream infile;
+    infile.open(path);
+    if(!infile) cout << "File error" << endl;
+    while(infile) {
+        int a, b; 
+        infile >> a >> b;
+        A.emplace_back(make_tuple(a, b, 1));
+        B.emplace_back(make_tuple(a, b, 1));
+        len.emplace_back(make_tuple(a, b, 1));
+        if (select == 1) {
+                    A.emplace_back(make_tuple(b, a, 1));
+                    B.emplace_back(make_tuple(b, a, 1));
+                    len.emplace_back(make_tuple(b, a, 1));
         }
     }
+    infile.close();
+
+    //输入
+    // cout << "input A: \n";
+    // for (int i = 0; i < max; ++i) {
+    //     for (int j = 0; j < max; ++j) {
+    //         int tmp = 0;
+    //         cin >> tmp;
+    //         if (tmp == 1) {
+    //             A.emplace_back(make_tuple(i, j, 1));
+    //             B.emplace_back(make_tuple(i, j, 1));
+    //             len.emplace_back(make_tuple(i, j, 1));
+    //             if (select == 1) {
+    //                 A.emplace_back(make_tuple(j, i, 1));
+    //                 B.emplace_back(make_tuple(j, i, 1));
+    //                 len.emplace_back(make_tuple(j, i, 1));
+    //             }
+    //         } 
+    //     }
+    // }
     return k;
 }
 
@@ -160,12 +179,15 @@ void unweighted_Coppersmith_power(vector<tuple<int, int, int>> &len, int n, int 
         if (k > k_max - 1) break;
         if (k_diameter == dim) break;
         k_last = k;
+
+        // cout << dim << '\n';
     }
     finish = clock();
     cout << "程序运行总时间为" << double(finish - start) / CLOCKS_PER_SEC << "s\n";
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    path = argv[1];
     int n = 0;
     cout << "请输入矩阵的阶数：\n";
     cin >> n;
