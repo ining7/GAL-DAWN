@@ -1,3 +1,0 @@
-/home/lab310/SC2023/ining/sparse_cpu/build/CMakeFiles/rebuild_cache.dir
-/home/lab310/SC2023/ining/sparse_cpu/build/CMakeFiles/edit_cache.dir
-/home/lab310/SC2023/ining/sparse_cpu/build/CMakeFiles/Sparse.dir
