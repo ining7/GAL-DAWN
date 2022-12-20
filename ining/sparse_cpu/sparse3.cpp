@@ -10,15 +10,14 @@ const int NodesUpper = 1e4 + 10;
 const int stw = 5;
 
 int N; 
-map<pair<int, int>, int> shortest_distance;
+vector<vector<int>> shortest_distance(NodesUpper, vector<int>(NodesUpper, 0));
 
 struct Matrix{
     int n; // nodes number
     vector<pair<int, int>> g[NodesUpper];
 };
+
 void setElement(Matrix& A, int idx, int jdx, int v);
-int getElement(Matrix A, int idx, int jdx);
-void changeElement(Matrix& A, int idx, int jdx);
 void printRes();
 void sparseMultiplication(Matrix& A, Matrix& B);
 void writeList( Matrix& A, Matrix& B, int select_direction);
@@ -29,30 +28,11 @@ void setElement(Matrix& A, int idx, int jdx, int v) {
     A.g[idx].emplace_back(make_pair(jdx, v));
 }
 
-int getElement(Matrix A, int idx, int jdx) {
-    auto ed = A.g[idx].end();
-    for (auto it = A.g[idx].begin(); it != ed; ++it) {
-        if (it->first == jdx) return it->second;
-    }
-    return 0;
-}
-
-void changeElement(Matrix& A, int idx, int jdx, int v) {
-    auto ed = A.g[idx].end();
-    for (auto it = A.g[idx].begin(); it != ed; ++it) {
-        if (it->first == jdx) {
-            it->second = v;
-            return ;
-        }
-    }
-    setElement(A, idx, jdx, v);
-}
-
 void printRes() {
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
-            if (shortest_distance[make_pair(i, j)]) {
-                cout << setw(stw) << shortest_distance[make_pair(i, j)] << ' ';
+            if (shortest_distance[i][j]) {
+                cout << setw(stw) << shortest_distance[i][j] << ' ';
             } else cout << setw(stw) << 0 << ' ';
         }
         cout << '\n';
@@ -96,11 +76,11 @@ void writeList(Matrix& A, Matrix& B, int select_direction) {
         infile >> a >> b;
         setElement(A, a, b, 1);
         setElement(B, a, b, 1);
-        shortest_distance[make_pair(a, b)] = 1;
+        shortest_distance[a][b] = 1;
         if (select_direction == 1) {
             setElement(A, b, a, 1);
             setElement(B, b, a, 1);
-            shortest_distance[make_pair(b, a)] = 1;
+            shortest_distance[b][a] = 1;
         }
     }
     infile.close();
@@ -118,8 +98,8 @@ void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter) {
             for (auto it = B.g[i].begin(); it != ed; ++it) {
                 int j = it->first;
                 if (i == j || it->second == 0) continue; 
-                if (shortest_distance[make_pair(i, j)] == 0) {
-                    shortest_distance[make_pair(i, j)] = dim;
+                if (shortest_distance[i][j] == 0) {
+                    shortest_distance[i][j] = dim;
                     ++k;
                     if (k > k_max - 1) return ;
                 }
