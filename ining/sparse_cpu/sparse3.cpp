@@ -42,26 +42,45 @@ void printRes() {
 // A = A * B
 void sparseMultiplication(Matrix& A, Matrix& B) {
     int n = A.n;
-    Matrix tmp;
-    tmp.n = n;
-    unordered_map<int, int> res[n];
+    Matrix tmp; 
+    tmp.n = n; 
+    vector<int> res[n]; 
+    vector<int> b_idx_que[n]; 
     for (int i = 0; i < n; ++i) {
-        auto a_tmp = A.g[i];
+        auto a_tmp = A.g[i]; 
+        bool flag[n]; 
+        b_idx_que[i].resize(n); 
+        int b_idx_idx[n] = {}; 
+        int cnt = 0; 
+        for (int j = 0, m = a_tmp.size(); j < m; ++j) { 
+            int a_idx = a_tmp[j].first;  
+            auto b_tmp = B.g[a_idx];
+            for (int k = 0, l = b_tmp.size(); k < l; ++k) { 
+                int b_idx = b_tmp[k].first; 
+                if (!flag[b_idx]) { 
+                    flag[b_idx] = true; 
+                    b_idx_que[i][cnt] = b_idx; 
+                    b_idx_idx[b_idx] = cnt; 
+                    ++cnt;
+                }
+            }
+        }
+        res[i].resize(cnt); 
         for (int j = 0, m = a_tmp.size(); j < m; ++j) {
-            int a_idx = a_tmp[j].first;
-            int a_w = a_tmp[j].second;
+            int a_idx = a_tmp[j].first; 
+            int a_w = a_tmp[j].second; 
             auto b_tmp = B.g[a_idx];
             for (int k = 0, l = b_tmp.size(); k < l; ++k) {
-                int b_idx = b_tmp[k].first;
-                int b_w = b_tmp[k].second;
-                res[i][b_idx] += a_w * b_w;
+                int b_idx = b_tmp[k].first; 
+                int b_w = b_tmp[k].second; 
+                res[i][b_idx_idx[b_idx]] += a_w * b_w; 
             }
         }
     }
     for (int i = 0; i < n; ++i) {
-        auto ed = res[i].end();
-        for (auto it = res[i].begin(); it != ed; ++it) {
-            tmp.g[i].emplace_back(make_pair(it->first, it->second));
+        int m = res[i].size();
+        for (int j = 0; j < m; ++j) {
+            tmp.g[i].emplace_back(make_pair(b_idx_que[i][j], res[i][j])); 
         }
     }
     A = tmp;

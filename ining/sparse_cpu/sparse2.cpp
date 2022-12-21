@@ -115,6 +115,7 @@ void DAWN(Matrix& len, Matrix& A, Matrix& B, int k, int k_max, int k_diameter) {
             for (auto it = B.g[i].begin(); it != ed; ++it) {
                 int j = it->first;
                 if (i == j || it->second == 0) continue;
+                auto len_ed = len.g[i].end();
                 if (getElement(len, i, j) == 0) {
                     setElement(len, i, j, dim);
                     ++k;
