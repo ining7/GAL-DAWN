@@ -72,8 +72,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
             auto b_tmp = B.g[a_idx];
             for (int k = 0, l = b_tmp.size(); k < l; ++k) {
                 int b_idx = b_tmp[k].first; 
-                int b_w = b_tmp[k].second; 
-                res[i][b_idx_idx[b_idx]] += a_w * b_w; 
+                res[i][b_idx_idx[b_idx]] += a_w * b_tmp[k].second; 
             }
         }
     }
