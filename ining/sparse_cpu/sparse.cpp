@@ -78,6 +78,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
             }
         }
     }
+#pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         int m = res[i].size();
         for (int j = 0; j < m; ++j) {
