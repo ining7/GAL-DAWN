@@ -1,4 +1,5 @@
 #include "access.h"
+#include "omp.h"
 
 using namespace std;
 
@@ -46,6 +47,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
     tmp.n = n; 
     vector<int> res[n]; 
     vector<int> b_idx_que[n]; 
+#pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         auto a_tmp = A.g[i]; 
         bool flag[n] = {}; 
@@ -111,6 +113,7 @@ void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter) {
     while(1) {
         ++dim;
         sparseMultiplication(B, A);
+#pragma omp parallel for
         for (int i = 0; i < n; ++i) {
             auto ed = B.g[i].end();
             for (auto it = B.g[i].begin(); it != ed; ++it) {
@@ -119,10 +122,8 @@ void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter) {
                 if (shortest_distance[i][j] == 0) {
                     shortest_distance[i][j] = dim;
                     ++k;
-                    if (k > k_max - 1) return ;
                 }
             }
-            if (k > k_max - 1) return ;
         }
         if (k > k_max - 1) return ;
         if (k_diameter == dim) return ;
@@ -177,7 +178,7 @@ int main(int argc, char *argv[]) {
     unweightedPipeline(nodes, select_direction);
 
     // Output the shortest path result
-    printRes();
+    // printRes();
 
     return 0;
 }
