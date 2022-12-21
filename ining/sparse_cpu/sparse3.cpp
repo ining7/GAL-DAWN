@@ -48,7 +48,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
     vector<int> b_idx_que[n]; 
     for (int i = 0; i < n; ++i) {
         auto a_tmp = A.g[i]; 
-        bool flag[n]; 
+        bool flag[n] = {}; 
         b_idx_que[i].resize(n); 
         int b_idx_idx[n] = {}; 
         int cnt = 0; 
