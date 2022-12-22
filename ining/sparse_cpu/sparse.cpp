@@ -128,7 +128,6 @@ void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter) {
         }
         if (k > k_max - 1) return ;
         if (k_diameter == dim) return ;
-        if (k_last == k) return ;
         k_last = k;
     }
 }
