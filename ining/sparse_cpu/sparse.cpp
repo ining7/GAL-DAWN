@@ -78,6 +78,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
             }
         }
     }
+#pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         int m = res[i].size();
         for (int j = 0; j < m; ++j) {
@@ -127,6 +128,7 @@ void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter) {
         }
         if (k > k_max - 1) return ;
         if (k_diameter == dim) return ;
+        if (k_last == k) return ;
         k_last = k;
     }
 }
