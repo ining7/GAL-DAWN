@@ -15,17 +15,17 @@ vector<vector<int>> shortest_distance(NodesUpper, vector<int>(NodesUpper, 0));
 
 struct Matrix{
     int n; // nodes number
-    vector<pair<int, int>> g[NodesUpper];
+    vector<pair<int, long long>> g[NodesUpper];
 };
 
-void setElement(Matrix& A, int idx, int jdx, int v);
+void setElement(Matrix& A, int idx, int jdx, long long v);
 void printRes();
 void sparseMultiplication(Matrix& A, Matrix& B);
 void writeList( Matrix& A, Matrix& B, int select_direction);
 void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter);
 void unweightedPipeline(int nodes, int select_direction);
 
-void setElement(Matrix& A, int idx, int jdx, int v) {
+void setElement(Matrix& A, int idx, int jdx, long long v) {
     A.g[idx].emplace_back(make_pair(jdx, v));
 }
 
@@ -45,7 +45,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
     int n = A.n;
     Matrix tmp; 
     tmp.n = n; 
-    vector<int> res[n]; 
+    vector<long long> res[n]; 
     vector<int> b_idx_que[n]; 
 #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
@@ -74,7 +74,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
             auto b_tmp = B.g[a_idx];
             for (int k = 0, l = b_tmp.size(); k < l; ++k) {
                 int b_idx = b_tmp[k].first; 
-                res[i][b_idx_idx[b_idx]] += a_w * b_tmp[k].second; 
+                res[i][b_idx_idx[b_idx]] = (long long) res[i][b_idx_idx[b_idx]] + a_w * b_tmp[k].second; 
             }
         }
     }
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
     unweightedPipeline(nodes, select_direction);
 
     // Output the shortest path result
-    // printRes();
+    printRes(); 
 
     return 0;
 }
