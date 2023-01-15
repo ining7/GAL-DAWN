@@ -69,7 +69,7 @@ void DAWN(long long**& shortest_distance, bool**&A, bool**&B, long long k, long 
                 if (i != j && B[i][j] && shortest_distance[i][j] == 0) {
                     shortest_distance[i][j] = dim;
                     ++k;
-                    if (k > k_max - 1) return ;
+                    // if (k > k_max - 1) return ;
                 }
             }
         }
