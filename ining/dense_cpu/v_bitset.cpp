@@ -19,7 +19,6 @@ void printRes(int n, int8_t**& shortest_distance) {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             out << setw(3) << static_cast<int>(shortest_distance[i][j]) << (j == n - 1 ? '\n' : ' ');
-            // out << setw(4) << shortest_distance[i][j] << (j == n - 1 ? '\n' : ' ');
         }
     }
     out.close();
@@ -48,6 +47,7 @@ void writeList(int8_t**& shortest_distance, vector<bitset<N>>& A, vector<bitset<
 
 void sparseMultiplication(int n, vector<bitset<N>>& A, vector<bitset<N>>& B) {
     vector<bitset<N>> res(N);
+#pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             bool tmp = (A[i] & B[j]).any();
@@ -66,12 +66,13 @@ void DAWN(int n, int8_t**& shortest_distance, vector<bitset<N>>& A, vector<bitse
         cout << dim << '\n';
         ++dim;
         sparseMultiplication(n, B, A);
+#pragma omp parallel for
         for (int i = 0; i < N; ++i) {
             for (int j = 0; j < N; ++j) {
                 if (i != j && B[i][j] && shortest_distance[i][j] == 0) {
                     shortest_distance[i][j] = (int8_t)dim;
                     ++k;
-                    if (k > k_max - 1) return ;
+                    // if (k > k_max - 1) return ;
                 }
             }
         }
@@ -126,8 +127,6 @@ int main(int argc, char *argv[]) {
     // cin >> select_weight;
     cout << "Please select the type of diagram: 1-Undirected graph  2-Directed graph\n";
     cin >> select_direction;
-
-    // printRes(n, shortest_distance); 
 
     writeList(shortest_distance, A, B, select_direction);
     

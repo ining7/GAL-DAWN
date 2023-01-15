@@ -11,11 +11,13 @@ string out_path = "";
 int N = 0;
 
 void printRes(long long**& shortest_distance) {
+    ofstream out(out_path);
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
-            cout << setw(4) << shortest_distance[i][j] << (j == N - 1 ? '\n' : ' ');
+            out << setw(4) << shortest_distance[i][j] << (j == N - 1 ? '\n' : ' ');
         }
     }
+    out.close();
 }
 
 void writeList(long long**& shortest_distance, bool**& A, bool**& B, int select_direction) {
@@ -39,9 +41,11 @@ void writeList(long long**& shortest_distance, bool**& A, bool**& B, int select_
 
 void sparseMultiplication(bool**& A, bool**& B) {
     bool** res = new bool*[N];
+#pragma omp parallel for
     for (int i = 0; i < N; i++) {
         res[i] = new bool[N]();
     }
+#pragma omp parallel for
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             for (int k = 0; k < N; ++k) {
@@ -59,6 +63,7 @@ void DAWN(long long**& shortest_distance, bool**&A, bool**&B, long long k, long 
         cout << dim << '\n';
         ++dim;
         sparseMultiplication(B, A);
+#pragma omp parallel for
         for (int i = 0; i < N; ++i) {
             for (int j = 0; j < N; ++j) {
                 if (i != j && B[i][j] && shortest_distance[i][j] == 0) {
@@ -129,7 +134,7 @@ int main(int argc, char *argv[]) {
     unweightedPipeline(N, nodes, shortest_distance, A, B);
 
     // Output the shortest path result
-    // printRes(shortest_distance); 
+    printRes(shortest_distance); 
 
     return 0;
 }
