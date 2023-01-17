@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(cpu_sparse)
+project(final_versi)
 
 set(CMAKE_CXX_STANDARD 11)
 

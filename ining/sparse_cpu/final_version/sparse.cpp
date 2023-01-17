@@ -3,10 +3,11 @@
 
 using namespace std;
 
-// Path to the input dataset
+// Path to the input | output dataset
 string input_path = "";
+string output_path = "";
 // The upper limit of the number of nodes
-const int NodesUpper = 1e4 + 10;
+const int NodesUpper = 1500 + 10;
 // setw(stw) to control matrix output
 const int stw = 5;
 
@@ -21,8 +22,8 @@ struct Matrix{
 void setElement(Matrix& A, int idx, int jdx, long long v);
 void printRes();
 void sparseMultiplication(Matrix& A, Matrix& B);
-void writeList( Matrix& A, Matrix& B, int select_direction);
-void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter);
+void writeList( Matrix& A, Matrix& B, int select_direction, long long& k);
+void DAWN(Matrix& A, Matrix& B, long long k, long long k_max, long long k_diameter);
 void unweightedPipeline(int nodes, int select_direction);
 
 void setElement(Matrix& A, int idx, int jdx, long long v) {
@@ -30,14 +31,16 @@ void setElement(Matrix& A, int idx, int jdx, long long v) {
 }
 
 void printRes() {
+    ofstream out(output_path);
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             if (shortest_distance[i][j]) {
-                cout << setw(stw) << shortest_distance[i][j] << ' ';
-            } else cout << setw(stw) << 0 << ' ';
+                out << setw(stw) << shortest_distance[i][j] << ' ';
+            } else out << setw(stw) << 0 << ' ';
         }
-        cout << '\n';
+        out << '\n';
     }
+    out.close();
 }
 
 // A = A * B
@@ -88,7 +91,7 @@ void sparseMultiplication(Matrix& A, Matrix& B) {
     A = tmp;
 }
 
-void writeList(Matrix& A, Matrix& B, int select_direction) {
+void writeList(Matrix& A, Matrix& B, int select_direction, long long& k) {
     ifstream infile;
     infile.open(input_path);
     if(!infile) cout << " === File error ===\n";
@@ -97,35 +100,39 @@ void writeList(Matrix& A, Matrix& B, int select_direction) {
         infile >> a >> b;
         setElement(A, a, b, 1);
         setElement(B, a, b, 1);
+        if (shortest_distance[a][b] == 0) ++k;
         shortest_distance[a][b] = 1;
-        if (select_direction == 1) {
-            setElement(A, b, a, 1);
-            setElement(B, b, a, 1);
-            shortest_distance[b][a] = 1;
-        }
+        // if (select_direction == 1) {
+        //     setElement(A, b, a, 1);
+        //     setElement(B, b, a, 1);
+        //     shortest_distance[b][a] = 1;
+        // }
     }
     infile.close();
 }
 
-void DAWN(Matrix& A, Matrix& B, int k, int k_max, int k_diameter) {
+void DAWN(Matrix& A, Matrix& B, long long k, long long k_max, long long k_diameter) {
     int k_last = 0;
     int dim = 1;
     int n = N;
     while(1) {
         ++dim;
         sparseMultiplication(B, A);
+        int* cnt = new int[n];
 #pragma omp parallel for
         for (int i = 0; i < n; ++i) {
+            cnt[i] = 0;
             auto ed = B.g[i].end();
             for (auto it = B.g[i].begin(); it != ed; ++it) {
                 int j = it->first;
                 if (i == j || it->second == 0) continue; 
                 if (shortest_distance[i][j] == 0) {
                     shortest_distance[i][j] = dim;
-                    ++k;
+                    ++cnt[i];
                 }
             }
         }
+        for (int i = 0; i < n; ++i) k += cnt[i];
         if (k > k_max - 1) return ;
         if (k_diameter == dim) return ;
         if (k == k_last) return ;
@@ -138,14 +145,15 @@ void unweightedPipeline(int nodes, int select_direction) {
     int n = N;
     Matrix A, B;
     A.n = B.n = n;
-    int k = 0; // The number of pairs of nodes that have found the shortest path
+    long long k = 0; // The number of pairs of nodes that have found the shortest path
     long long k_max = 1.0 * nodes * (nodes - 1); // Maximum number of node pairs
-    int k_diameter = n; // Graph diameter
+    long long k_diameter = n; // Graph diameter
     // cout << "Please enter the graph diameter: " << '\n';
     // cin >> k_diameter;
     cout << "[default: graph diameter = nodes number]\n";
 
-    writeList(A, B, select_direction);
+    writeList(A, B, select_direction, k);
+    cout << k << '\n';
 
     clock_t start, finish;
     // start the timer
@@ -162,6 +170,7 @@ void unweightedPipeline(int nodes, int select_direction) {
 int main(int argc, char *argv[]) {
     // get file path
     input_path = argv[1]; 
+    output_path = argv[2];
 
     cout << "Please enter the number of nodes in the graph: \n";
     cin >> N;
