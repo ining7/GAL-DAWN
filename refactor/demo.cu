@@ -1,7 +1,7 @@
 #include "access.h"
 using namespace std;
 
-const int kmaxRow = 10000;
+const int kmaxRow = 1000000;
 const int kmaxBitsetThou = 1000;
 const int kmaxBitsetTenThou = 10000;
 const int kmaxBitsetHunThou = 100000;
@@ -19,32 +19,38 @@ public:
 		if (device == "gpu" && g_type == "dense") {
 			stride = (col + 31) / 32;
       		g_dense_gpu = new unsigned int[row * stride]();
+		} else if (device == "cpu" && g_type == "sparse") { //
+			stride = col;
 		}
 	}
 	~Matrix() {
 		if (device == "gpu" && g_type == "dense") {
 			delete[] g_dense_gpu;
+		} else if (device == "cpu" && g_type == "sparse") { //
+			delete[] g_dense_gpu;
 		}
 	}
-	inline void setValue(int i, int j, int value) {
-		if (device == "gpu" && g_type == "dense") {
-			g_dense_gpu[i * stride + j] = value;
+	inline void setValueGpuDense(int i, int j, int value) {
+		g_dense_gpu[i * stride + j] = value;
+	}
+	inline void setValueCpuSparse(int i, int j, long long value) { // 0
+		g_sparse_cpu[i].emplace_back(make_pair(j, value));
+	}
+	inline int getValueGpuDense(int i, int j, bool flag_press) { // flag_press = true press
+		if (flag_press) {
+			unsigned int index = i * stride + (j >> 5);
+			int len = col % 32;
+			int offset = len - (j & 31) - 1;
+			// cout << "len:" << len << "  j:" << j << "  offset:" << offset << '\n';
+			bool value = (g_dense_gpu[index] & (1 << offset));
+			return value;
+		} else {
+			return g_dense_gpu[i * stride + j];
 		}
 	}
-	inline int getValue(int i, int j, bool flag_press) {
-		if (device == "gpu" && g_type == "dense") {
-			if (flag_press) {
-				unsigned int index = i * stride + (j >> 5);
-				int len = col % 32;
-				int offset = len - (j & 31) - 1;
-				// cout << "len:" << len << "  j:" << j << "  offset:" << offset << '\n';
-				bool value = (g_dense_gpu[index] & (1 << offset));
-				return value;
-			} else {
-				return g_dense_gpu[i * stride + j];
-			}
-		}
-		return 1;//
+	inline int getValueCpuSparse(int i, int j) {
+		// 3
+		return g_dense_gpu[i * stride  + j];
 	}
 	void readData(bool* in) {
 		if (device == "gpu" && g_type == "dense") {
@@ -54,6 +60,15 @@ public:
 						g_dense_gpu[i * stride + j] = 1;
 					} else {
 						g_dense_gpu[i * stride + j] = 0;
+					}
+				}
+			}
+		} else if (device == "cpu" && g_type == "sparse") { 
+			// 1
+			for (int i = 0; i < row; ++i) {
+				for (int j = 0; j < col; ++j) {
+					if (in[i * col + j]) {
+						setValueCpuSparse(i, j, 1);
 					}
 				}
 			}
@@ -70,67 +85,141 @@ public:
 					}
 				}
 			}
+		} else if (device == "cpu" && g_type == "sparse") { //
+
 		}
 	}
-	void sparseMultiplication(Matrix* A) { // this = this * A
+	void printMatrix() {
+		cout << "\ndevice:" << device << "  g_type:" << g_type << '\n';
 		if (device == "gpu" && g_type == "dense") {
-			unsigned int* start_A = this->g_dense_gpu;
-			unsigned int* start_B = A->g_dense_gpu;
-			unsigned int* h_res = new unsigned int[this->row * this->col]();
-			unsigned int* start_res = h_res;
-			long long rows = 1;
-			for (int i = 0; i < this->row; ++i) { 
-				long long r_B = rows;
-				bool* h_C = new bool[this->col]();
-				bool* start_C = h_C;
-				for (int j = 0; j < this->col; j += rows) { 
-					r_B = min(rows, this->col - j);
-					unsigned int* ptr_A;
-					unsigned int* ptr_B;
-					bool* ptr_C;
-
-					cudaMalloc((void**)&ptr_A, 1 * this->stride * sizeof(unsigned int));
-					cudaMalloc((void**)&ptr_B, r_B * this->stride * sizeof(unsigned int));
-					cudaMalloc((void**)&ptr_C, this->row * r_B * sizeof(bool));
-
-					cudaMemcpy(ptr_A, this->g_dense_gpu, 1 * this->stride * sizeof(unsigned int), cudaMemcpyHostToDevice);
-					cudaMemcpy(ptr_B, A->g_dense_gpu, r_B * this->stride * sizeof(unsigned int), cudaMemcpyHostToDevice);
-					cudaMemset(ptr_C, 0, 1 * r_B * sizeof(bool));
-					
-					dim3 block(32, 32, 1);
-					dim3 grid((this->row + block.x - 1) / block.x, (this->col + block.y - 1) / block.y, 1);
-
-					denseIntMultiplicationKernel<<<grid, block>>>(1, this->stride, r_B, ptr_A, ptr_B, ptr_C);
-					cudaDeviceSynchronize();
-					cudaError_t error = cudaGetLastError();
-					if (error != cudaSuccess) {
-						printf("i:%d j:%d  CUDA error: %s\n", i, j, cudaGetErrorString(error));
-					}
-
-					cudaMemcpy(h_C, ptr_C, r_B * sizeof(bool), cudaMemcpyDeviceToHost); 
-					
-					cudaFree(ptr_A);
-					cudaFree(ptr_B); 
-					cudaFree(ptr_C); 
-
-					A->g_dense_gpu += r_B * this->stride;
-					h_C += r_B;
+			for (int i = 0; i < row; ++i) {
+				for (int j = 0; j < stride; ++j) {
+					cout << g_dense_gpu[i * stride + j] << ' ';
 				}
-				h_C = start_C;
-				change(1, this->stride, this->col, h_C, h_res);
-				this->g_dense_gpu += this->stride;
-				A->g_dense_gpu = start_B;
-				h_res += this->stride;
-				delete []h_C;
+				cout << '\n';
 			}
-			this->g_dense_gpu = start_A;
-			A->g_dense_gpu = start_B;
-			h_res = start_res;
-			this->g_dense_gpu = h_res;
-			delete []h_res;
+		} else if (device == "cpu" && g_type == "sparse") {
+			for (int i = 0; i < row; ++i) {
+				for (int k = 0, arn = g_sparse_cpu[i].size(); k < arn; ++k) {
+					int j = g_sparse_cpu[i][k].first;
+					int v = g_sparse_cpu[i][k].second;
+					cout << "i:" << i << " j:" << j << " v:" << v << '\n';
+				}
+			}
 		}
+		cout << '\n';
 	}
+	void sparseCpuMultiplication(Matrix* A) { // 2
+		int n = this->row;
+		Matrix *tmp = new Matrix(this->g_type, this->device, this->algo_type, this->row, this->col);
+		vector<long long> res[n]; 
+		vector<int> b_idx_que[n]; 
+	// #pragma omp parallel for
+		for (int i = 0; i < n; ++i) {
+			auto a_tmp = this->g_sparse_cpu[i]; 
+			bool flag[n] = {}; 
+			b_idx_que[i].resize(n); 
+			int b_idx_idx[n] = {}; 
+			int cnt = 0; 
+			for (int j = 0, m = a_tmp.size(); j < m; ++j) { 
+				int a_idx = a_tmp[j].first;  
+				auto b_tmp = A->g_sparse_cpu[a_idx];
+				for (int k = 0, l = b_tmp.size(); k < l; ++k) { 
+					int b_idx = b_tmp[k].first; 
+					if (!flag[b_idx]) { 
+						flag[b_idx] = true; 
+						b_idx_que[i][cnt] = b_idx; 
+						b_idx_idx[b_idx] = cnt; 
+						++cnt;
+					}
+				}
+			}
+			res[i].resize(cnt); 
+			for (int j = 0, m = a_tmp.size(); j < m; ++j) {
+				int a_idx = a_tmp[j].first; 
+				int a_w = a_tmp[j].second; 
+				auto b_tmp = A->g_sparse_cpu[a_idx];
+				for (int k = 0, l = b_tmp.size(); k < l; ++k) {
+					int b_idx = b_tmp[k].first; 
+					res[i][b_idx_idx[b_idx]] = (long long) res[i][b_idx_idx[b_idx]] + a_w * b_tmp[k].second; 
+				}
+			}
+		}
+	// #pragma omp parallel for
+		for (int i = 0; i < n; ++i) {
+			int m = res[i].size();
+			for (int j = 0; j < m; ++j) {
+				tmp->g_sparse_cpu[i].emplace_back(make_pair(b_idx_que[i][j], res[i][j])); 
+			}
+		}
+		// for (int i = 0; i < n; ++i) {
+		// 	int m = res[i].size();
+		// 	this->g_sparse_cpu[i].clear();
+		// 	for (int j = 0; j < m; ++j) {
+		// 		this->g_sparse_cpu[i].emplace_back(make_pair(b_idx_que[i][j], res[i][j])); 
+		// 	}
+		// }
+		for (int i = 0; i < n; ++i) {
+			this->g_sparse_cpu[i] = tmp->g_sparse_cpu[i];
+		}
+		// g_sparse_cpu = tmp->g_sparse_cpu;
+	}
+	void denseGpuMultiplication(Matrix* A) { // this = this * A
+		unsigned int* start_A = this->g_dense_gpu;
+		unsigned int* start_B = A->g_dense_gpu;
+		unsigned int* h_res = new unsigned int[this->row * this->col]();
+		unsigned int* start_res = h_res;
+		long long rows = 1;
+		for (int i = 0; i < this->row; ++i) { 
+			long long r_B = rows;
+			bool* h_C = new bool[this->col]();
+			bool* start_C = h_C;
+			for (int j = 0; j < this->col; j += rows) { 
+				r_B = min(rows, this->col - j);
+				unsigned int* ptr_A;
+				unsigned int* ptr_B;
+				bool* ptr_C;
 
+				cudaMalloc((void**)&ptr_A, 1 * this->stride * sizeof(unsigned int));
+				cudaMalloc((void**)&ptr_B, r_B * this->stride * sizeof(unsigned int));
+				cudaMalloc((void**)&ptr_C, this->row * r_B * sizeof(bool));
+
+				cudaMemcpy(ptr_A, this->g_dense_gpu, 1 * this->stride * sizeof(unsigned int), cudaMemcpyHostToDevice);
+				cudaMemcpy(ptr_B, A->g_dense_gpu, r_B * this->stride * sizeof(unsigned int), cudaMemcpyHostToDevice);
+				cudaMemset(ptr_C, 0, 1 * r_B * sizeof(bool));
+				
+				dim3 block(32, 32, 1);
+				dim3 grid((this->row + block.x - 1) / block.x, (this->col + block.y - 1) / block.y, 1);
+
+				denseIntMultiplicationKernel<<<grid, block>>>(1, this->stride, r_B, ptr_A, ptr_B, ptr_C);
+				cudaDeviceSynchronize();
+				cudaError_t error = cudaGetLastError();
+				if (error != cudaSuccess) {
+					printf("i:%d j:%d  CUDA error: %s\n", i, j, cudaGetErrorString(error));
+				}
+
+				cudaMemcpy(h_C, ptr_C, r_B * sizeof(bool), cudaMemcpyDeviceToHost); 
+				
+				cudaFree(ptr_A);
+				cudaFree(ptr_B); 
+				cudaFree(ptr_C); 
+
+				A->g_dense_gpu += r_B * this->stride;
+				h_C += r_B;
+			}
+			h_C = start_C;
+			change(1, this->stride, this->col, h_C, h_res);
+			this->g_dense_gpu += this->stride;
+			A->g_dense_gpu = start_B;
+			h_res += this->stride;
+			delete []h_C;
+		}
+		this->g_dense_gpu = start_A;
+		A->g_dense_gpu = start_B;
+		h_res = start_res;
+		this->g_dense_gpu = h_res;
+		delete []h_res;
+	}
 	string g_type, device;
 	AlgoType algo_type;
 	long long row, col;
@@ -147,11 +236,16 @@ public:
 	Graph(string _g_type, string _device, int _node_num, AlgoType _algo_type):
 		node_num(_node_num), algo_type(_algo_type) {
 		k = 0;
-		k_max = 0;
+		k_max = node_num * (node_num - 1);
 		k_diameter = node_num;
 		A = new Matrix(_g_type, _device, algo_type, _node_num, _node_num);
 		B = new Matrix(_g_type, _device, algo_type, _node_num, _node_num);
-		res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); // save res with one_dim ptr
+		// save res with one_dim ptr
+		if (_g_type == "dense" && _device == "gpu") {
+			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
+		} else if (_g_type == "sparse" && _device == "cpu") {
+			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
+		} 
 	}
 	~Graph() {
 		delete A;
@@ -161,7 +255,7 @@ public:
 		AlgoType ans = dawn; //
 		return ans; //
 	}
-	void readMap(string file_name, string random_flag) {
+	void readMap(string file_name, string device, string g_type, string random_flag) {
 		bool* tmp = new bool[node_num * node_num]();
 		bool* transpose_tmp = new bool[node_num * node_num]();
 		if (random_flag == "true") {
@@ -174,12 +268,12 @@ public:
 					long long rn = (ra * RAND_MAX + rb) % INT_MAX;
 					for (int k = 0; k < 32 && j + k < node_num; ++k, rn >>= 1) {
 						if (i == j + k) continue;
-						if (!tmp[i * node_num + j + k]) ++(this->k);
-						tmp[i * node_num + j + k] = rn & 1;
-						transpose_tmp[(j + k) * node_num + i] = rn & 1;
 						if (rn & 1) {
 							out << i << ' ' << j + k << '\n';
+							if (!tmp[i * node_num + j + k]) ++(this->k);
 						}
+						tmp[i * node_num + j + k] = rn & 1;
+						transpose_tmp[(j + k) * node_num + i] = rn & 1;
 					}
 				}
 			}
@@ -200,44 +294,61 @@ public:
 			}
 			in.close();
 		}
-		A->pressData(transpose_tmp);
-		B->pressData(tmp);
-		for (int i = 0; i < node_num; ++i) {
-			for (int j = 0; j < node_num; ++j) {
-				cout << tmp[i * node_num + j] << ' ';
-			}
-			cout << '\n';
+		if (device == "gpu" && g_type == "dense") {
+			A->pressData(transpose_tmp);
+			B->pressData(tmp);
+			res->readData(tmp);
+		} else if (device == "cpu" && g_type == "sparse") { //
+			A->readData(tmp);
+			B->readData(tmp);
+			res->readData(tmp);
 		}
-		cout << "----\n";
-		res->readData(tmp);
 		delete []tmp;
 		delete []transpose_tmp;
 	}
-	void updateShortestPath(int dim) {
+	void updateShortestPath(int dim, string g_type, string device) {
+		if (device == "gpu" && g_type == "dense") {
 // #pragma omp parallel for
-		for (int i = 0; i < node_num; ++i) {
-			for (int j = 0; j < node_num; ++j) {
-				if (i != j && B->getValue(i, j, true) && res->getValue(i, j, false) == 0) {
-					res->setValue(i, j, dim);
-					++k;
+			for (int i = 0; i < node_num; ++i) {
+				for (int j = 0; j < node_num; ++j) {
+					if (i != j && B->getValueGpuDense(i, j, true) && res->getValueGpuDense(i, j, false) == 0) {
+						res->setValueGpuDense(i, j, dim);
+						++k;
+					}
 				}
+			}
+		} else if (device == "cpu" && g_type == "sparse") { //
+			// 4
+			int* cnt = new int[node_num];
+		// #pragma omp parallel for
+			for (int i = 0; i < node_num; ++i) {
+				cnt[i] = 0;
+				auto ed = B->g_sparse_cpu[i].end();
+				for (auto it = B->g_sparse_cpu[i].begin(); it != ed; ++it) {
+					int j = it->first;
+					if (i == j || it->second == 0) continue; 
+					if (res->getValueCpuSparse(i, j) == 0) {
+						res->setValueGpuDense(i, j, dim); 
+						++cnt[i];
+					}
+				}
+			}
+			for (int i = 0; i < node_num; ++i) {
+				k += cnt[i];
 			}
 		}
 	}
-	void runDawn() {
+	void runDawn(string g_type, string device) {
 		long long k_last = 0;
     	long long dim = 1;
 		while(1) {
 			++dim;
-			B->sparseMultiplication(A);
-			for (int i = 0; i < node_num; ++i) {
-				for (int j = 0; j < node_num; ++j) {
-					cout << B->getValue(i, j, true) << ' ';
-				}
-				cout << '\n';
+			if (g_type == "dense" && device == "gpu") {
+				B->denseGpuMultiplication(A) ;
+			} else if (g_type == "sparse" && device == "cpu") {
+				B->sparseCpuMultiplication(A);
 			}
-			updateShortestPath(dim);
-			cout << "dim:" << dim << "  k:" << k << '\n';
+			updateShortestPath(dim, g_type, device);
 			if (k > k_max - 1) return ;
 			if (k_diameter == dim) return ;
 			if (k == k_last) return ;
@@ -246,9 +357,9 @@ public:
 	}
 	void runDij() {}
 	void runSpfa() {}
-	void runShortestPath() {
+	void runShortestPath(string g_type, string device) {
 		if (algo_type == dawn) {
-			runDawn();
+			runDawn(g_type, device);
 		} else if (algo_type == dij) {
 			runDij();
 		} else if (algo_type == spfa) {
@@ -278,7 +389,7 @@ Graph* readNeighboorMatrix(string file_name,
 	/*...*/ // read row and col from file
 	AlgoType algo_type = Graph::parseAlgo(file_name);
 	Graph* g = new Graph(g_type, device, node_num, algo_type); 
-	g->readMap(file_name, random_flag); // need to read row and col again
+	g->readMap(file_name, device, g_type , random_flag); // need to read row and col again
 	return g;
 }
 
@@ -291,7 +402,7 @@ int main(int argc, char *argv[]) {
 	string random_flag = argv[5]; // true or false
 	string node_num = argv[6]; // int
 	Graph* g = readNeighboorMatrix(input_path, g_type, device, random_flag, node_num);
-	g->runShortestPath();
+	g->runShortestPath(g_type, device);
 	g->saveRes(output_path);
 	delete g;
     return 0;
