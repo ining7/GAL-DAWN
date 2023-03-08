@@ -21,6 +21,8 @@ public:
       		g_dense_gpu = new unsigned int[row * stride]();
 		} else if (device == "cpu" && g_type == "sparse") {
 			stride = col;
+		} else if (device == "cpu" && g_type == "dense") {
+			g_dense_cpu_hun_thou.resize(row);
 		}
 	}
 	~Matrix() {
@@ -50,6 +52,9 @@ public:
 	inline int getValueCpuSparse(int i, int j) {
 		return g_dense_gpu[i * stride  + j];
 	}
+	inline int getValueCpuDense(int i, int j) {
+		return g_dense_gpu[i * stride  + j];
+	}
 	void readData(bool* in) {
 		if (device == "gpu" && g_type == "dense") {
 			for (int i = 0; i < row; ++i) {
@@ -66,6 +71,14 @@ public:
 				for (int j = 0; j < col; ++j) {
 					if (in[i * col + j]) {
 						setValueCpuSparse(i, j, 1);
+					}
+				}
+			}
+		} else if (device == "cpu" && g_type == "dense") {
+			for (int i = 0; i < row; ++i) {
+				for (int j = 0; j < col; ++j) {
+					if (in[i * col + j]) {
+						g_dense_cpu_hun_thou[i].set(j);
 					}
 				}
 			}
@@ -103,8 +116,32 @@ public:
 					cout << "i:" << i << " j:" << j << " v:" << v << '\n';
 				}
 			}
+		} else if (device == "cpu" && g_type == "dense") {
+			for (int i = 0, size_i = g_dense_cpu_hun_thou.size(); i < size_i; ++i) {
+				for (int j = 0; j < size_i; ++j) {
+					cout << (g_dense_cpu_hun_thou[i][j] & 1) << ' ';
+				}
+				cout << '\n';
+			}
 		}
 		cout << '\n';
+	}
+	void denseCpuMultiplication(Matrix* A) { // this = this * A
+		int n = this->row;
+		vector<bitset<kmaxBitsetHunThou>> res(n);
+	// #pragma omp parallel for
+ 		for (int i = 0; i < n; ++i) {
+			for (int j = 0; j < n; ++j) {
+				bool tmp = (g_dense_cpu_hun_thou[i] & A->g_dense_cpu_hun_thou[j]).any();
+				if (res[i][j] == false && tmp == true) {
+					res[i].set(j);
+				}
+			}
+		}
+		for (int i = 0; i < n; ++i) {
+			this->g_dense_cpu_hun_thou[i] = res[i];
+		}
+		// this->g_dense_cpu_hun_thou = res;
 	}
 	void sparseCpuMultiplication(Matrix* A) { 
 		int n = this->row;
@@ -234,7 +271,9 @@ public:
 			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
 		} else if (_g_type == "sparse" && _device == "cpu") {
 			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
-		} 
+		} else if (_g_type == "dense" && _device == "cpu") {
+			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
+		}
 	}
 	~Graph() {
 		delete A;
@@ -291,20 +330,28 @@ public:
 			A->readData(tmp);
 			B->readData(tmp);
 			res->readData(tmp);
+		} else if (device == "cpu" && g_type == "dense") {
+			A->readData(transpose_tmp);
+			B->readData(tmp);
+			res->readData(tmp);
 		}
 		delete []tmp;
 		delete []transpose_tmp;
 	}
 	void updateShortestPath(int dim, string g_type, string device) {
 		if (device == "gpu" && g_type == "dense") {
+			int* cnt = new int[node_num];
 // #pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
 				for (int j = 0; j < node_num; ++j) {
 					if (i != j && B->getValueGpuDense(i, j, true) && res->getValueGpuDense(i, j, false) == 0) {
 						res->setValueGpuDense(i, j, dim);
-						++k;
+						++cnt[i];
 					}
 				}
+			}
+			for (int i = 0; i < node_num; ++i) {
+				k += cnt[i];
 			}
 		} else if (device == "cpu" && g_type == "sparse") { //
 			int* cnt = new int[node_num];
@@ -324,6 +371,21 @@ public:
 			for (int i = 0; i < node_num; ++i) {
 				k += cnt[i];
 			}
+		} else if (device == "cpu" && g_type == "dense") {
+			int* cnt = new int[node_num];
+	// #pragma omp parallel for
+			for (int i = 0; i < node_num; ++i) {
+				cnt[i] = 0;
+				for (int j = 0; j < node_num; ++j) {
+					if ((i != j) && B->g_dense_cpu_hun_thou[i].test(j) && res->getValueCpuDense(i, j) == 0) {
+						res->setValueGpuDense(i, j, dim);
+						++cnt[i];
+					}
+				}
+			}
+			for (int i = 0; i < node_num; ++i) {
+				k += cnt[i];
+			}
 		}
 	}
 	void runDawn(string g_type, string device) {
@@ -335,6 +397,8 @@ public:
 				B->denseGpuMultiplication(A) ;
 			} else if (g_type == "sparse" && device == "cpu") {
 				B->sparseCpuMultiplication(A);
+			} else if (g_type == "dense" && device == "cpu") {
+				B->denseCpuMultiplication(A);
 			}
 			updateShortestPath(dim, g_type, device);
 			if (k > k_max - 1) return ;
