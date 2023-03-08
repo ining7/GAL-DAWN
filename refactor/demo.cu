@@ -19,21 +19,21 @@ public:
 		if (device == "gpu" && g_type == "dense") {
 			stride = (col + 31) / 32;
       		g_dense_gpu = new unsigned int[row * stride]();
-		} else if (device == "cpu" && g_type == "sparse") { //
+		} else if (device == "cpu" && g_type == "sparse") {
 			stride = col;
 		}
 	}
 	~Matrix() {
 		if (device == "gpu" && g_type == "dense") {
 			delete[] g_dense_gpu;
-		} else if (device == "cpu" && g_type == "sparse") { //
+		} else if (device == "cpu" && g_type == "sparse") { 
 			delete[] g_dense_gpu;
 		}
 	}
 	inline void setValueGpuDense(int i, int j, int value) {
 		g_dense_gpu[i * stride + j] = value;
 	}
-	inline void setValueCpuSparse(int i, int j, long long value) { // 0
+	inline void setValueCpuSparse(int i, int j, long long value) { 
 		g_sparse_cpu[i].emplace_back(make_pair(j, value));
 	}
 	inline int getValueGpuDense(int i, int j, bool flag_press) { // flag_press = true press
@@ -41,7 +41,6 @@ public:
 			unsigned int index = i * stride + (j >> 5);
 			int len = col % 32;
 			int offset = len - (j & 31) - 1;
-			// cout << "len:" << len << "  j:" << j << "  offset:" << offset << '\n';
 			bool value = (g_dense_gpu[index] & (1 << offset));
 			return value;
 		} else {
@@ -49,7 +48,6 @@ public:
 		}
 	}
 	inline int getValueCpuSparse(int i, int j) {
-		// 3
 		return g_dense_gpu[i * stride  + j];
 	}
 	void readData(bool* in) {
@@ -64,7 +62,6 @@ public:
 				}
 			}
 		} else if (device == "cpu" && g_type == "sparse") { 
-			// 1
 			for (int i = 0; i < row; ++i) {
 				for (int j = 0; j < col; ++j) {
 					if (in[i * col + j]) {
@@ -85,7 +82,7 @@ public:
 					}
 				}
 			}
-		} else if (device == "cpu" && g_type == "sparse") { //
+		} else if (device == "cpu" && g_type == "sparse") { 
 
 		}
 	}
@@ -109,7 +106,7 @@ public:
 		}
 		cout << '\n';
 	}
-	void sparseCpuMultiplication(Matrix* A) { // 2
+	void sparseCpuMultiplication(Matrix* A) { 
 		int n = this->row;
 		Matrix *tmp = new Matrix(this->g_type, this->device, this->algo_type, this->row, this->col);
 		vector<long long> res[n]; 
@@ -152,17 +149,9 @@ public:
 				tmp->g_sparse_cpu[i].emplace_back(make_pair(b_idx_que[i][j], res[i][j])); 
 			}
 		}
-		// for (int i = 0; i < n; ++i) {
-		// 	int m = res[i].size();
-		// 	this->g_sparse_cpu[i].clear();
-		// 	for (int j = 0; j < m; ++j) {
-		// 		this->g_sparse_cpu[i].emplace_back(make_pair(b_idx_que[i][j], res[i][j])); 
-		// 	}
-		// }
 		for (int i = 0; i < n; ++i) {
 			this->g_sparse_cpu[i] = tmp->g_sparse_cpu[i];
 		}
-		// g_sparse_cpu = tmp->g_sparse_cpu;
 	}
 	void denseGpuMultiplication(Matrix* A) { // this = this * A
 		unsigned int* start_A = this->g_dense_gpu;
@@ -318,7 +307,6 @@ public:
 				}
 			}
 		} else if (device == "cpu" && g_type == "sparse") { //
-			// 4
 			int* cnt = new int[node_num];
 		// #pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
