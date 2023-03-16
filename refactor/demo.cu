@@ -129,7 +129,7 @@ public:
 	void denseCpuMultiplication(Matrix* A) { // this = this * A
 		int n = this->row;
 		vector<bitset<kmaxBitsetHunThou>> res(n);
-	// #pragma omp parallel for
+#pragma omp parallel for
  		for (int i = 0; i < n; ++i) {
 			for (int j = 0; j < n; ++j) {
 				bool tmp = (g_dense_cpu_hun_thou[i] & A->g_dense_cpu_hun_thou[j]).any();
@@ -148,7 +148,7 @@ public:
 		Matrix *tmp = new Matrix(this->g_type, this->device, this->algo_type, this->row, this->col);
 		vector<long long> res[n]; 
 		vector<int> b_idx_que[n]; 
-	// #pragma omp parallel for
+#pragma omp parallel for
 		for (int i = 0; i < n; ++i) {
 			auto a_tmp = this->g_sparse_cpu[i]; 
 			bool flag[n] = {}; 
@@ -179,7 +179,7 @@ public:
 				}
 			}
 		}
-	// #pragma omp parallel for
+#pragma omp parallel for
 		for (int i = 0; i < n; ++i) {
 			int m = res[i].size();
 			for (int j = 0; j < m; ++j) {
@@ -341,7 +341,7 @@ public:
 	void updateShortestPath(int dim, string g_type, string device) {
 		if (device == "gpu" && g_type == "dense") {
 			int* cnt = new int[node_num];
-// #pragma omp parallel for
+#pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
 				for (int j = 0; j < node_num; ++j) {
 					if (i != j && B->getValueGpuDense(i, j, true) && res->getValueGpuDense(i, j, false) == 0) {
@@ -355,7 +355,7 @@ public:
 			}
 		} else if (device == "cpu" && g_type == "sparse") { //
 			int* cnt = new int[node_num];
-		// #pragma omp parallel for
+#pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
 				cnt[i] = 0;
 				auto ed = B->g_sparse_cpu[i].end();
@@ -373,7 +373,7 @@ public:
 			}
 		} else if (device == "cpu" && g_type == "dense") {
 			int* cnt = new int[node_num];
-	// #pragma omp parallel for
+#pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
 				cnt[i] = 0;
 				for (int j = 0; j < node_num; ++j) {
