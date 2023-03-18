@@ -30,12 +30,14 @@ public:
 			delete[] g_dense_gpu;
 		} else if (device == "cpu" && g_type == "sparse") { 
 			delete[] g_dense_gpu;
+		} else if (device == "cpu" && g_type == "dense") {
+			delete[] g_dense_gpu;
 		}
 	}
 	inline void setValueGpuDense(int i, int j, int value) {
 		g_dense_gpu[i * stride + j] = value;
 	}
-	inline void setValueCpuSparse(int i, int j, long long value) { 
+	inline void setValueCpuSparse(int i, int j, long long value) {
 		g_sparse_cpu[i].emplace_back(make_pair(j, value));
 	}
 	inline int getValueGpuDense(int i, int j, bool flag_press) { // flag_press = true press
@@ -66,7 +68,7 @@ public:
 					}
 				}
 			}
-		} else if (device == "cpu" && g_type == "sparse") { 
+		} else if (device == "cpu" && g_type == "sparse") {
 			for (int i = 0; i < row; ++i) {
 				for (int j = 0; j < col; ++j) {
 					if (in[i * col + j]) {
@@ -95,7 +97,7 @@ public:
 					}
 				}
 			}
-		} else if (device == "cpu" && g_type == "sparse") { 
+		} else if (device == "cpu" && g_type == "sparse") {
 
 		}
 	}
@@ -129,7 +131,7 @@ public:
 	void denseCpuMultiplication(Matrix* A) { // this = this * A
 		int n = this->row;
 		vector<bitset<kmaxBitsetHunThou>> res(n);
-#pragma omp parallel for
+	// #pragma omp parallel for
  		for (int i = 0; i < n; ++i) {
 			for (int j = 0; j < n; ++j) {
 				bool tmp = (g_dense_cpu_hun_thou[i] & A->g_dense_cpu_hun_thou[j]).any();
@@ -143,47 +145,47 @@ public:
 		}
 		// this->g_dense_cpu_hun_thou = res;
 	}
-	void sparseCpuMultiplication(Matrix* A) { 
+	void sparseCpuMultiplication(Matrix* A) {
 		int n = this->row;
 		Matrix *tmp = new Matrix(this->g_type, this->device, this->algo_type, this->row, this->col);
-		vector<long long> res[n]; 
-		vector<int> b_idx_que[n]; 
-#pragma omp parallel for
+		vector<long long> res[n];
+		vector<int> b_idx_que[n];
+	// #pragma omp parallel for
 		for (int i = 0; i < n; ++i) {
-			auto a_tmp = this->g_sparse_cpu[i]; 
-			bool flag[n] = {}; 
-			b_idx_que[i].resize(n); 
-			int b_idx_idx[n] = {}; 
-			int cnt = 0; 
-			for (int j = 0, m = a_tmp.size(); j < m; ++j) { 
-				int a_idx = a_tmp[j].first;  
+			auto a_tmp = this->g_sparse_cpu[i];
+			bool flag[n] = {};
+			b_idx_que[i].resize(n);
+			int b_idx_idx[n] = {};
+			int cnt = 0;
+			for (int j = 0, m = a_tmp.size(); j < m; ++j) {
+				int a_idx = a_tmp[j].first;
 				auto b_tmp = A->g_sparse_cpu[a_idx];
-				for (int k = 0, l = b_tmp.size(); k < l; ++k) { 
-					int b_idx = b_tmp[k].first; 
-					if (!flag[b_idx]) { 
-						flag[b_idx] = true; 
-						b_idx_que[i][cnt] = b_idx; 
-						b_idx_idx[b_idx] = cnt; 
+				for (int k = 0, l = b_tmp.size(); k < l; ++k) {
+					int b_idx = b_tmp[k].first;
+					if (!flag[b_idx]) {
+						flag[b_idx] = true;
+						b_idx_que[i][cnt] = b_idx;
+						b_idx_idx[b_idx] = cnt;
 						++cnt;
 					}
 				}
 			}
-			res[i].resize(cnt); 
+			res[i].resize(cnt);
 			for (int j = 0, m = a_tmp.size(); j < m; ++j) {
-				int a_idx = a_tmp[j].first; 
-				int a_w = a_tmp[j].second; 
+				int a_idx = a_tmp[j].first;
+				int a_w = a_tmp[j].second;
 				auto b_tmp = A->g_sparse_cpu[a_idx];
 				for (int k = 0, l = b_tmp.size(); k < l; ++k) {
-					int b_idx = b_tmp[k].first; 
-					res[i][b_idx_idx[b_idx]] = (long long) res[i][b_idx_idx[b_idx]] + a_w * b_tmp[k].second; 
+					int b_idx = b_tmp[k].first;
+					res[i][b_idx_idx[b_idx]] = (long long) res[i][b_idx_idx[b_idx]] + a_w * b_tmp[k].second;
 				}
 			}
 		}
-#pragma omp parallel for
+	// #pragma omp parallel for
 		for (int i = 0; i < n; ++i) {
 			int m = res[i].size();
 			for (int j = 0; j < m; ++j) {
-				tmp->g_sparse_cpu[i].emplace_back(make_pair(b_idx_que[i][j], res[i][j])); 
+				tmp->g_sparse_cpu[i].emplace_back(make_pair(b_idx_que[i][j], res[i][j]));
 			}
 		}
 		for (int i = 0; i < n; ++i) {
@@ -195,12 +197,12 @@ public:
 		unsigned int* start_B = A->g_dense_gpu;
 		unsigned int* h_res = new unsigned int[this->row * this->col]();
 		unsigned int* start_res = h_res;
-		long long rows = 1;
-		for (int i = 0; i < this->row; ++i) { 
+		long long rows = 1; // matrix partitioning
+		for (int i = 0; i < this->row; ++i) {
 			long long r_B = rows;
 			bool* h_C = new bool[this->col]();
 			bool* start_C = h_C;
-			for (int j = 0; j < this->col; j += rows) { 
+			for (int j = 0; j < this->col; j += rows) {
 				r_B = min(rows, this->col - j);
 				unsigned int* ptr_A;
 				unsigned int* ptr_B;
@@ -213,8 +215,8 @@ public:
 				cudaMemcpy(ptr_A, this->g_dense_gpu, 1 * this->stride * sizeof(unsigned int), cudaMemcpyHostToDevice);
 				cudaMemcpy(ptr_B, A->g_dense_gpu, r_B * this->stride * sizeof(unsigned int), cudaMemcpyHostToDevice);
 				cudaMemset(ptr_C, 0, 1 * r_B * sizeof(bool));
-				
-				dim3 block(32, 32, 1);
+
+				dim3 block(1, 1, 1);
 				dim3 grid((this->row + block.x - 1) / block.x, (this->col + block.y - 1) / block.y, 1);
 
 				denseIntMultiplicationKernel<<<grid, block>>>(1, this->stride, r_B, ptr_A, ptr_B, ptr_C);
@@ -224,11 +226,11 @@ public:
 					printf("i:%d j:%d  CUDA error: %s\n", i, j, cudaGetErrorString(error));
 				}
 
-				cudaMemcpy(h_C, ptr_C, r_B * sizeof(bool), cudaMemcpyDeviceToHost); 
-				
+				cudaMemcpy(h_C, ptr_C, r_B * sizeof(bool), cudaMemcpyDeviceToHost);
+
 				cudaFree(ptr_A);
-				cudaFree(ptr_B); 
-				cudaFree(ptr_C); 
+				cudaFree(ptr_B);
+				cudaFree(ptr_C);
 
 				A->g_dense_gpu += r_B * this->stride;
 				h_C += r_B;
@@ -258,7 +260,7 @@ public:
 };
 
 class Graph {
-public: 
+public:
 	Graph(string _g_type, string _device, int _node_num, AlgoType _algo_type):
 		node_num(_node_num), algo_type(_algo_type) {
 		k = 0;
@@ -268,11 +270,11 @@ public:
 		B = new Matrix(_g_type, _device, algo_type, _node_num, _node_num);
 		// save res with one_dim ptr
 		if (_g_type == "dense" && _device == "gpu") {
-			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
+			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32);
 		} else if (_g_type == "sparse" && _device == "cpu") {
-			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
+			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32);
 		} else if (_g_type == "dense" && _device == "cpu") {
-			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32); 
+			res = new Matrix("dense", "gpu", algo_type, _node_num, _node_num * 32);
 		}
 	}
 	~Graph() {
@@ -312,14 +314,31 @@ public:
 			if (!in) {
 				cout << " == File ifstream error: " << file_name << " ==";
 			}
-			while (in) {
-				if (in.eof()) break;
-				int a, b; 
-				in >> a >> b;
+			// while (in) {
+			// 	if (in.eof()) break;
+			// 	int a, b;
+			// 	in >> a >> b;
+			// 	if (!tmp[a * node_num + b]) ++(this->k);
+			// 	tmp[a * node_num + b] = 1;
+			// 	transpose_tmp[b * node_num + a] = 1;
+			// }
+			string line;
+			getline(in, line);
+			while (line[0] == '%') getline(in, line);
+
+			int num_rows, num_cols, num_entries;
+			sscanf(line.c_str(), "%d %d %d", &num_rows, &num_cols, &num_entries);
+
+			for (int i = 0; i < num_entries; ++i) {
+				int a, b;
+				double val;
+				in >> a >> b >> val;
+				cout << a << "  " << b << '\n';
 				if (!tmp[a * node_num + b]) ++(this->k);
 				tmp[a * node_num + b] = 1;
 				transpose_tmp[b * node_num + a] = 1;
 			}
+
 			in.close();
 		}
 		if (device == "gpu" && g_type == "dense") {
@@ -341,7 +360,7 @@ public:
 	void updateShortestPath(int dim, string g_type, string device) {
 		if (device == "gpu" && g_type == "dense") {
 			int* cnt = new int[node_num];
-#pragma omp parallel for
+// #pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
 				for (int j = 0; j < node_num; ++j) {
 					if (i != j && B->getValueGpuDense(i, j, true) && res->getValueGpuDense(i, j, false) == 0) {
@@ -355,15 +374,15 @@ public:
 			}
 		} else if (device == "cpu" && g_type == "sparse") { //
 			int* cnt = new int[node_num];
-#pragma omp parallel for
+		// #pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
 				cnt[i] = 0;
 				auto ed = B->g_sparse_cpu[i].end();
 				for (auto it = B->g_sparse_cpu[i].begin(); it != ed; ++it) {
 					int j = it->first;
-					if (i == j || it->second == 0) continue; 
+					if (i == j || it->second == 0) continue;
 					if (res->getValueCpuSparse(i, j) == 0) {
-						res->setValueGpuDense(i, j, dim); 
+						res->setValueGpuDense(i, j, dim);
 						++cnt[i];
 					}
 				}
@@ -373,7 +392,7 @@ public:
 			}
 		} else if (device == "cpu" && g_type == "dense") {
 			int* cnt = new int[node_num];
-#pragma omp parallel for
+	// #pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
 				cnt[i] = 0;
 				for (int j = 0; j < node_num; ++j) {
@@ -435,12 +454,12 @@ public:
 	long long node_num;
 };
 
-Graph* readNeighboorMatrix(string file_name, 
+Graph* readNeighboorMatrix(string file_name,
 		string g_type, string device, string random_flag, string _node_num) {
 	long long node_num = stoi(_node_num);
 	/*...*/ // read row and col from file
 	AlgoType algo_type = Graph::parseAlgo(file_name);
-	Graph* g = new Graph(g_type, device, node_num, algo_type); 
+	Graph* g = new Graph(g_type, device, node_num, algo_type);
 	g->readMap(file_name, device, g_type , random_flag); // need to read row and col again
 	return g;
 }
@@ -463,11 +482,13 @@ int main(int argc, char *argv[]) {
 __global__ void denseIntMultiplicationKernel(long long N, long long M, long long K, unsigned int* A, unsigned int* B, bool* res) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	// printf("i: %d  j:%d  ", i, j);
 	if (i < N && j < K) {
 		unsigned int temp = 0;
 		for (int k = 0; k < M; ++k) {
 			temp |= A[i * M + k] & B[j * M + k];
 		}
+		// printf("idx: %lld\n", i * K + j);
 		res[i * K + j] = temp ? 1 : 0;
 	}
 }
