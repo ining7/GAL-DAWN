@@ -333,9 +333,7 @@ public:
 
 			for (int i = 0; i < num_entries; ++i) {
 				int a, b;
-				double val;
-				in >> a >> b >> val;
-				cout << a << "  " << b << '\n';
+				in >> a >> b;
 				if (!tmp[a * node_num + b]) ++(this->k);
 				tmp[a * node_num + b] = 1;
 				transpose_tmp[b * node_num + a] = 1;
@@ -457,8 +455,8 @@ public:
 };
 
 Graph* readNeighboorMatrix(string file_name,
-		string g_type, string device, string random_flag, string _node_num) {
-	long long node_num = stoi(_node_num);
+		string g_type, string device, string random_flag, long long node_num) {
+	// long long node_num = stoi(_node_num);
 	/*...*/ // read row and col from file
 	AlgoType algo_type = Graph::parseAlgo(file_name);
 	Graph* g = new Graph(g_type, device, node_num, algo_type);
@@ -473,7 +471,19 @@ int main(int argc, char *argv[]) {
 	string g_type = argv[3]; // sparse or dense
 	string device = argv[4]; // cpu or gpu
 	string random_flag = argv[5]; // true or false
-	string node_num = argv[6]; // int
+	// string node_num = argv[6]; // int
+	ifstream in;
+	in.open(input_path);
+	if (!in) {
+		cout << " == File ifstream error: " << input_path << " ==";
+	}
+	string line;
+	getline(in, line);
+	while (line[0] == '%') getline(in, line);
+	int num_rows, num_cols, num_entries;
+	sscanf(line.c_str(), "%d %d %d", &num_rows, &num_cols, &num_entries);
+	long long node_num = num_rows;
+
 	Graph* g = readNeighboorMatrix(input_path, g_type, device, random_flag, node_num);
 	
 	Timer bTimer("DAWN");
