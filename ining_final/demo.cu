@@ -12,7 +12,6 @@ enum AlgoType {dawn, dij, spfa};
 
 __global__ void denseIntMultiplicationKernel(long long N, long long M, long long K, unsigned int* A, unsigned int* B, bool* res);
 void change(long long N, long long M, long long K, bool C[], unsigned int* A);
-
 class Matrix {
 public:
 	Matrix() {}
@@ -46,7 +45,12 @@ public:
 		if (flag_press) {
 			unsigned int index = i * stride + (j >> 5);
 			int len = col % 32;
-			int offset = len - (j & 31) - 1;
+			int offset;
+			if ((j >> 5) == (col >> 5)) { 
+				offset = len - 1 - (j & 31);
+			} else {
+				offset = 31 - (j & 31);
+			}
 			bool value = (g_dense_gpu[index] & (1 << offset));
 			return value;
 		} else {
@@ -197,9 +201,9 @@ public:
 	void denseGpuMultiplication(Matrix* A) { // this = this * A
 		unsigned int* start_A = this->g_dense_gpu;
 		unsigned int* start_B = A->g_dense_gpu;
-		unsigned int* h_res = new unsigned int[this->row * this->col]();
+		unsigned int* h_res = new unsigned int[this->row * this->stride]();
 		unsigned int* start_res = h_res;
-		long long rows = 1; // matrix partitioning
+		long long rows = 2; // matrix partitioning
 		for (int i = 0; i < this->row; ++i) {
 			long long r_B = rows;
 			bool* h_C = new bool[this->col]();
@@ -218,7 +222,7 @@ public:
 				cudaMemcpy(ptr_B, A->g_dense_gpu, r_B * this->stride * sizeof(unsigned int), cudaMemcpyHostToDevice);
 				cudaMemset(ptr_C, 0, 1 * r_B * sizeof(bool));
 
-				dim3 block(1, 1, 1);
+				dim3 block(4, 4, 1);
 				dim3 grid((this->row + block.x - 1) / block.x, (this->col + block.y - 1) / block.y, 1);
 
 				denseIntMultiplicationKernel<<<grid, block>>>(1, this->stride, r_B, ptr_A, ptr_B, ptr_C);
@@ -236,9 +240,11 @@ public:
 
 				A->g_dense_gpu += r_B * this->stride;
 				h_C += r_B;
+
 			}
 			h_C = start_C;
-			change(1, this->stride, this->col, h_C, h_res);
+			change(1, this->stride, this->col, h_C, h_res); 
+			memcpy(this->g_dense_gpu, h_res, this->stride * sizeof(unsigned int));
 			this->g_dense_gpu += this->stride;
 			A->g_dense_gpu = start_B;
 			h_res += this->stride;
@@ -247,7 +253,6 @@ public:
 		this->g_dense_gpu = start_A;
 		A->g_dense_gpu = start_B;
 		h_res = start_res;
-		this->g_dense_gpu = h_res;
 		delete []h_res;
 	}
 	string g_type, device;
@@ -334,6 +339,7 @@ public:
 			for (int i = 0; i < num_entries; ++i) {
 				int a, b;
 				in >> a >> b;
+				--a; --b;
 				if (!tmp[a * node_num + b]) ++(this->k);
 				tmp[a * node_num + b] = 1;
 				transpose_tmp[b * node_num + a] = 1;
@@ -362,6 +368,7 @@ public:
 			int* cnt = new int[node_num];
 #pragma omp parallel for
 			for (int i = 0; i < node_num; ++i) {
+				cnt[i] = 0;
 				for (int j = 0; j < node_num; ++j) {
 					if (i != j && B->getValueGpuDense(i, j, true) && res->getValueGpuDense(i, j, false) == 0) {
 						res->setValueGpuDense(i, j, dim);
@@ -372,6 +379,7 @@ public:
 			for (int i = 0; i < node_num; ++i) {
 				k += cnt[i];
 			}
+			delete[] cnt;
 		} else if (device == "cpu" && g_type == "sparse") { //
 			int* cnt = new int[node_num];
 #pragma omp parallel for
@@ -390,6 +398,7 @@ public:
 			for (int i = 0; i < node_num; ++i) {
 				k += cnt[i];
 			}
+			delete[] cnt;
 		} else if (device == "cpu" && g_type == "dense") {
 			int* cnt = new int[node_num];
 #pragma omp parallel for
@@ -405,6 +414,7 @@ public:
 			for (int i = 0; i < node_num; ++i) {
 				k += cnt[i];
 			}
+			delete[] cnt;
 		}
 	}
 	void runDawn(string g_type, string device) {
@@ -413,7 +423,7 @@ public:
 		while(1) {
 			++dim;
 			if (g_type == "dense" && device == "gpu") {
-				B->denseGpuMultiplication(A) ;
+				B->denseGpuMultiplication(A);
 			} else if (g_type == "sparse" && device == "cpu") {
 				B->sparseCpuMultiplication(A);
 			} else if (g_type == "dense" && device == "cpu") {
