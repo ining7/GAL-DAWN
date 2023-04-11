@@ -1,6 +1,4 @@
-#include <iostream>
 #include "access.h"
-#include <cstdlib>
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <cuda_fp16.h>
@@ -23,14 +21,13 @@ struct Matrix
     int dim;
 };
 
-float matmul16f(Matrix &matrix, string input_path, string output_path);
-void readgraph(string input_path, Matrix &matrix);
+float runDawnGpu(Matrix &matrix, string &input_path, string &output_path);
+void readgraph(string &input_path, Matrix &matrix);
 void update_A(__half *&host, Matrix matrix, int rows_start, int rows_end, int n);
 void update_B(__half *&host, Matrix matrix, int cols_start, int cols_end, int n);
-void check_gpu_dense(__half *dense, int i_dex, int j_dex, string output_path);
-void check_cpu_dense(bool *dense, int i_dex, int j_dex, string output_path);
+void check_gpu_dense(__half *dense, int i_dex, int j_dex, string &output_path);
 
-void readgraph(string input_path, Matrix &matrix)
+void readgraph(string &input_path, Matrix &matrix)
 {
     std::ifstream file(input_path);
     if (!file.is_open())
@@ -55,7 +52,7 @@ void readgraph(string input_path, Matrix &matrix)
     matrix.cols = cols;
     matrix.nnz = nnz;
     matrix.m = 8192;
-    matrix.n = (rows - rows % matrix.m) + matrix.m; // 数据对其为m的倍数
+    matrix.n = (rows - rows % matrix.m) + matrix.m;
     matrix.k = matrix.m;
     matrix.loop = matrix.n / matrix.m;
     matrix.dim = dim;
@@ -108,7 +105,7 @@ void readgraph(string input_path, Matrix &matrix)
     cout << "Initialize input matrices" << endl;
 }
 
-float matmul16f(Matrix &matrix, string input_path, string output_path)
+float runDawnGpu(Matrix &matrix, string &input_path, string &output_path)
 {
     readgraph(input_path, matrix);
     int n = matrix.n;
@@ -133,8 +130,6 @@ float matmul16f(Matrix &matrix, string input_path, string output_path)
     cudaMalloc(&d_A, lda * n * sizeof(__half));
     cudaMalloc(&d_B, ldb * k * sizeof(__half));
     cudaMalloc(&d_C, ldc * k * sizeof(__half));
-
-    cout << " 显存分配完毕 " << endl;
 
     cublasHandle_t handle;
     cublasCreate(&handle);
@@ -197,7 +192,6 @@ float matmul16f(Matrix &matrix, string input_path, string output_path)
                 cudaEventRecord(start, 0);
 
                 // Perform matrix multiplication
-                // cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, d_A, m, d_B, n, &beta, d_C, m);
                 cublasGemmEx(handle,
                              CUBLAS_OP_N,
                              CUBLAS_OP_N,
@@ -225,7 +219,7 @@ float matmul16f(Matrix &matrix, string input_path, string output_path)
                 elapsed_time += trial_time;
 
                 cudaMemcpy(h_C, d_C, ldc * k * sizeof(__half), cudaMemcpyDeviceToHost);
-                // check_dense(h_C, ldc, k, output_path);
+
                 // update result
                 for (int i = i_std * m; i < (i_std + 1) * m - 1; i++)
                 {
@@ -244,7 +238,6 @@ float matmul16f(Matrix &matrix, string input_path, string output_path)
                         }
                     }
                 }
-                // cout << " j: " << j_std << " ";
             }
             cout << endl;
         }
@@ -292,7 +285,6 @@ float matmul16f(Matrix &matrix, string input_path, string output_path)
 
 void update_A(__half *&host, Matrix matrix, int rows_start, int rows_end, int n) // m*n
 {
-    // int entry = 0;
 #pragma omp parallel for
     for (int i = rows_start; i <= rows_end; i++)
     {
@@ -308,7 +300,6 @@ void update_A(__half *&host, Matrix matrix, int rows_start, int rows_end, int n)
                 host[(i % matrix.m) * n + j] = __float2half(0.0f);
         }
     }
-    // cout << " A:entry = " << entry << endl;
 }
 
 void update_B(__half *&host, Matrix matrix, int cols_start, int cols_end, int n) // n*k
@@ -328,24 +319,9 @@ void update_B(__half *&host, Matrix matrix, int cols_start, int cols_end, int n)
             //             ++entry;
         }
     }
-    // #pragma omp parallel for
-    //     for (int i = 0; i < n; i++)
-    //     {
-    //         for (int j = cols_start; j <= cols_end; j++)
-    //         {
-    //             if (matrix.dense[i][j] == true)
-    //             {
-    //                 host[i * matrix.k + j % matrix.k] = __float2half(1.0f);
-    //                 ++entry;
-    //             }
-    //             else
-    //                 host[i * matrix.k + j % matrix.k] = __float2half(0.0f);
-    //         }
-    //     }
-    // cout << " B:entry = " << entry << endl;
 }
 
-void check_gpu_dense(__half *dense, int i_dex, int j_dex, string output_path)
+void check_gpu_dense(__half *dense, int i_dex, int j_dex, string &output_path)
 {
     std::ofstream outfile(output_path);
     if (!outfile.is_open())
@@ -367,35 +343,6 @@ void check_gpu_dense(__half *dense, int i_dex, int j_dex, string output_path)
             }
         }
     }
-
-    // cout << " entry = " << entry << endl;
-    outfile.close();
-}
-
-void check_cpu_dense(bool *dense, int i_dex, int j_dex, string output_path)
-{
-    std::ofstream outfile(output_path);
-    if (!outfile.is_open())
-    {
-        std::cerr << "Error opening file " << output_path << std::endl;
-        return;
-    }
-    int entry = 0;
-
-    for (auto i = 0; i < i_dex; i++)
-    {
-        for (auto j = 0; j < i_dex; j++)
-        {
-            float tmp = dense[i * j_dex + j];
-            if (tmp > 0)
-            {
-                outfile << i << " " << j << " " << tmp << endl;
-                entry++;
-            }
-        }
-    }
-
-    // cout << " entry = " << entry << endl;
     outfile.close();
 }
 
@@ -413,7 +360,7 @@ int main(int argc, char *argv[])
 
     Matrix matrix;
 
-    float elapsed_time = 1.0f * matmul16f(matrix, input_path, output_path);
+    float elapsed_time = 1.0f * runDawnGpu(matrix, input_path, output_path);
 
     // Output elapsed time and free remaining resources
     std::cout << "Average Elapsed time: " << elapsed_time / (1000 * matrix.loop) << std::endl;
