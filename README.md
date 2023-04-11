@@ -66,8 +66,8 @@ sudo bash ../process.sh
 Please note that the normal operation of the batch script needs to ensure that the test machine meets the minimum requirements. Insufficient memory or GPU memory needs to be manually adjusted according to amount of resources.
 
 ```c++
-CPU  Multi-threaded processor supporting OpenMP API
-RAM	 80GB or more
-GPU	 NVIDIA graphics cards supporting above CUDA 11.0
-OS	 Ubuntu 20.04 and above
+CPU: Multi-threaded processor supporting OpenMP API
+RAM: 80GB or more
+GPU: NVIDIA graphics cards supporting above CUDA 11.0
+OS:	 Ubuntu 20.04 and above
 ```
