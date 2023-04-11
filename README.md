@@ -4,7 +4,9 @@
 
 Depending on your GPU, you may also want to edit the CMAKE_CUDA_ARCHITECTURES variable in $PROJECT_ROOT/CMakeLists.txt
 
+```bash
 export PROJECT_ROOT="to_your_project_path"
+```
 
 1. Modify $PROJECT_ROOT/CMakeLists.txt
 
