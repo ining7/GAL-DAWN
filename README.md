@@ -50,3 +50,24 @@ cd $PROJECT_ROOT/build
 ./dawn_gpu $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
 ./dawn_cpu_v2 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
 ```
+3.Using script. 
+
+```c++
+cd ..
+sudo vim ./process.sh
+MAIN = ${main}
+GRAPH_DIR = ${test_graph}
+OUTPUT= ${outputfile}
+LOG_DIR= ${GRAPH_DIR}/log
+ESC && wq
+sudo chmod +x ../process.sh 
+sudo bash ../process.sh
+```
+Please note that the normal operation of the batch script needs to ensure that the test machine meets the minimum requirements. Insufficient memory or GPU memory needs to be manually adjusted according to amount of resources.
+
+```c++
+CPU  Multi-threaded processor supporting OpenMP API
+RAM	 80GB or more
+GPU	 NVIDIA graphics cards supporting above CUDA 11.0
+OS	 Ubuntu 20.04 and above
+```
