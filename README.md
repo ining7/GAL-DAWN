@@ -49,6 +49,7 @@ If compilation succeeds without errors, you can run your code as before, for exa
 cd $PROJECT_ROOT/build
 ./dawn_gpu $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
 ./dawn_cpu_v2 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
+./dawn_cpu_v3 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
 ```
 3.Using script. 
 
