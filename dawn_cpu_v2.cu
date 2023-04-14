@@ -125,7 +125,7 @@ float runDawn(Matrix &matrix, string &input_path, string &output_path)
     uint64_t entry_total = 0;
     uint64_t entry_total_last = 0;
     bool *tmp_output = new bool[matrix.rows];
-
+    int *entry = new int[matrix.rows];
 #pragma omp parallel for
     for (int i = 0; i < matrix.rows; i++)
     {
@@ -134,13 +134,16 @@ float runDawn(Matrix &matrix, string &input_path, string &output_path)
             continue;
         for (int j = 0; j < matrix.dense_entry[i]; j++)
         {
-#pragma omp critical
-            {
-                // outfile << matrix.dense[i][j] << " " << i << " " << dim << endl;
-                entry_total++;
-            }
+            // outfile << matrix.dense[i][j] << " " << i << " " << dim << endl;
+            entry[i]++;
         }
     }
+    for (int i = 0; i < matrix.rows; i++)
+    {
+        entry_total += entry[i];
+        entry[i] = 0;
+    }
+
     cout << "Path length 1:" << entry_total << endl;
     entry_total_last = entry_total;
 
@@ -165,37 +168,38 @@ float runDawn(Matrix &matrix, string &input_path, string &output_path)
             {
                 for (int k = 0; k < matrix.dense_entry[j]; k++)
                 {
-                    if (tmp_output[j] == true)
+                    if (matrix.input[i][matrix.dense[j][k]] == true)
                     {
+                        tmp_output[j] = true;
                         break;
                     }
-                    tmp_output[j] = (tmp_output[j] || matrix.input[i][matrix.dense[j][k]]);
                 }
             }
-            auto end = std::chrono::high_resolution_clock::now();
-
-            uint64_t entry = 0;
 
 #pragma omp parallel for
             for (int j = 0; j < matrix.rows; j++)
             {
-
                 if (matrix.result[i][j] == false && tmp_output[j] == true && i != j)
                 {
                     matrix.result[i][j] = true;
-#pragma omp critical
-                    {
-                        entry++;
-                        entry_total++;
-                        // outfile << i << " " << j << " " << dim << endl;
-                    }
+                    entry[j]++;
+                    // outfile << i << " " << j << " " << dim << endl;
                 }
                 matrix.input[i][j] = tmp_output[j];
                 tmp_output[j] = false;
             }
-            if (entry > 0)
+            uint64_t entry_total_tmp = 0;
+
+            for (int j = 0; j < matrix.rows; j++)
             {
-                matrix.entry[i] += entry;
+                entry_total_tmp += entry[j];
+                entry[j] = 0;
+            }
+
+            if (entry_total_tmp > 0)
+            {
+                matrix.entry[i] += entry_total_tmp;
+                entry_total += entry_total_tmp;
                 if (matrix.entry[i] > matrix.rows - 1)
                     break;
             }
@@ -203,7 +207,7 @@ float runDawn(Matrix &matrix, string &input_path, string &output_path)
             {
                 matrix.entry[i] = -1;
             }
-
+            auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed = end - start;
             elapsed_time += elapsed.count();
         }
@@ -238,7 +242,7 @@ int main(int argc, char *argv[])
     if (!file.is_open())
     {
         std::cerr << "Error opening file " << input_path << std::endl;
-        return;
+        return 0;
     }
 
     Matrix matrix;

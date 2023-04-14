@@ -71,3 +71,4 @@ RAM: 80GB or more
 GPU: NVIDIA graphics cards supporting above CUDA 11.0
 OS:  Ubuntu 20.04 and above
 ```
+
