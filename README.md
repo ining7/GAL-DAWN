@@ -68,8 +68,15 @@ Please note that the normal operation of the batch script needs to ensure that t
 
 ```c++
 CPU: Multi-threaded processor supporting OpenMP API
-RAM: 80GB or more
+RAM: 8GB or more
 GPU: NVIDIA graphics cards supporting above CUDA 11.0
 OS:  Ubuntu 20.04 and above
 ```
+4.Release version
+
+For the CPU version, dawn_cpu_v3 is fine-grained parallel version and dawn_cpu_v4 is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
+
+4.Release result
+
+On the test machine, dawn_cpu_v3 and dawn_cpu_v4 achieves average speedup of 1.857x and 6.423x over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738x and 1.579x, over running on the 20-thread i5-13600KF.
 
