@@ -8,8 +8,6 @@ struct Matrix
     int rows;
     int cols;
     int nnz;
-    bool *input;
-    int *result;
     int **A;      // 按列压缩
     int *A_entry; // 每列项数
     int **B;      // 按行压缩
@@ -124,31 +122,34 @@ void runDawn(Matrix &matrix, string &input_path, string &output_path)
         return;
     }
     float elapsed_time = 0.0;
-    matrix.input = new bool[matrix.rows];
-    matrix.result = new int[matrix.rows];
+    int entry = 0;
+    int thread = 12;
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
-
+#pragma omp parallel for num_threads(12)
     for (int i = 0; i < matrix.rows; i++)
     {
-        elapsed_time += dawnSssp(matrix, i);
+        float time_tmp = 0.0f;
+        if (matrix.B_entry[i] == 0)
+            continue;
+        time_tmp = dawnSssp(matrix, i);
+#pragma omp critical
+        {
+            elapsed_time += time_tmp;
+            entry++;
+        }
         // 输出结果
 
-        // for (int j = 0; j < matrix.rows; j++)
-        // {
-        //     if (i != j)
-        //         outfile << i << " " << j << " " << matrix.result[j] << endl;
-        // }
-        if (i % (matrix.rows / 100) == 0)
+        if (entry % (matrix.rows / 100) == 0)
         {
             float completion_percentage =
-                static_cast<float>(i * 100.0f) / static_cast<float>(matrix.rows);
+                static_cast<float>(entry * 100.0f) / static_cast<float>(matrix.rows);
             std::cout << "Progress: " << completion_percentage << "%" << std::endl;
-            std::cout << "Elapsed Time :" << elapsed_time / 1000 << " s" << std::endl;
+            std::cout << "Elapsed Time :" << elapsed_time / (thread * 1000) << " s" << std::endl;
         }
     }
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
-    std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
+    std::cout << " Elapsed time: " << elapsed_time / (thread * 1000) << std::endl;
     outfile.close();
 }
 
@@ -158,29 +159,30 @@ float dawnSssp(Matrix &matrix, int source)
     int entry = matrix.B_entry[source];
     int entry_last = entry;
     bool *tmp_output = new bool[matrix.rows];
-#pragma omp parallel for
+    bool *input = new bool[matrix.rows];
+    int *result = new int[matrix.rows];
+
     for (int j = 0; j < matrix.rows; j++)
     {
-        matrix.input[j] = false;
-        matrix.result[j] = 0;
+        input[j] = false;
+        result[j] = 0;
     }
-#pragma omp parallel for
+
     for (int i = 0; i < matrix.B_entry[source]; i++)
     {
-        matrix.input[matrix.B[source][i]] = true;
-        matrix.result[matrix.B[source][i]] = 1;
+        input[matrix.B[source][i]] = true;
+        result[matrix.B[source][i]] = 1;
     }
     auto start = std::chrono::high_resolution_clock::now();
     while (dim < matrix.dim)
     {
         dim++;
-// cout << " dim: " << dim << endl;
-#pragma omp parallel for
+
         for (int j = 0; j < matrix.rows; j++)
         {
             for (int k = 0; k < matrix.A_entry[j]; k++)
             {
-                if (matrix.input[matrix.A[j][k]] == true)
+                if (input[matrix.A[j][k]] == true)
                 {
                     tmp_output[j] = true;
                     break;
@@ -188,16 +190,14 @@ float dawnSssp(Matrix &matrix, int source)
             }
         }
 
-#pragma omp parallel for
         for (int j = 0; j < matrix.rows; j++)
         {
-            if (matrix.result[j] == 0 && tmp_output[j] == true && j != source)
+            if (result[j] == 0 && tmp_output[j] == true && j != source)
             {
-                matrix.result[j] = dim;
-#pragma omp atomic
+                result[j] = dim;
                 entry++;
             }
-            matrix.input[j] = tmp_output[j];
+            input[j] = tmp_output[j];
             tmp_output[j] = false;
         }
 
@@ -215,8 +215,18 @@ float dawnSssp(Matrix &matrix, int source)
 
     matrix.entry += entry_last;
 
+    // for (int j = 0; j < matrix.rows; j++)
+    // {
+    //     if (i != j)
+    //         outfile << i << " " << j << " " << result[j] << endl;
+    // }
+
     delete[] tmp_output;
     tmp_output = nullptr;
+    delete[] result;
+    result = nullptr;
+    delete[] input;
+    input = nullptr;
 
     return elapsed.count();
 }

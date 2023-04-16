@@ -3,12 +3,12 @@
 # Use "sudo bash process_full_sssp.sh" to run the script
 
 # Modify the absolute path of MAIN and GRAPH_DIR, or the relative path based on the directory where it is located.
-MAIN="/home/lxr/ining/SC2023/ining_final/build/vtov" #需要修改为demo地址
-GRAPH_DIR="/home/lxr/sc2023/gunrock/test_graph"
-OUTPUT="/home/lxr/ining/SC2023/ining_final/v2v_check.txt"
+MAIN="/home/lxr/sc2023/SC2023-dev/build/dawn_cpu_v4" #需要修改为demo地址
+GRAPH_DIR="/home/lxr/sc2023/SC2023-dev/test_graph"
+OUTPUT="/home/lxr/sc2023/SC2023-dev/v3result.txt"
 
 # Set directory path for the graph log files
-LOG_DIR="${GRAPH_DIR}/vtov_log"
+LOG_DIR="${GRAPH_DIR}/v4_12log"
 
 
 # Check if the GRAPH_DIR path exists and contains any mtx files
@@ -30,11 +30,9 @@ for file in ${GRAPH_DIR}/*.mtx; do
     # Extract filename from filepath, without .mtx extension
     filename=$(basename -- "${file}")
     filename="${filename%.*}"
-    echo "Proccessing ${file}!"
+    echo "Proccessing ${file}! Please check the log file for details. log files: ${LOG_DIR}/${filename}_log.txt"
     # Run full_sssp on the mtx file and redirect output to logfile
     "${MAIN}" "${file}" "${OUTPUT}" | tee "${LOG_DIR}/${filename}_log.txt"
-    echo "${MAIN}" "${file}" "${OUTPUT}" | tee "${LOG_DIR}/${filename}_log.txt"
-    echo "${file} proccessed, please check the log file for details. log files: ${LOG_DIR}/${filename}_log.txt"
 done
 
 echo "All done!"
