@@ -78,7 +78,7 @@ OS:  Ubuntu 20.04 and above
 
 For the CPU version, dawn_cpu_v3 is fine-grained parallel version and dawn_cpu_v4 is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
 
-For the lagre-scale graph, you can use dawn_cpu_big, which is the version for large-scale graph, and you need use the convert tool to process the graph first. Convert tool will compress the large-scale graph to graph_CRC.txt and graph_RCC.txt, which is the inputfile of the dawn_cpu_big.
+For the large-scale graph, you can use dawn_cpu_big, which is the version for large-scale graph, and you need use the convert tool to process the graph first. Convert tool will compress the large-scale graph to graph_CRC.txt and graph_RCC.txt, which is the inputfile of the dawn_cpu_big.
 
 4.Release result
 
