@@ -48,8 +48,10 @@ If compilation succeeds without errors, you can run your code as before, for exa
 ```c++
 cd $PROJECT_ROOT/build
 ./dawn_gpu $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
-./dawn_cpu_v2 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
 ./dawn_cpu_v3 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
+./dawn_cpu_v4 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
+./dawn_cpu_big $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt
+./convert $GRAPH_DIR/large_graph.mtx $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt
 ```
 3.Using script. 
 
@@ -76,7 +78,12 @@ OS:  Ubuntu 20.04 and above
 
 For the CPU version, dawn_cpu_v3 is fine-grained parallel version and dawn_cpu_v4 is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
 
+For the lagre-scale graph, you can use dawn_cpu_big, which is the version for large-scale graph, and you need use the convert tool to process the graph first. Convert tool will compress the large-scale graph to graph_CRC.txt and graph_RCC.txt, which is the inputfile of the dawn_cpu_big.
+
 4.Release result
 
-On the test machine, dawn_cpu_v3 and dawn_cpu_v4 achieves average speedup of 1.857x and 6.423x over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738x and 1.579x, over running on the 20-thread i5-13600KF.
+On the test machine with i5-13600KF, dawn_cpu_v3 and dawn_cpu_v4 achieves average speedup of 1.857x and 6.423x over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738x and 1.579x, over running on the 20-thread i5-13600KF.
+
+On the test machine with i5-13600KF, dawn_cpu_big requires about 67 hours to process Graph kmer_V1r, which has 214,005,017 nodes and 465,410,904 edges.
+
 
