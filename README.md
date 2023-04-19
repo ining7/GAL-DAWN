@@ -84,6 +84,6 @@ For the large-scale graph, you can use dawn_cpu_big, which is the version for la
 
 On the test machine with i5-13600KF, dawn_cpu_v3 and dawn_cpu_v4 achieves average speedup of 1.857x and 6.423x over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738x and 1.579x, over running on the 20-thread i5-13600KF.
 
-On the test machine with i5-13600KF, dawn_cpu_big requires about 67 hours to process Graph kmer_V1r, which has 214,005,017 nodes and 465,410,904 edges.
+On the test machine with i5-13600KF, dawn_cpu_big requires about 155 hours to process Graph kmer_V1r, which has 214,005,017 nodes and 465,410,904 edges.
 
 
