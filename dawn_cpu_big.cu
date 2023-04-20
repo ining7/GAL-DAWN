@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
     DAWN dawn;
     DAWN::Matrix matrix;
-    matrix.thread = 20;
+    matrix.thread = 1;
     matrix.interval = 10000;
     dawn.readGraphBig(input_path, col_input_path, row_input_path, matrix);
     dawn.runApspV3(matrix, output_path);
