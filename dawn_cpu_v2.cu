@@ -7,7 +7,7 @@ struct Matrix
 {
     int rows;
     int cols;
-    int nnz;
+    uint64_t nnz;
     bool **input;
     int **dense;
     int *dense_entry;
