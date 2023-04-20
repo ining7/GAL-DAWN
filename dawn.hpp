@@ -43,7 +43,7 @@ public:
 
     void readRCC(Matrix &matrix, string &input_path);
 
-    void readGraphBig(string &col_input_path, string &row_input_path, Matrix &matrix);
+    void readGraphBig(std::string &input_path, string &col_input_path, string &row_input_path, Matrix &matrix);
 
     // convert
     void createGraphconvert(string &input_path, Matrix &matrix, string &col_output_path, string &row_output_path);
@@ -457,20 +457,32 @@ void DAWN::readCRC(DAWN::Matrix &matrix, std::string &input_path)
         std::cerr << "Error opening file " << input_path << std::endl;
         return;
     }
+
     matrix.A = new int *[matrix.rows];
+    matrix.A_entry = new int[matrix.rows];
+#pragma omp parallel for
+    for (int i = 0; i < matrix.rows; i++)
+    {
+        matrix.A_entry[i] = 0;
+    }
+
     string line;
     int rows = 0, cols = 0, k = 0;
     while (getline(file, line))
     {
         stringstream ss(line);
         ss >> cols;
-        if (cols == 0)
+        if (cols == matrix.rows)
         {
-            matrix.A_entry[rows] = 0;
-            rows++;
-            k = 0;
             continue;
         }
+        if ((cols == 0) || (cols == matrix.rows))
+        {
+            if (cols == 0)
+                rows++;
+            continue;
+        }
+
         matrix.A_entry[rows] = cols;
         matrix.A[rows] = new int[cols];
         for (int j = 0; j < cols; j++)
@@ -491,17 +503,26 @@ void DAWN::readRCC(DAWN::Matrix &matrix, std::string &input_path)
         return;
     }
     matrix.B = new int *[matrix.rows];
+    matrix.B_entry = new int[matrix.rows];
+#pragma omp parallel for
+    for (int i = 0; i < matrix.rows; i++)
+    {
+        matrix.B_entry[i] = 0;
+    }
     string line;
     int rows = 0, cols = 0, k = 0;
     while (getline(file, line))
     {
         stringstream ss(line);
         ss >> cols;
-        if (cols == 0)
+        if (cols == matrix.rows)
         {
-            matrix.B_entry[rows] = 0;
-            rows++;
-            k = 0;
+            continue;
+        }
+        if ((cols == 0) || (cols == matrix.rows))
+        {
+            if (cols == 0)
+                rows++;
             continue;
         }
         matrix.B_entry[rows] = cols;
@@ -515,12 +536,12 @@ void DAWN::readRCC(DAWN::Matrix &matrix, std::string &input_path)
     }
 }
 
-void DAWN::readGraphBig(std::string &col_input_path, std::string &row_input_path, DAWN::Matrix &matrix)
+void DAWN::readGraphBig(std::string &input_path, std::string &col_input_path, std::string &row_input_path, DAWN::Matrix &matrix)
 {
-    std::ifstream file(col_input_path);
+    std::ifstream file(input_path);
     if (!file.is_open())
     {
-        std::cerr << "Error opening file " << col_input_path << std::endl;
+        std::cerr << "Error opening file " << input_path << std::endl;
         return;
     }
 
