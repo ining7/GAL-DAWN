@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     DAWN dawn;
     DAWN::Matrix matrix;
     matrix.thread = 20;
-    matrix.interval = 100;
+    matrix.interval = 1;
     dawn.createGraph(input_path, matrix);
     dawn.runApspV4(matrix, output_path);
     return 0;

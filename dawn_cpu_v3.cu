@@ -8,8 +8,8 @@ int main(int argc, char *argv[])
 
     DAWN dawn;
     DAWN::Matrix matrix;
-    matrix.thread = 1;
-    matrix.interval = 100;
+    matrix.thread = 1;   // 运行SSSP的线程
+    matrix.interval = 1; // 请保证打印间隔小于节点总数
     dawn.createGraph(input_path, matrix);
     dawn.runApspV3(matrix, output_path);
     return 0;
