@@ -86,4 +86,6 @@ On the test machine with i5-13600KF, dawn_cpu_v3 and dawn_cpu_v4 achieves averag
 
 On the test machine with i5-13600KF, dawn_cpu_big requires about 155 hours to process Graph kmer_V1r, which has 214,005,017 nodes and 465,410,904 edges.
 
-
+5.New version
+The version of DWAN with better performance in spare graph is under development, which has lower time complexity.
+We will release GPU_v2 as soon as possible.
