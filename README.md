@@ -86,6 +86,9 @@ On the test machine with i5-13600KF, dawn_cpu_v3 and dawn_cpu_v4 achieves averag
 
 On the test machine with i5-13600KF, dawn_cpu_big requires about 155 hours to process Graph kmer_V1r, which has 214,005,017 nodes and 465,410,904 edges.
 
+On the test machine with RTX3080TI, dawn_gpu_v2 achieves average speedup of 6.336x, 1.509X and 5.291x over dawn_cpu_v3, dawn_cpu_v4 and GDS.
+
 5.New version
-The version of DAWN with better performance in sparse graph is under development, which has lower time complexity.
-We will release GPU_v2 as soon as possible.
+GPUv3 is the last component of DAWN1.0, and then we will refactor and rename the version.
+The further optimization of DAWN has achieved a theoretical breakthrough, and we will start making new artifacts as soon as possible.
+DAWN2.0  will have better performance in sparse graph and with lower time complexity.
