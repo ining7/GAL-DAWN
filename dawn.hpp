@@ -1,6 +1,4 @@
 #include "access.h"
-#include "omp.h"
-
 using namespace std;
 
 class DAWN
@@ -19,6 +17,8 @@ public:
         uint64_t entry;
         int thread;
         int interval;
+        int stream;
+        int block_size;
     };
 
     // v3 and V4
@@ -34,16 +34,16 @@ public:
 
     void runApspV4(Matrix &matrix, string &output_path);
 
-    float sssp_p(Matrix &matrix, int source);
+    float sssp_p(DAWN::Matrix &matrix, int source, int *&result);
 
-    float sssp(Matrix &matrix, int source);
+    float sssp(DAWN::Matrix &matrix, int source, int *&result);
 
     // big
     void readCRC(Matrix &matrix, string &input_path);
 
     void readRCC(Matrix &matrix, string &input_path);
 
-    void readGraphBig(std::string &input_path, string &col_input_path, string &row_input_path, Matrix &matrix);
+    void readGraphBig(string &input_path, string &col_input_path, string &row_input_path, Matrix &matrix);
 
     // convert
     void createGraphconvert(string &input_path, Matrix &matrix, string &col_output_path, string &row_output_path);
@@ -189,6 +189,12 @@ void DAWN::createGraph(std::string &input_path, DAWN::Matrix &matrix)
     }
     COO2CRC(matrix, cooMatCol);
     COO2RCC(matrix, cooMatRow);
+    matrix.nnz = 0;
+    for (int i = 0; i < matrix.rows; i++)
+    {
+        matrix.nnz += matrix.A_entry[i];
+    }
+
     cout << "Initialize Input Matrices" << endl;
 }
 
@@ -234,22 +240,37 @@ void DAWN::runApspV3(DAWN::Matrix &matrix, std::string &output_path)
         return;
     }
     float elapsed_time = 0.0;
+    int *result = new int[matrix.rows];
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 
     for (int i = 0; i < matrix.rows; i++)
     {
-        infoprint(i, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
-        float time_tmp = 0.0f;
+
         if (matrix.B_entry[i] == 0)
+        {
+            infoprint(i, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
             continue;
-        time_tmp = sssp_p(matrix, i);
+        }
+        float time_tmp = 0.0f;
+
+        time_tmp = sssp_p(matrix, i, result);
 
         elapsed_time += time_tmp;
-        // 输出结果
+        infoprint(i, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
+
+        for (int j = 0; j < matrix.rows; j++)
+        {
+            if (i != j)
+                outfile << i << " " << j << " " << result[j] << endl;
+        }
     }
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
     std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
+
+    // 输出结果
+    delete[] result;
+    result = nullptr;
     outfile.close();
 }
 
@@ -264,7 +285,7 @@ void DAWN::runApspV4(DAWN::Matrix &matrix, std::string &output_path)
     float elapsed_time = 0.0;
     int proEntry = 0;
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
-#pragma omp parallel for
+#pragma omp parallel for shared(outfile, elapsed_time, proEntry)
     for (int i = 0; i < matrix.rows; i++)
     {
         if (matrix.B_entry[i] == 0)
@@ -272,51 +293,61 @@ void DAWN::runApspV4(DAWN::Matrix &matrix, std::string &output_path)
 #pragma omp critical
             {
                 proEntry++;
-                infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
             }
+            infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
             continue;
         }
         float time_tmp = 0.0f;
-        time_tmp = sssp(matrix, i);
+        int *result = new int[matrix.rows];
+        time_tmp = sssp(matrix, i, result);
 #pragma omp critical
         {
             elapsed_time += time_tmp;
             proEntry++;
+            if (i == (matrix.rows - 100))
+                for (int j = 0; j < matrix.rows; j++)
+                {
+                    if (i != j)
+                        outfile << i << " " << j << " " << result[j] << endl;
+                }
         }
         infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
+        delete[] result;
+        result = nullptr;
     }
+    // Wait for all threads to finish writing before closing the file.
+#pragma omp barrier
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
     std::cout << " Elapsed time: " << elapsed_time / (matrix.thread * 1000) << std::endl;
     outfile.close();
 }
 
-float DAWN::sssp_p(DAWN::Matrix &matrix, int source)
+float DAWN::sssp_p(DAWN::Matrix &matrix, int source, int *&result)
 {
-    int dim = 1;
-    int entry = matrix.B_entry[source];
-    int entry_last = entry;
-    bool *tmp_output = new bool[matrix.rows];
+    uint32_t dim = 1;
+    uint32_t entry_tmp = matrix.B_entry[source];
+    uint32_t entry_last = entry_tmp;
+    bool *output = new bool[matrix.rows];
     bool *input = new bool[matrix.rows];
-    int *result = new int[matrix.rows];
-
 #pragma omp parallel for
     for (int j = 0; j < matrix.rows; j++)
     {
         input[j] = false;
+        output[j] = false;
         result[j] = 0;
     }
 #pragma omp parallel for
     for (int i = 0; i < matrix.B_entry[source]; i++)
     {
         input[matrix.B[source][i]] = true;
+        output[matrix.B[source][i]] = true;
         result[matrix.B[source][i]] = 1;
     }
     auto start = std::chrono::high_resolution_clock::now();
     while (dim < matrix.dim)
     {
         dim++;
-// cout << " dim: " << dim << endl;
 #pragma omp parallel for
         for (int j = 0; j < matrix.rows; j++)
         {
@@ -326,70 +357,72 @@ float DAWN::sssp_p(DAWN::Matrix &matrix, int source)
             {
                 if (input[matrix.A[j][k]] == true)
                 {
-                    tmp_output[j] = true;
+                    output[j] = true;
                     break;
                 }
             }
         }
-
 #pragma omp parallel for
         for (int j = 0; j < matrix.rows; j++)
         {
-            if (result[j] == 0 && tmp_output[j] == true && j != source)
+            if ((result[j] == 0) && (output[j] == true) && (source != j))
             {
                 result[j] = dim;
-#pragma omp atomic
-                entry++;
+#pragma omp critical
+                {
+                    entry_tmp++;
+                }
             }
-            input[j] = tmp_output[j];
-            tmp_output[j] = false;
+            input[j] = output[j];
+            output[j] = false;
         }
-
-        if (entry > entry_last)
+        if ((entry_tmp > entry_last) && (entry_tmp < matrix.rows))
         {
-            entry_last = entry;
-            if (entry >= matrix.rows - 1) // entry = matrix.rows - 1意味着向量填满，无下一轮
+            entry_last = entry_tmp;
+            if (entry_last >= matrix.rows - 1) // entry = matrix.rows - 1意味着向量填满，无下一轮
                 break;
         }
-        else // entry = entry_last表示没有发现新的路径，也不再进行下一轮
+        else // 如果没有新的最短路径产生，则退出循环
+        {
             break;
+        }
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
 
     matrix.entry += entry_last;
 
-    delete[] tmp_output;
-    tmp_output = nullptr;
-    delete[] result;
-    result = nullptr;
+    delete[] output;
+    output = nullptr;
     delete[] input;
     input = nullptr;
 
     return elapsed.count();
 }
 
-float DAWN::sssp(DAWN::Matrix &matrix, int source)
+float DAWN::sssp(DAWN::Matrix &matrix, int source, int *&result)
 {
-    int dim = 1;
-    int entry = matrix.B_entry[source];
-    int entry_last = entry;
-    bool *tmp_output = new bool[matrix.rows];
+    uint32_t dim = 1;
+    uint32_t entry = matrix.B_entry[source];
+    uint32_t entry_last = entry;
+    bool *output = new bool[matrix.rows];
     bool *input = new bool[matrix.rows];
-    int *result = new int[matrix.rows];
 
     for (int j = 0; j < matrix.rows; j++)
     {
         input[j] = false;
+        output[j] = false;
         result[j] = 0;
     }
 
     for (int i = 0; i < matrix.B_entry[source]; i++)
     {
         input[matrix.B[source][i]] = true;
+        output[matrix.B[source][i]] = true;
         result[matrix.B[source][i]] = 1;
     }
     auto start = std::chrono::high_resolution_clock::now();
+
     while (dim < matrix.dim)
     {
         dim++;
@@ -402,47 +435,39 @@ float DAWN::sssp(DAWN::Matrix &matrix, int source)
             {
                 if (input[matrix.A[j][k]] == true)
                 {
-                    tmp_output[j] = true;
+                    output[j] = true;
                     break;
                 }
             }
         }
-
         for (int j = 0; j < matrix.rows; j++)
         {
-            if (result[j] == 0 && tmp_output[j] == true && j != source)
+            if ((result[j] == 0) && (output[j] == true) && (source != j))
             {
                 result[j] = dim;
                 entry++;
             }
-            input[j] = tmp_output[j];
-            tmp_output[j] = false;
+            input[j] = output[j];
+            output[j] = false;
         }
-
-        if (entry > entry_last)
+        if ((entry > entry_last) && (entry < matrix.rows))
         {
             entry_last = entry;
-            if (entry >= matrix.rows - 1) // entry = matrix.rows - 1意味着向量填满，无下一轮
+            if (entry_last >= matrix.rows - 1) // entry = matrix.rows - 1意味着向量填满，无下一轮
                 break;
         }
-        else // entry = entry_last表示没有发现新的路径，也不再进行下一轮
+        else // 如果没有新的最短路径产生，则退出循环
+        {
             break;
+        }
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
 
     matrix.entry += entry_last;
 
-    // for (int j = 0; j < matrix.rows; j++)
-    // {
-    //     if (i != j)
-    //         outfile << i << " " << j << " " << result[j] << endl;
-    // }
-
-    delete[] tmp_output;
-    tmp_output = nullptr;
-    delete[] result;
-    result = nullptr;
+    delete[] output;
+    output = nullptr;
     delete[] input;
     input = nullptr;
 
