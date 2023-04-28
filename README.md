@@ -53,7 +53,8 @@ cd $PROJECT_ROOT/build
 ./dawn_cpu_big $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt
 ./convert $GRAPH_DIR/large_graph.mtx $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt
 ```
-3.Using script. 
+
+3.Using script.
 
 ```c++
 cd ..
@@ -63,9 +64,10 @@ GRAPH_DIR = ${test_graph}
 OUTPUT= ${outputfile}
 LOG_DIR= ${GRAPH_DIR}/log
 ESC && wq
-sudo chmod +x ../process.sh 
+sudo chmod +x ../process.sh
 sudo bash ../process.sh
 ```
+
 Please note that the normal operation of the batch script needs to ensure that the test machine meets the minimum requirements. Insufficient memory or GPU memory needs to be manually adjusted according to amount of resources.
 
 ```c++
@@ -74,6 +76,7 @@ RAM: 8GB or more
 GPU: NVIDIA graphics cards supporting above CUDA 11.0
 OS:  Ubuntu 20.04 and above
 ```
+
 4.Release version
 
 For the CPU version, dawn_cpu_v3 is fine-grained parallel version and dawn_cpu_v4 is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
@@ -89,6 +92,5 @@ On the test machine with i5-13600KF, dawn_cpu_big requires about 155 hours to pr
 On the test machine with RTX3080TI, dawn_gpu_v2 achieves average speedup of 6.336x, 1.509X and 5.291x over dawn_cpu_v3, dawn_cpu_v4 and GDS.
 
 5.New version
-GPUv3 is the last component of DAWN1.0, and then we will refactor and rename the version.
-The further optimization of DAWN has achieved a theoretical breakthrough, and we will start making new artifacts as soon as possible.
-DAWN2.0  will have better performance in sparse graph and with lower time complexity.
+The further optimization of DAWN has achieved a theoretical breakthrough, and we will start making new artifacts as soon as possible. DAWN2.0 will have better performance in sparse graph and with lower time complexity.
+The version of DWAN on the weighted graph will be include in DAWN2.0.
