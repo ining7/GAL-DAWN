@@ -1,4 +1,4 @@
-#include "dawn.hpp"
+#include "dawn.cuh"
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     DAWN dawn;
     DAWN::Matrix matrix;
     matrix.thread = 20;
-    matrix.interval = 10000;
+    matrix.interval = 1;
     dawn.createGraphconvert(input_path, matrix, col_output_path, row_output_path);
     return 0;
 }

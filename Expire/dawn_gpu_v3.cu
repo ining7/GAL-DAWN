@@ -16,7 +16,6 @@ void runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
     float elapsed_time = 0.0;
     int proEntry = 0;
 
-    omp_set_dynamic(true);
     DAWN dawn;
 
     // Copy data to device
@@ -55,7 +54,7 @@ void runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
     }
 
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
-
+    auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < matrix.rows; i++)
     {
 
@@ -75,18 +74,21 @@ void runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
         proEntry++;
         dawn.infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
 
-        // // Output
-        // for (int j = 0; j < matrix.rows; j++)
-        // {
-        //     if (i != j)
-        //         outfile << i << " " << j << " " << result[j] << endl;
-        // }
+        // Output
+        if (matrix.prinft == true)
+            for (int j = 0; j < matrix.rows; j++)
+            {
+                if (i != j)
+                    outfile << i << " " << j << " " << result[j] << endl;
+            }
         delete[] result;
         result = nullptr;
     }
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
-    std::cout << " Elapsed time: " << elapsed_time / (matrix.thread * 1000) << std::endl;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << " Elapsed time: " << elapsed.count() / (matrix.thread * 1000) << std::endl;
 
     outfile.close();
 
@@ -142,8 +144,8 @@ float sssp_gpu(DAWN::Matrix &matrix, int source, cudaStream_t streams, int *d_A_
     // Launch kernel
     int block_size = matrix.block_size;
     int num_blocks = (matrix.cols + block_size - 1) / block_size;
+    int entry_max = matrix.rows - 1;
 
-    auto start = std::chrono::high_resolution_clock::now();
     while (dim < matrix.dim)
     {
         dim++;
@@ -153,7 +155,7 @@ float sssp_gpu(DAWN::Matrix &matrix, int source, cudaStream_t streams, int *d_A_
         if ((entry > entry_last) && (entry < matrix.rows))
         {
             entry_last = entry;
-            if (entry_last >= matrix.rows - 1)
+            if (entry_last >= entry_max)
                 break;
         }
         else
@@ -161,9 +163,8 @@ float sssp_gpu(DAWN::Matrix &matrix, int source, cudaStream_t streams, int *d_A_
             break;
         }
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed = end - start;
 
+    auto start = std::chrono::high_resolution_clock::now();
     // Copy result vector
     cudaMemcpyAsync(result, d_result, sizeof(int) * matrix.rows, cudaMemcpyDeviceToHost, streams);
     matrix.entry += entry_last;
@@ -177,7 +178,8 @@ float sssp_gpu(DAWN::Matrix &matrix, int source, cudaStream_t streams, int *d_A_
     cudaFree(d_output);
     cudaFree(d_result);
     cudaFree(d_entry);
-
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
     return elapsed.count();
 }
 
@@ -219,6 +221,7 @@ int main(int argc, char *argv[])
     int stream = atoi(argv[3]);
     int block_size = atoi(argv[4]);
     int interval = atoi(argv[5]);
+    int prinft = atoi(argv[6]);
 
     std::ifstream file(input_path);
     if (!file.is_open())
@@ -233,6 +236,7 @@ int main(int argc, char *argv[])
     matrix.interval = interval;     // 100
     matrix.stream = stream;         // 32
     matrix.block_size = block_size; // 4
+    matrix.prinft = prinft;
 
     dawn.createGraph(input_path, matrix);
     runApspGpu(matrix, output_path);
