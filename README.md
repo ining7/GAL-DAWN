@@ -38,8 +38,7 @@ GRAPH_DIR="to_your_graph_path"
 
 ```c++
 cd $PROJECT_ROOT
-mkdir build
-cd build
+mkdir build && cd build
 cmake .. && make -j
 ```
 
@@ -47,12 +46,22 @@ If compilation succeeds without errors, you can run your code as before, for exa
 
 ```c++
 cd $PROJECT_ROOT/build
-./dawn_gpu $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
-./dawn_cpu_v3 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
-./dawn_cpu_v4 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt
-./dawn_cpu_big $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt
+./dawn_cpu_v1 CG $GRAPH_DIR/mouse_gene.mtx ../outpu.txt 100 false 0
+
+./dawn_gpu_v1 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt 8 4 100 false
+
+./dawn_cpu_v1 BCG $GRAPH_DIR/graph.mxt $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt 10000 false 0
+
 ./convert $GRAPH_DIR/large_graph.mtx $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt
 ```
+
+When the version is built, it will SSSP applications, which can be used directly. 
+
+Please refer to decument/Decumention_v1 for commands.
+
+If you need to use DAWN in your own solution, please check the source code under the **sssp** folder and call it.
+
+If you do not have the conditions to use NVCC, you can enter the **cpu** folder, use GCC or clang to build applications that can only run on the cpu. (GCC 9.4.0 and above, clang 10.0.0 and above)
 
 3.Using script.
 
@@ -73,24 +82,28 @@ Please note that the normal operation of the batch script needs to ensure that t
 ```c++
 CPU: Multi-threaded processor supporting OpenMP API
 RAM: 8GB or more
-GPU: NVIDIA graphics cards supporting above CUDA 11.0
+GPU: 1GB or more
+Compiler: NVCC of CUDA 11.0 above
 OS:  Ubuntu 20.04 and above
 ```
 
 4.Release version
 
-For the CPU version, dawn_cpu_v3 is fine-grained parallel version and dawn_cpu_v4 is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
+For the CPU version, FG is fine-grained parallel version and CG is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
 
-For the large-scale graph, you can use dawn_cpu_big, which is the version for large-scale graph, and you need use the convert tool to process the graph first. Convert tool will compress the large-scale graph to graph_CRC.txt and graph_RCC.txt, which is the inputfile of the dawn_cpu_big.
+For the large-scale graph, you can use BFG and BCG, which is the version for large-scale graph, and you need use the convert tool to process the graph first. Convert tool will compress the large-scale graph to graph_CRC.txt and graph_RCC.txt, which is the inputfile.
+
+For the GPU version, you can use Default and Big, please make sure that there is enough GPU memory for the graph.
 
 4.Release result
 
-On the test machine with i5-13600KF, dawn_cpu_v3 and dawn_cpu_v4 achieves average speedup of 1.857x and 6.423x over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738x and 1.579x, over running on the 20-thread i5-13600KF.
+On the test machine with i5-13600KF, FG and CG achieves average speedup of 1.857x and 6.423x over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738x and 1.579x, over running on the 20-thread i5-13600KF.
 
-On the test machine with i5-13600KF, dawn_cpu_big requires about 155 hours to process Graph kmer_V1r, which has 214,005,017 nodes and 465,410,904 edges.
+On the test machine with i5-13600KF, BFG need 10GB free memory to solve the Graph kmer_V1r with 214M nodes and 465M edges, which require average 92 minutes for 21.4K nodes in the graph and average 0.257 seconds for SSSP. For Graph wiki-Talk with 2.39M nodes and 5M egdes, DAWN can compelet work of APSP problem in 1475 secconds. We hope that our work can make it possible for everyone to widely use personal computers to analyze the graphs over 200M nodes, although at present we need a little patience to wait for the results.
 
-On the test machine with RTX3080TI, dawn_gpu_v2 achieves average speedup of 6.336x, 1.509X and 5.291x over dawn_cpu_v3, dawn_cpu_v4 and GDS.
+On the test machine with RTX3080TI, dawn_gpu_v1 achieves average speedup of 6.336x, 1.509X and 5.291x over FG, CG and GDS.
 
 5.New version
 The further optimization of DAWN has achieved a theoretical breakthrough, and we will start making new artifacts as soon as possible. DAWN2.0 will have better performance in sparse graph and with lower time complexity.
+
 The version of DWAN on the weighted graph will be include in DAWN2.0.
