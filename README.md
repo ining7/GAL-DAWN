@@ -1,4 +1,4 @@
-# SC2023
+# DAWN
 
 0. Before getting started
 
