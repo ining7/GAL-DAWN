@@ -103,9 +103,7 @@ On the test machine with RTX3080TI, dawn_gpu_v1 achieves average speedup of 6.33
 
 ## 6.New version
 
-The further optimization of DAWN has achieved a theoretical breakthrough, and we will start making new artifacts as soon as possible. DAWN2.0 will have better performance in sparse graph and with lower time complexity.
-
-The version of DWAN on the weighted graph will be include in DAWN2.0.
+The version of DWAN on the weighted graph will be include in DAWN2.0, and we will start making new artifacts as soon as possible.
 
 ## 7.Decumentation
 
