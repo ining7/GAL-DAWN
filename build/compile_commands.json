@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/home/lxr/sc2023/SC2023/build",
+  "command": "/usr/local/cuda-12.0/bin/nvcc -forward-unknown-to-host-compiler -I/home/lxr/sc2023/SC2023/include  -O3 -gencode arch=compute_86,code=sm_86 -Xcompiler -fopenmp -g -std=c++14 --generate-code=arch=compute_86,code=[compute_86,sm_86] -x cu -c /home/lxr/sc2023/SC2023/apsp/dawn_cpu_v1.cu -o CMakeFiles/dawn_cpu_v1.dir/apsp/dawn_cpu_v1.cu.o",
+  "file": "/home/lxr/sc2023/SC2023/apsp/dawn_cpu_v1.cu",
+  "output": "CMakeFiles/dawn_cpu_v1.dir/apsp/dawn_cpu_v1.cu.o"
+},
+{
+  "directory": "/home/lxr/sc2023/SC2023/build",
+  "command": "/usr/local/cuda-12.0/bin/nvcc -forward-unknown-to-host-compiler -I/home/lxr/sc2023/SC2023/include  -O3 -gencode arch=compute_86,code=sm_86 -Xcompiler -fopenmp -g -std=c++14 --generate-code=arch=compute_86,code=[compute_86,sm_86] -x cu -c /home/lxr/sc2023/SC2023/apsp/dawn_gpu_v1.cu -o CMakeFiles/dawn_gpu_v1.dir/apsp/dawn_gpu_v1.cu.o",
+  "file": "/home/lxr/sc2023/SC2023/apsp/dawn_gpu_v1.cu",
+  "output": "CMakeFiles/dawn_gpu_v1.dir/apsp/dawn_gpu_v1.cu.o"
+},
+{
+  "directory": "/home/lxr/sc2023/SC2023/build",
+  "command": "/usr/local/cuda-12.0/bin/nvcc -forward-unknown-to-host-compiler -I/home/lxr/sc2023/SC2023/include  -O3 -gencode arch=compute_86,code=sm_86 -Xcompiler -fopenmp -g -std=c++14 --generate-code=arch=compute_86,code=[compute_86,sm_86] -x cu -c /home/lxr/sc2023/SC2023/sssp/dawn_cpu_sssp.cu -o CMakeFiles/dawn_cpu_sssp.dir/sssp/dawn_cpu_sssp.cu.o",
+  "file": "/home/lxr/sc2023/SC2023/sssp/dawn_cpu_sssp.cu",
+  "output": "CMakeFiles/dawn_cpu_sssp.dir/sssp/dawn_cpu_sssp.cu.o"
+},
+{
+  "directory": "/home/lxr/sc2023/SC2023/build",
+  "command": "/usr/local/cuda-12.0/bin/nvcc -forward-unknown-to-host-compiler -I/home/lxr/sc2023/SC2023/include  -O3 -gencode arch=compute_86,code=sm_86 -Xcompiler -fopenmp -g -std=c++14 --generate-code=arch=compute_86,code=[compute_86,sm_86] -x cu -c /home/lxr/sc2023/SC2023/sssp/dawn_gpu_sssp.cu -o CMakeFiles/dawn_gpu_sssp.dir/sssp/dawn_gpu_sssp.cu.o",
+  "file": "/home/lxr/sc2023/SC2023/sssp/dawn_gpu_sssp.cu",
+  "output": "CMakeFiles/dawn_gpu_sssp.dir/sssp/dawn_gpu_sssp.cu.o"
+},
+{
+  "directory": "/home/lxr/sc2023/SC2023/build",
+  "command": "/usr/local/cuda-12.0/bin/nvcc -forward-unknown-to-host-compiler -I/home/lxr/sc2023/SC2023/include  -O3 -gencode arch=compute_86,code=sm_86 -Xcompiler -fopenmp -g -std=c++14 --generate-code=arch=compute_86,code=[compute_86,sm_86] -x cu -c /home/lxr/sc2023/SC2023/tool/convert.cu -o CMakeFiles/convert.dir/tool/convert.cu.o",
+  "file": "/home/lxr/sc2023/SC2023/tool/convert.cu",
+  "output": "CMakeFiles/convert.dir/tool/convert.cu.o"
+}
+]

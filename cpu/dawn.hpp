@@ -353,7 +353,7 @@ void DAWN::runSsspCpu(DAWN::Matrix &matrix, std::string &output_path)
     if (matrix.prinft)
         for (int j = 0; j < matrix.rows; j++)
         {
-            if (source != j)
+            if (source != j && (result[j] != 0))
                 outfile << source << " " << j << " " << result[j] << endl;
         }
 

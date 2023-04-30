@@ -40,9 +40,9 @@ public:
 
     void runSsspCpu(DAWN::Matrix &matrix, std::string &output_path);
 
-    float sssp_p(DAWN::Matrix &matrix, int source, int *&result);
+    float sssp_p(DAWN::Matrix &matrix, int source, std::string &output_path);
 
-    float sssp(DAWN::Matrix &matrix, int source, int *&result);
+    float sssp(DAWN::Matrix &matrix, int source, std::string &output_path);
 
     // big
     void readCRC(Matrix &matrix, string &input_path);
@@ -245,56 +245,27 @@ void DAWN::readGraph(std::string &input_path, DAWN::Matrix &matrix, std::vector<
 
 void DAWN::runApspV3(DAWN::Matrix &matrix, std::string &output_path)
 {
-    std::ofstream outfile(output_path);
-    if (!outfile.is_open())
-    {
-        std::cerr << "Error opening file " << output_path << std::endl;
-        return;
-    }
     float elapsed_time = 0.0;
-    int *result = new int[matrix.rows];
+
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 
     for (int i = 0; i < matrix.rows; i++)
     {
-
         if (matrix.B_entry[i] == 0)
         {
             infoprint(i, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
             continue;
         }
-        float time_tmp = 0.0f;
-
-        time_tmp = sssp_p(matrix, i, result);
-
-        elapsed_time += time_tmp;
+        elapsed_time += sssp_p(matrix, i, output_path);
         infoprint(i, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
-
-        if (matrix.prinft && (i == matrix.source))
-            for (int j = 0; j < matrix.rows; j++)
-            {
-                if (i != j)
-                    outfile << i << " " << j << " " << result[j] << endl;
-            }
     }
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
-    // Output elapsed time and free remaining resources
+    // Output elapsed time
     std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
-
-    // 输出结果
-    delete[] result;
-    result = nullptr;
-    outfile.close();
 }
 
 void DAWN::runApspV4(DAWN::Matrix &matrix, std::string &output_path)
 {
-    std::ofstream outfile(output_path);
-    if (!outfile.is_open())
-    {
-        std::cerr << "Error opening file " << output_path << std::endl;
-        return;
-    }
     float elapsed_time = 0.0;
     int proEntry = 0;
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
@@ -303,34 +274,24 @@ void DAWN::runApspV4(DAWN::Matrix &matrix, std::string &output_path)
     {
         if (matrix.B_entry[i] == 0)
         {
-            ++proEntry;
-            infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
+#pragma omp critical
+            {
+                ++proEntry;
+                infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
+            }
             continue;
         }
-        float time_tmp = 0.0f;
-        int *result = new int[matrix.rows];
-        time_tmp = sssp(matrix, i, result);
+        float time_tmp = sssp(matrix, i, output_path);
 #pragma omp critical
         {
             elapsed_time += time_tmp;
-            proEntry++;
-            if (matrix.prinft && (i == matrix.source))
-                for (int j = 0; j < matrix.rows; j++)
-                {
-                    if (i != j)
-                        outfile << i << " " << j << " " << result[j] << endl;
-                }
+            ++proEntry;
         }
         infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
-        delete[] result;
-        result = nullptr;
     }
-    // Wait for all threads to finish writing before closing the file.
-#pragma omp barrier
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
     std::cout << " Elapsed time: " << elapsed_time / (matrix.thread * 1000) << std::endl;
-    outfile.close();
 }
 
 void DAWN::runSsspCpu(DAWN::Matrix &matrix, std::string &output_path)
@@ -349,35 +310,24 @@ void DAWN::runSsspCpu(DAWN::Matrix &matrix, std::string &output_path)
         exit(0);
     }
 
-    int *result = new int[matrix.rows];
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 
-    float elapsed_time = sssp_p(matrix, source, result);
+    float elapsed_time = sssp_p(matrix, source, output_path);
 
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
     std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
-
-    if (matrix.prinft)
-        for (int j = 0; j < matrix.rows; j++)
-        {
-            if (source != j)
-                outfile << source << " " << j << " " << result[j] << endl;
-        }
-
-    // 输出结果
-    delete[] result;
-    result = nullptr;
     outfile.close();
 }
 
-float DAWN::sssp_p(DAWN::Matrix &matrix, int source, int *&result)
+float DAWN::sssp_p(DAWN::Matrix &matrix, int source, std::string &output_path)
 {
     uint32_t dim = 1;
     uint32_t entry = matrix.B_entry[source];
     uint32_t entry_last = entry;
     bool *output = new bool[matrix.rows];
     bool *input = new bool[matrix.rows];
+    int *result = new int[matrix.rows];
 #pragma omp parallel for
     for (int j = 0; j < matrix.rows; j++)
     {
@@ -416,7 +366,8 @@ float DAWN::sssp_p(DAWN::Matrix &matrix, int source, int *&result)
             if ((result[j] == 0) && (output[j] == true) && (source != j))
             {
                 result[j] = dim;
-                ++entry;
+#pragma omp atomic
+                entry++;
             }
             input[j] = output[j];
             output[j] = false;
@@ -441,18 +392,36 @@ float DAWN::sssp_p(DAWN::Matrix &matrix, int source, int *&result)
     output = nullptr;
     delete[] input;
     input = nullptr;
+    // 输出结果
+    if ((matrix.prinft) && (source == matrix.source))
+    {
+        std::ofstream outfile(output_path);
+        if (!outfile.is_open())
+        {
+            std::cerr << "Error opening file " << output_path << std::endl;
+            return 0.0;
+        }
+        for (int j = 0; j < matrix.rows; j++)
+        {
+            if ((source != j) && (result[j] != 0))
+                outfile << source << " " << j << " " << result[j] << endl;
+        }
+        outfile.close();
+    }
+    delete[] result;
+    result = nullptr;
 
     return elapsed.count();
 }
 
-float DAWN::sssp(DAWN::Matrix &matrix, int source, int *&result)
+float DAWN::sssp(DAWN::Matrix &matrix, int source, std::string &output_path)
 {
     uint32_t dim = 1;
     uint32_t entry = matrix.B_entry[source];
     uint32_t entry_last = entry;
     bool *output = new bool[matrix.rows];
     bool *input = new bool[matrix.rows];
-
+    int *result = new int[matrix.rows];
     for (int j = 0; j < matrix.rows; j++)
     {
         input[j] = false;
@@ -515,6 +484,24 @@ float DAWN::sssp(DAWN::Matrix &matrix, int source, int *&result)
     output = nullptr;
     delete[] input;
     input = nullptr;
+    // 输出结果
+    if ((matrix.prinft) && (source == matrix.source))
+    {
+        std::ofstream outfile(output_path);
+        if (!outfile.is_open())
+        {
+            std::cerr << "Error opening file " << output_path << std::endl;
+            return 0.0;
+        }
+        for (int j = 0; j < matrix.rows; j++)
+        {
+            if ((source != j) && (result[j] != 0))
+                outfile << source << " " << j << " " << result[j] << endl;
+        }
+        outfile.close();
+    }
+    delete[] result;
+    result = nullptr;
 
     return elapsed.count();
 }
@@ -904,14 +891,16 @@ void DAWN::runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
         proEntry++;
         dawn.infoprint(proEntry, matrix.rows, matrix.interval, matrix.thread, elapsed_time);
         // Output
-        if (matrix.prinft == true)
+        if ((matrix.prinft == true) && (i == matrix.source))
+        {
             for (int j = 0; j < matrix.rows; j++)
             {
-                if (i != j)
+                if (i != j && (result[j] > 1))
                     outfile << i << " " << j << " " << result[j] << endl;
             }
-        delete[] result;
-        result = nullptr;
+            delete[] result;
+            result = nullptr;
+        }
     }
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources

@@ -1,0 +1,96 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "convert",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "convert::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-convert-Debug-a2d2d0acb5196685b8ca.json",
+					"name" : "convert",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dawn_cpu_sssp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dawn_cpu_sssp-Debug-305f6845b012f421b3ee.json",
+					"name" : "dawn_cpu_sssp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dawn_cpu_v1::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dawn_cpu_v1-Debug-fca452c8e22fe5384621.json",
+					"name" : "dawn_cpu_v1",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dawn_gpu_sssp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dawn_gpu_sssp-Debug-3674cf3b1ac162cc68ba.json",
+					"name" : "dawn_gpu_sssp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dawn_gpu_v1::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dawn_gpu_v1-Debug-cff27489f08ccb8fbacf.json",
+					"name" : "dawn_gpu_v1",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/lxr/sc2023/SC2023/build",
+		"source" : "/home/lxr/sc2023/SC2023"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}
