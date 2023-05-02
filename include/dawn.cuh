@@ -298,13 +298,6 @@ void DAWN::runApspV4(DAWN::Matrix &matrix, std::string &output_path)
 
 void DAWN::runSsspCpu(DAWN::Matrix &matrix, std::string &output_path)
 {
-    std::ofstream outfile(output_path);
-    if (!outfile.is_open())
-    {
-        std::cerr << "Error opening file " << output_path << std::endl;
-        return;
-    }
-
     int source = matrix.source;
     if (matrix.B_entry[source] == 0)
     {
@@ -319,7 +312,6 @@ void DAWN::runSsspCpu(DAWN::Matrix &matrix, std::string &output_path)
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
     std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
-    outfile.close();
 }
 
 float DAWN::sssp_p(DAWN::Matrix &matrix, int source, std::string &output_path)
@@ -822,12 +814,6 @@ void DAWN::infoprint(int entry, int total, int interval, int thread, float elaps
 
 void DAWN::runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
 {
-    std::ofstream outfile(output_path);
-    if (!outfile.is_open())
-    {
-        std::cerr << "Error opening file " << output_path << std::endl;
-        return;
-    }
     float elapsed_time = 0.0;
     int proEntry = 0;
 
@@ -886,8 +872,6 @@ void DAWN::runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
     // Output elapsed time and free remaining resources
     std::cout << " Elapsed time: " << elapsed_time / (matrix.thread * 1000) << std::endl;
-
-    outfile.close();
 
     // Synchronize streams
     for (int i = 0; i < matrix.stream; i++)
