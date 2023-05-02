@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 CMakeFiles/dawn_cpu_sssp.dir/dawn_cpu_sssp.cpp.o -o dawn_cpu_sssp  /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.so 

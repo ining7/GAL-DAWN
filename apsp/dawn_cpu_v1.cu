@@ -12,11 +12,15 @@ int main(int argc, char *argv[])
         string output_path = argv[3];
         matrix.interval = atoi(argv[4]); // 请保证打印间隔小于节点总数，建议10-1000
         string prinft = argv[5];
+        matrix.source = atoi(argv[6]);
         if (prinft == "true")
+        {
             matrix.prinft = true;
+            cout << "Prinft source " << matrix.source << endl;
+        }
         else
             matrix.prinft = false;
-        matrix.source = atoi(argv[6]);
+
         if (algo == "CG")
         {
             matrix.thread = 20;
