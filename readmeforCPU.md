@@ -1,6 +1,6 @@
 # SC2023
 
-1. Download testing data
+1.Download testing data
 
 Unzip the compressed package and put it in the directory you need
 
@@ -11,7 +11,7 @@ URL=https://www.scidb.cn/s/6BjM3a
 GRAPH_DIR="to_your_graph_path"
 ```
 
-2. RUN
+2.RUN
 
 ```c++
 cd $PROJECT_ROOT

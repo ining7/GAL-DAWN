@@ -34,7 +34,7 @@ URL=https://www.scidb.cn/s/6BjM3a
 GRAPH_DIR="to_your_graph_path"
 ```
 
-## 3. RUN
+## 3. Build and RUN
 
 ```c++
 cd $PROJECT_ROOT
@@ -46,20 +46,17 @@ If compilation succeeds without errors, you can run your code as before, for exa
 
 ```c++
 cd $PROJECT_ROOT/build
-./dawn_cpu_v1 CG $GRAPH_DIR/mouse_gene.mtx ../outpu.txt 100 false 0
+./dawn_cpu_v1 CG $GRAPH_DIR/mouse_gene.mtx ../output.txt 100 false 0
 
-./dawn_gpu_v1 $GRAPH_DIR/mouse_gene.mtx ../outpu.txt 8 4 100 false
+./dawn_gpu_v1 Default $GRAPH_DIR/mouse_gene.mtx ../output.txt 4 256 100 false 0
 
-./dawn_cpu_v1 BCG $GRAPH_DIR/graph.mxt $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt 10000 false 0
-
-./convert $GRAPH_DIR/large_graph.mtx $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt
 ```
 
 When the version is built, it will also prepare SSSP applications, which can be used directly.
 
 If you need to use DAWN in your own solution, please check the source code under the **sssp** folder and call it.
 
-If you do not have the conditions to use NVCC, you can enter the **cpu** folder, use GCC or clang to build applications that can only run on the cpu. (GCC 9.4.0 and above, clang 10.0.0 and above)
+If you do not have the conditions to use NVCC, you need to comment out all GPU-related statements in **cmakelists.txt**, then use GCC or clang to build applications that can only run on the cpu. (GCC 9.4.0 and above, clang 10.0.0 and above)
 
 ## 4.Using script
 
@@ -89,15 +86,27 @@ OS:  Ubuntu 20.04 and above
 
 For the CPU version, FG is fine-grained parallel version and CG is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
 
-For the large-scale graph, you can use BFG and BCG, which is the version for large-scale graph, and you need use the convert tool to process the graph first. Convert tool will compress the large-scale graph to graph_CRC.txt and graph_RCC.txt, which is the inputfile.
+For the GPU version, you can use Default, please make sure that there is enough GPU memory for the graph.
 
-For the GPU version, you can use Default and Big, please make sure that there is enough GPU memory for the graph.
+We provide a faster GPU kernel function which uses a lot of shared memory. Compared with the Function **vecMatOpeCsr**, the **vecMatOpeCsrShare** will achieve a speedup above 1.4&times;. However, due to large differences in hardware parameters such as shared memory in various devices, we do not use this function in the **Default** mode. You can check the maximum share memory per block as foolows,
+
+```c++
+int device;
+cudaDeviceProp props;
+cudaGetDevice(&device);
+cudaGetDeviceProperties(&props, device);
+printf("Max shared memory per block: %ld\n", props.sharedMemPerBlock);
+```
+
+If you are sure that the size of the thread block and the scale of the graph is set reasonably according to the device parameters. If the requested shared memory exceeds the maximum available shared memory, the **vecMatOpeCsrShare** function will return an incorrect result.
+
+Please modify the **graph.share** in the Default mode in the **dawn_gpu_v1.cu** file to **true**. If shared memory is sufficient, you can modify the **graph.stream** at the same time (the default vaule is 1). And then, you can test the fastest version of DAWN.
 
 ## 5.Release result
 
-On the test machine with i5-13600KF, FG and CG achieves average speedup of 1.857x and 6.423x over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738x and 1.579x, over running on the 20-thread i5-13600KF.
+On the test machine with i5-13600KF, FG and CG achieves average speedup of 1.857&times; and 7.632&times; over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738&times; and 2.231&times;, over running on the 20-thread i5-13600KF.
 
-On the test machine with i5-13600KF, BFG need 10GB free memory to solve the Graph kmer_V1r with 214M nodes and 465M edges, which require average 92 minutes for 21.4K nodes in the graph and average 0.257 seconds for SSSP. For Graph wiki-Talk with 2.39M nodes and 5M egdes, DAWN can compelet work of APSP problem in 1475 secconds. We hope that our work can make it possible for everyone to widely use personal computers to analyze the graphs over 200M nodes, although at present we need a little patience to wait for the results.
+On the test machine with i5-13600KF, CG need 10GB free memory to solve the Graph kmer_V1r with 214M nodes and 465M edges, which require average 92 minutes for 21.4K nodes in the graph and average 0.257 seconds for SSSP. For Graph wiki-Talk with 2.39M nodes and 5M egdes, DAWN can compelet work of APSP problem in 1475 secconds. We hope that our work can make it possible for everyone to widely use personal computers to analyze the graphs over 200M nodes, although at present we need a little patience to wait for the results.
 
 On the test machine with RTX3080TI, dawn_gpu_v1 achieves average speedup of 6.336x, 1.509X and 5.291x over FG, CG and GDS.
 

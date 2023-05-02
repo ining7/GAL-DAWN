@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
 {
     string algo = argv[1];
     DAWN dawn;
-    DAWN::Matrix matrix;
+    DAWN::Graph matrix;
     if ((algo == "FG") || (algo == "CG"))
     {
         string input_path = argv[2];

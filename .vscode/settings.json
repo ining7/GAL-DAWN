@@ -5,6 +5,7 @@
     "iosfwd": "cpp",
     "new": "cpp",
     "*.tcc": "cpp",
+<<<<<<< HEAD
     "fstream": "cpp",
     "cctype": "cpp",
     "clocale": "cpp",
@@ -77,3 +78,8 @@
     "variant": "cpp"
   }
 }
+=======
+    "fstream": "cpp"
+  }
+}
+>>>>>>> 22a56c9ce02ec9ac66666088b26aadfb13205966

@@ -3,16 +3,18 @@
 # Use "sudo bash process_full_sssp.sh" to run the script
 
 # Modify the absolute path of MAIN and GRAPH_DIR, or the relative path based on the directory where it is located.
-MAIN="/home/lxr/sc2023/SC2023/build/dawn_cpu_v1" #需要修改为demo地址
-GRAPH_DIR="/home/lxr/sc2023/test_graph"
-OUTPUT="/home/lxr/sc2023/SC2023/gpu.txt"
-Algorithm="CG"
+MAIN="/home/lxr/code/SC2023/build/dawn_gpu_v1" #需要修改为demo地址
+GRAPH_DIR="/home/lxr/code/test_graph"
+OUTPUT="/home/lxr/code/SC2023/gpu.txt"
+Algorithm="Test"
 Interval="200"
 Prinft="false"
 Source="0"
+Stream="4"
+Block_size="1024"
 
 # Set directory path for the graph log files
-LOG_DIR="${GRAPH_DIR}/v1_log"
+LOG_DIR="${GRAPH_DIR}/log"
 
 
 # Check if the GRAPH_DIR path exists and contains any mtx files
@@ -37,8 +39,9 @@ for file in ${GRAPH_DIR}/*.mtx; do
     echo "Proccessing ${file}! Please check the log file for details. log files: ${LOG_DIR}/${filename}_log.txt"
     echo "${MAIN} ${Algorithm} ${file} ${OUTPUT} ${Interval} ${Prinft} ${Source}| tee ${LOG_DIR}/${filename}_log.txt"
     # Run full_sssp on the mtx file and redirect output to logfile
-    "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Interval}" "${Prinft}" "${Source}"| tee "${LOG_DIR}/${filename}_log.txt"
-    #"${MAIN}" "${file}" "${OUTPUT}" 4 4 100 | tee "${LOG_DIR}/${filename}_log.txt"
+    # "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Interval}" "${Prinft}" "${Source}"| tee "${LOG_DIR}/${filename}_log.txt"
+    # "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Stream}" "${Block_size}" "${Interval}" "${Prinft}" "${Source}" | tee "${LOG_DIR}/${filename}_log.txt"
+    "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Block_size}" "${Prinft}" "${Source}" | tee "${LOG_DIR}/${filename}_log.txt"
 done
 
 echo "All done!"
