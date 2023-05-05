@@ -1,1 +1,0 @@
-/usr/bin/c++  -O3 CMakeFiles/convert.dir/convert.cpp.o -o convert  /usr/lib/gcc/x86_64-linux-gnu/9/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.so 
