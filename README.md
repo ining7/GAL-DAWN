@@ -17,10 +17,10 @@ set(CMAKE_CUDA_ARCHITECTURES "86")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 -gencode arch=compute_xx,code=sm_xx")
 ```
 
-Set the CMAKE_CUDA_COMPILER to the path of your NVCC, for example, "/usr/local/cuda-12.0/bin/nvcc"
+Set the CMAKE_CUDA_COMPILER to the path of your NVCC, for example,
 
 ```c++
-set(CMAKE_CUDA_COMPILER "/usr/local/cuda-12.0/bin/nvcc")
+set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 ```
 
 ## 2.Download testing data
