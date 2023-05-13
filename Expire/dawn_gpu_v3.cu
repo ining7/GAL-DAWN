@@ -2,10 +2,10 @@
 using namespace std;
 
 __global__ void vecMatOpe(int rows, int *d_A_entry, int *d_A, bool *input, bool *output, int *result, int source, int dim, int *entry);
-void runApspGpu(DAWN::Matrix &matrix, std::string &output_path);
-float sssp_gpu(DAWN::Matrix &matrix, int source, cudaStream_t streams, int *d_A_entry, int *d_A, int *&result);
+void runApspGpu(DAWN::Graph &matrix, std::string &output_path);
+float sssp_gpu(DAWN::Graph &matrix, int source, cudaStream_t streams, int *d_A_entry, int *d_A, int *&result);
 
-void runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
+void runApspGpu(DAWN::Graph &matrix, std::string &output_path)
 {
     std::ofstream outfile(output_path);
     if (!outfile.is_open())
@@ -41,7 +41,7 @@ void runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
         matrix.A_entry[i] = tmp;
     }
 
-    std::cerr << "Copy Matrix" << std::endl;
+    std::cerr << "Copy Graph" << std::endl;
 
     cudaMemcpy(d_A_entry, matrix.A_entry, sizeof(int) * matrix.rows, cudaMemcpyHostToDevice);
     cudaMemcpy(d_A, h_A, sizeof(int) * matrix.nnz, cudaMemcpyHostToDevice);
@@ -104,7 +104,7 @@ void runApspGpu(DAWN::Matrix &matrix, std::string &output_path)
     cudaFree(d_A);
 }
 
-float sssp_gpu(DAWN::Matrix &matrix, int source, cudaStream_t streams, int *d_A_entry, int *d_A, int *&result)
+float sssp_gpu(DAWN::Graph &matrix, int source, cudaStream_t streams, int *d_A_entry, int *d_A, int *&result)
 {
     int dim = 1;
     int entry = matrix.B_entry[source];
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     }
 
     DAWN dawn;
-    DAWN::Matrix matrix;
+    DAWN::Graph matrix;
     matrix.thread = 1;              // 运行SSSP的线程,GPU版本默認爲1
     matrix.interval = interval;     // 100
     matrix.stream = stream;         // 32

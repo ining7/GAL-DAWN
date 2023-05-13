@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     string output_path = argv[2];
 
     DAWN dawn;
-    DAWN::Matrix matrix;
+    DAWN::Graph matrix;
     matrix.thread = 1;   // 运行SSSP的线程
     matrix.interval = 1; // 请保证打印间隔小于节点总数
     dawn.createGraph(input_path, matrix);

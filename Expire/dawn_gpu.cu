@@ -6,7 +6,7 @@
 
 using namespace std;
 
-struct Matrix
+struct Graph
 {
     int rows;
     int cols;
@@ -21,13 +21,13 @@ struct Matrix
     int dim;
 };
 
-float runDawnGpu(Matrix &matrix, string &input_path, string &output_path);
-void readgraph(string &input_path, Matrix &matrix);
-void update_A(__half *&host, Matrix matrix, int rows_start, int rows_end, int n);
-void update_B(__half *&host, Matrix matrix, int cols_start, int cols_end, int n);
+float runDawnGpu(Graph &matrix, string &input_path, string &output_path);
+void readgraph(string &input_path, Graph &matrix);
+void update_A(__half *&host, Graph matrix, int rows_start, int rows_end, int n);
+void update_B(__half *&host, Graph matrix, int cols_start, int cols_end, int n);
 void check_gpu_dense(__half *dense, int i_dex, int j_dex, string &output_path);
 
-void readgraph(string &input_path, Matrix &matrix)
+void readgraph(string &input_path, Graph &matrix)
 {
     std::ifstream file(input_path);
     if (!file.is_open())
@@ -105,7 +105,7 @@ void readgraph(string &input_path, Matrix &matrix)
     cout << "Initialize input matrices" << endl;
 }
 
-float runDawnGpu(Matrix &matrix, string &input_path, string &output_path)
+float runDawnGpu(Graph &matrix, string &input_path, string &output_path)
 {
     readgraph(input_path, matrix);
     int n = matrix.n;
@@ -283,7 +283,7 @@ float runDawnGpu(Matrix &matrix, string &input_path, string &output_path)
     return elapsed_time;
 }
 
-void update_A(__half *&host, Matrix matrix, int rows_start, int rows_end, int n) // m*n
+void update_A(__half *&host, Graph matrix, int rows_start, int rows_end, int n) // m*n
 {
 #pragma omp parallel for
     for (int i = rows_start; i <= rows_end; i++)
@@ -302,7 +302,7 @@ void update_A(__half *&host, Matrix matrix, int rows_start, int rows_end, int n)
     }
 }
 
-void update_B(__half *&host, Matrix matrix, int cols_start, int cols_end, int n) // n*k
+void update_B(__half *&host, Graph matrix, int cols_start, int cols_end, int n) // n*k
 {
     // int entry = 0;
 #pragma omp parallel for
@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
         return;
     }
 
-    Matrix matrix;
+    Graph matrix;
 
     float elapsed_time = 1.0f * runDawnGpu(matrix, input_path, output_path);
 
