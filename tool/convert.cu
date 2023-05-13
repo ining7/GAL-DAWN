@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     string row_output_path = argv[3];
 
     DAWN dawn;
-    DAWN::Matrix matrix;
+    DAWN::Graph matrix;
     matrix.thread = 20;
     matrix.interval = 1;
     dawn.createGraphconvert(input_path, matrix, col_output_path, row_output_path);

@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     }
 
     DAWN dawn;
-    DAWN::Matrix matrix;
+    DAWN::Graph matrix;
     matrix.thread = 1;          // 运行SSSP的线程,GPU版本默認爲1
     matrix.interval = interval; // 100
     matrix.stream = stream;     // 32

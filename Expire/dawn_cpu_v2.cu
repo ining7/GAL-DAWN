@@ -3,7 +3,7 @@
 
 using namespace std;
 
-struct Matrix
+struct Graph
 {
     int rows;
     int cols;
@@ -16,10 +16,10 @@ struct Matrix
     int dim;
 };
 
-float runDawn(Matrix &matrix, string &input_path, string &output_path);
-void readgraph(string &input_path, Matrix &matrix);
+float runDawn(Graph &matrix, string &input_path, string &output_path);
+void readgraph(string &input_path, Graph &matrix);
 
-void readgraph(string &input_path, Matrix &matrix)
+void readgraph(string &input_path, Graph &matrix)
 {
     std::ifstream file(input_path);
     if (!file.is_open())
@@ -108,7 +108,7 @@ void readgraph(string &input_path, Matrix &matrix)
     cout << "Initialize input matrices" << endl;
 }
 
-float runDawn(Matrix &matrix, string &input_path, string &output_path)
+float runDawn(Graph &matrix, string &input_path, string &output_path)
 {
     readgraph(input_path, matrix);
 
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Matrix matrix;
+    Graph matrix;
 
     float elapsed_time = 1.0f * runDawn(matrix, input_path, output_path);
 

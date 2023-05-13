@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     string output_path = argv[4];
 
     DAWN dawn;
-    DAWN::Matrix matrix;
+    DAWN::Graph matrix;
     matrix.thread = 1;
     matrix.interval = 10000;
     dawn.readGraphBig(input_path, col_input_path, row_input_path, matrix);

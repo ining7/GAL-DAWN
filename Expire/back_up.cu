@@ -3,7 +3,7 @@
 
 using namespace std;
 
-struct Matrix
+struct Graph
 {
     int rows;
     int cols;
@@ -16,14 +16,14 @@ struct Matrix
     uint64_t entry;
 };
 
-void runDawn(Matrix &matrix, string &input_path, string &output_path);
-void createGraph(string &input_path, Matrix &matrix);
-void readGraph(string &input_path, Matrix &matrix, vector<pair<int, int>> &cooMatCol);
-void COO2CRC(Matrix &matrix, vector<pair<int, int>> &cooMatCol);
-void COO2RCC(Matrix &matrix, vector<pair<int, int>> &cooMatRow);
-float dawnSssp(Matrix &matrix, int source);
+void runDawn(Graph &matrix, string &input_path, string &output_path);
+void createGraph(string &input_path, Graph &matrix);
+void readGraph(string &input_path, Graph &matrix, vector<pair<int, int>> &cooMatCol);
+void COO2CRC(Graph &matrix, vector<pair<int, int>> &cooMatCol);
+void COO2RCC(Graph &matrix, vector<pair<int, int>> &cooMatRow);
+float dawnSssp(Graph &matrix, int source);
 
-void COO2CRC(Matrix &matrix, vector<pair<int, int>> &cooMatCol)
+void COO2CRC(Graph &matrix, vector<pair<int, int>> &cooMatCol)
 {
     int col_a = 0;
     int k = 0;
@@ -61,7 +61,7 @@ void COO2CRC(Matrix &matrix, vector<pair<int, int>> &cooMatCol)
     }
 }
 
-void COO2RCC(Matrix &matrix, vector<pair<int, int>> &cooMatRow)
+void COO2RCC(Graph &matrix, vector<pair<int, int>> &cooMatRow)
 {
     int row_b = 0;
     int k = 0;
@@ -100,7 +100,7 @@ void COO2RCC(Matrix &matrix, vector<pair<int, int>> &cooMatRow)
     }
 }
 
-void readCRC(Matrix &matrix, string &input_path)
+void readCRC(Graph &matrix, string &input_path)
 {
     std::ifstream file(input_path);
     if (!file.is_open())
@@ -132,7 +132,7 @@ void readCRC(Matrix &matrix, string &input_path)
         k = 0;
     }
 }
-void readRCC(Matrix &matrix, string &input_path)
+void readRCC(Graph &matrix, string &input_path)
 {
     std::ifstream file(input_path);
     if (!file.is_open())
@@ -165,7 +165,7 @@ void readRCC(Matrix &matrix, string &input_path)
     }
 }
 
-void readGraph(string &input_path, Matrix &matrix, vector<pair<int, int>> &cooMatCol)
+void readGraph(string &input_path, Graph &matrix, vector<pair<int, int>> &cooMatCol)
 {
     std::ifstream file(input_path);
     if (!file.is_open())
@@ -198,7 +198,7 @@ void readGraph(string &input_path, Matrix &matrix, vector<pair<int, int>> &cooMa
     cout << "nnz: " << matrix.nnz << endl;
 }
 
-void createGraph(string &input_path, Matrix &matrix)
+void createGraph(string &input_path, Graph &matrix)
 {
 
     matrix.A = new int *[matrix.rows];
@@ -233,7 +233,7 @@ void createGraph(string &input_path, Matrix &matrix)
     cout << "Initialize Input Matrices" << endl;
 }
 
-void runDawn(Matrix &matrix, string &input_path, string &output_path)
+void runDawn(Graph &matrix, string &input_path, string &output_path)
 {
     createGraph(input_path, matrix);
 
@@ -275,7 +275,7 @@ void runDawn(Matrix &matrix, string &input_path, string &output_path)
     outfile.close();
 }
 
-float dawnSssp(Matrix &matrix, int source)
+float dawnSssp(Graph &matrix, int source)
 {
     int dim = 1;
     int entry = matrix.B_entry[source];
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
     }
     cout << rows << " " << cols << " " << nnz << " " << dim << endl;
 
-    Matrix matrix;
+    Graph matrix;
     matrix.rows = rows;
     matrix.cols = cols;
     matrix.dim = dim;
