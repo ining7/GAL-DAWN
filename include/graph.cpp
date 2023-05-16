@@ -33,9 +33,6 @@ void Graph::createGraphCsm(std::string& input_path, DAWN::Graph& graph)
   std::fill_n(graph.coo.col, 0, nnz);
   std::fill_n(graph.coo.row, 0, nnz);
   std::fill_n(graph.coo.val, 0.0f, nnz);
-  // std::memset(graph.coo.col, 0, sizeof(int) * nnz);
-  // std::memset(graph.coo.row, 0, sizeof(int) * nnz);
-  // std::memset(graph.coo.val, 0.0f, sizeof(float) * nnz);
 
   std::cout << "Read Input Graph" << std::endl;
 
@@ -45,13 +42,6 @@ void Graph::createGraphCsm(std::string& input_path, DAWN::Graph& graph)
   tool.coo2Csm(graph.rows, graph.nnz, graph.csmA, graph.coo);
   tool.transport(graph.rows, graph.nnz, graph.coo);
   tool.coo2Csm(graph.rows, graph.nnz, graph.csmB, graph.coo);
-  // for (int i = 0; i < graph.rows; i++)
-  //   for (int j = 0; j < graph.csmA.row[i]; j++)
-  //     printf("A.col[%d][%d]\n", i, graph.csmA.col[i][j]);
-
-  // for (int i = 0; i < graph.rows; i++)
-  //   for (int j = 0; j < graph.csmB.row[i]; j++)
-  //     printf("B.col[%d][%d]\n", i, graph.csmB.col[i][j]);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -96,9 +86,6 @@ void Graph::createGraphCsr(std::string& input_path, DAWN::Graph& graph)
   std::fill_n(graph.coo.col, 0, nnz);
   std::fill_n(graph.coo.row, 0, nnz);
   std::fill_n(graph.coo.val, 0.0f, nnz);
-  // std::memset(graph.coo.col, 0, sizeof(int) * nnz);
-  // std::memset(graph.coo.row, 0, sizeof(int) * nnz);
-  // std::memset(graph.coo.val, 0.0f, sizeof(float) * nnz);
 
   std::cout << "Read Input Graph" << std::endl;
 
@@ -148,6 +135,28 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph)
 
   graph.nnz = i;
   std::cout << "nnz: " << graph.nnz << std::endl;
+}
+
+void Graph::readList(std::string& input_path, DAWN::Graph& graph)
+{
+  std::ifstream file(input_path);
+  if (!file.is_open()) {
+    std::cerr << "Error opening file " << input_path << std::endl;
+    return;
+  }
+  std::string line;
+
+  int source;
+  int i = 0;
+  while (std::getline(file, line)) {
+    if (line[0] == '%')
+      continue;
+    std::stringstream ss(line);
+    ss >> source;
+    graph.msource.push_back(source);
+    i++;
+  }
+  file.close();
 }
 
 void Graph::readGraphWeighted(std::string& input_path, DAWN::Graph& graph)

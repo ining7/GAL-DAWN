@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
     string algo = argv[1];
     DAWN dawn;
     DAWN::Graph matrix;
-    if ((algo == "FG") || (algo == "CG"))
+    if ((algo == "TG") || (algo == "SG"))
     {
         string input_path = argv[2];
         string output_path = argv[3];
@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
         else
             matrix.prinft = false;
         matrix.source = atoi(argv[6]);
-        if (algo == "CG")
+        if (algo == "SG")
         {
             matrix.thread = 20;
             dawn.createGraph(input_path, matrix);
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
             return 0;
         }
     }
-    if ((algo == "BFG") || (algo == "BCG"))
+    if ((algo == "BTG") || (algo == "BSG"))
     {
         string input_path = argv[2];
         string col_input_path = argv[3];
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         else
             matrix.prinft = false;
         matrix.source = atoi(argv[8]);
-        if (algo == "BCG")
+        if (algo == "BSG")
         {
             matrix.thread = 20;
             cout << "matrix.source: " << matrix.source << endl;

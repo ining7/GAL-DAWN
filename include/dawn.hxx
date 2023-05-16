@@ -20,56 +20,46 @@ public:
     int**   col;  // CSR列索引
     float** val;  // CSR值
   };
-
-  int      rows;
-  int      cols;
-  uint64_t nnz;
-  Csr      csrA;
-  Csr      csrB;
-  Coo      coo;
-  Csm      csmA;
-  Csm      csmB;
-  int      dim;
-  uint64_t entry;
-  int      thread;
-  int      interval;
-  int      stream;
-  int      block_size;
-  bool     prinft;  // 是否打印结果
-  int      source;  // 打印的节点
-  bool     share;
+  int              rows;
+  int              cols;
+  uint64_t         nnz;
+  Csr              csrA;
+  Csr              csrB;
+  Coo              coo;
+  Csm              csmA;
+  Csm              csmB;
+  int              dim;
+  uint64_t         entry;
+  int              thread;
+  int              interval;
+  int              stream;
+  int              block_size;
+  bool             prinft;  // 是否打印结果
+  int              source;  // 打印的节点
+  bool             share;
+  std::vector<int> msource;
 
   void createGraphCsr(std::string& input_path, Graph& graph);
-  void createGraphCsm(std::string& input_path, Graph& graph);
 
-  // void createGraphconvert(std::string& input_path,
-  //                         Graph&       graph,
-  //                         std::string& col_output_path,
-  //                         std::string& row_output_path);
+  void createGraphCsm(std::string& input_path, Graph& graph);
 
   void readGraph(std::string& input_path, Graph& graph);
 
   void readGraphWeighted(std::string& input_path, Graph& graph);
 
-  // big
-  // void readCRC(Graph& graph, std::string& input_path);
-
-  // void readRCC(Graph& graph, std::string& input_path);
-
-  // void readGraphBig(std::string& input_path,
-  //                   std::string& col_input_path,
-  //                   std::string& row_input_path,
-  //                   Graph&       graph);
+  void readList(std::string& input_path, DAWN::Graph& graph);
 };
 
 class CPU {
 public:
   // APSP run
-  void runApspFGCsr(Graph& graph, std::string& output_path);
+  void runApspTGCsr(Graph& graph, std::string& output_path);
 
-  void runApspCGCsr(Graph& graph, std::string& output_path);
+  void runApspSGCsr(Graph& graph, std::string& output_path);
 
   // SSSP run
+  void runMsspCpuCsr(Graph& graph, std::string& output_path);
+
   void runSsspCpuCsr(Graph& graph, std::string& output_path);
 
   // SSSP
@@ -78,9 +68,9 @@ public:
   float ssspSCsr(Graph& graph, int source, std::string& output_path);
 
   // APSP run
-  void runApspFGCsm(Graph& graph, std::string& output_path);
+  void runApspTGCsm(Graph& graph, std::string& output_path);
 
-  void runApspCGCsm(Graph& graph, std::string& output_path);
+  void runApspSGCsm(Graph& graph, std::string& output_path);
 
   // SSSP run
   void runSsspCpuCsm(Graph& graph, std::string& output_path);

@@ -23,11 +23,7 @@ If compilation succeeds without errors, you can run your code as before, for exa
 
 ```c++
 cd $PROJECT_ROOT/build
-./dawn_cpu_v1 CG $GRAPH_DIR/mouse_gene.mtx ../outpu.txt 100 false 0
-
-./dawn_cpu_v1 BCG $GRAPH_DIR/graph.mxt $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt 10000 false 0
-
-./convert $GRAPH_DIR/large_graph.mtx $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt
+./dawn_cpu_v1 SG $GRAPH_DIR/mouse_gene.mtx ../outpu.txt 100 false 0
 ```
 
 When the version is built, it will SSSP applications, which can be used directly.
@@ -54,7 +50,7 @@ Please note that the normal operation of the batch script needs to ensure that t
 
 ```c++
 CPU: Multi-threaded processor supporting OpenMP API
-RAM: 8GB or more
+RAM: 4GB or more
 Compiler: GCC 9.4.0 and above, clang 10.0.0 and above.
 OS:  Ubuntu 20.04 and above
 ```

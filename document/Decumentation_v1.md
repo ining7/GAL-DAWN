@@ -1,66 +1,164 @@
-# 1.Function
+# 1.Class
 
 ```c++
-    struct Matrix
-    {
-        int rows;
-        int cols;
-        uint64_t nnz;
-        int **A;      // 按列压缩
-        int *A_entry; // 每列项数
-        int **B;      // 按行压缩
-        int *B_entry; // 每行项数
-        int dim;
-        uint64_t entry;
-        int thread;
-        int interval;
-        int stream;
-        int block_size;
-        bool prinft; // 是否打印结果
-        int source;  // 打印的节点
-    };
+   class Graph {
+public:
+  struct Csr         // 一维CSR
+  {
+    int*   row_ptr;  // CSR行指针
+    int*   col;      // CSR列索引
+    float* val;      // CSR值
+  };
+  struct Coo
+  {
+    int*   row;   // COO行指针
+    int*   col;   // COO列索引
+    float* val;   // COO值
+  };
+  struct Csm      // 二维CSR
+  {
+    int*    row;  // CSM行指针
+    int**   col;  // CSM列索引
+    float** val;  // CSM值
+  };
+  int              rows;
+  int              cols;
+  uint64_t         nnz;
+  Csr              csrA;
+  Csr              csrB;
+  Coo              coo;
+  Csm              csmA;
+  Csm              csmB;
+  int              dim;
+  uint64_t         entry;
+  int              thread;
+  int              interval;
+  int              stream;
+  int              block_size;
+  bool             prinft;  // 是否打印结果
+  int              source;  // 打印的节点
+  bool             share;
+  std::vector<int> msource;
+
+  void createGraphCsr(std::string& input_path, Graph& graph);
+
+  void createGraphCsm(std::string& input_path, Graph& graph);
+
+  void readGraph(std::string& input_path, Graph& graph);
+
+  void readGraphWeighted(std::string& input_path, Graph& graph);
+
+  void readList(std::string& input_path, DAWN::Graph& graph);
+};
 ```
 
-Matrix struct
-
 ````c++
-    void runApspV3(Matrix &matrix, string &output_path);
+    class CPU {
+public:
+  // APSP run
+  void runApspTGCsr(Graph& graph, std::string& output_path);
 
-    void runApspV4(Matrix &matrix, string &output_path);
+  void runApspSGCsr(Graph& graph, std::string& output_path);
 
-    void runSsspCpu(DAWN::Matrix &matrix, std::string &output_path);
+  // SSSP run
+  void runMsspCpuCsr(Graph& graph, std::string& output_path);
 
-    void runApspGpu(DAWN::Matrix &matrix, std::string &output_path);
+  void runSsspCpuCsr(Graph& graph, std::string& output_path);
 
-    void runSsspGpu(DAWN::Matrix &matrix, std::string &output_path);
+  // SSSP
+  float ssspPCsr(Graph& graph, int source, std::string& output_path);
+
+  float ssspSCsr(Graph& graph, int source, std::string& output_path);
+
+  // APSP run
+  void runApspTGCsm(Graph& graph, std::string& output_path);
+
+  void runApspSGCsm(Graph& graph, std::string& output_path);
+
+  // SSSP run
+  void runSsspCpuCsm(Graph& graph, std::string& output_path);
+
+  // SSSP
+  float ssspPCsm(Graph& graph, int source, std::string& output_path);
+
+  float ssspSCsm(Graph& graph, int source, std::string& output_path);
+};
 ````
 
-Function of running dawn, time complexity O(dnm) and space complexity O(n^2)
-
 ````c++
-    void createGraph(string &input_path, Matrix &matrix);
+  class Tool {
+public:
+  void coo2Csr(int n, int nnz, Graph::Csr& csr, Graph::Coo& coo);
 
-    void readGraph(string &input_path, Matrix &matrix, vector<pair<int, int>> &cooMatCol);
+  void csr2Csm(int n, int nnz, Graph::Csm& csm, Graph::Csr& csr);
 
-    void readGraphBig(string &input_path, string &col_input_path, string &row_input_path, Matrix &matrix);
+  void coo2Csm(int n, int nnz, Graph::Csm& csm, Graph::Coo& coo);
+
+  void transport(int n, int nnz, Graph::Coo& coo);
+
+  void
+  infoprint(int entry, int total, int interval, int thread, float elapsed_time);
+
+  void outfile(int n, int* result, int source, std::string& output_path);
+};
 ````
 
-Function of reading and creating graph from mtx file
+````c++
+class GPU {
+public:
+  void runApspGpuCsr(Graph& graph, std::string& output_path);
 
+  void runSsspGpuCsr(Graph& graph, std::string& output_path);
+
+  void runMsspGpuCsr(Graph& graph, std::string& output_path);
+
+  float ssspGpuCsr(Graph&       graph,
+                   int          source,
+                   cudaStream_t streams,
+                   int*         d_A_row_ptr,
+                   int*         d_A_col,
+                   std::string& output_path);
+
+  void runApspGpuCsm(Graph& graph, std::string& output_path);
+
+  void runSsspGpuCsm(Graph& graph, std::string& output_path);
+
+  float ssspGpuCsm(Graph&       graph,
+                   int          source,
+                   cudaStream_t streams,
+                   int*         d_A_row_ptr,
+                   int*         d_A_col,
+                   std::string& output_path);
+};
+````
+
+````c++
+__global__ void vecMatOpeCsr(bool* input,
+                             bool* output,
+                             int*  result,
+                             int*  rows,
+                             int*  source,
+                             int*  dim,
+                             int*  d_entry);
+__global__ void vecMatOpeCsrShare(bool* input,
+                                  bool* output,
+                                  int*  result,
+                                  int*  rows,
+                                  int*  source,
+                                  int*  dim,
+                                  int*  d_entry);
+````
 
 # 2 Command
 
 ## 2.1 dawn_cpu_v1
 
 ````c++
-    ./dawn_cpu_v1 -algo $GRAPH_DIR/xx.mtx ../outpu.txt -interval -prinft -source
-    
-    ./dawn_cpu_v1 -algo $GRAPH_DIR/xx.mtx $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt -interval -prinft -source
+    ./dawn_cpu_v1 -algo $GRAPH_DIR/xx.mtx ../output.txt -interval -prinft -source
+    ./dawn_cpu_v1 -algo $GRAPH_DIR/xx.mtx ../output.txt -interval -prinft -sourceList
 ````
 
-**algo** is the algorithm, **FG** is fine-grained parallel version and **CG** is the coarse-grained parallel version.
-
-**BFG** and **BCG** run on the large-scale graph.
+**algo** is the algorithm, **TG** and **SG** is supported.
 
 **interval** is the refers to the progress interval. For example, **100** refers to printing the current time every time 1% of the node calculation is completed.
 
@@ -69,10 +167,10 @@ Function of reading and creating graph from mtx file
 ## 2.2 dawn_gpu_v1
 
 ````c++
-    ./dawn_gpu_v1 -algo $GRAPH_DIR ../outpu.txt -stream -block_size -interval -prinft -source
-    ./dawn_gpu_v1 -algo $GRAPH_DIR/xx.mtx $GRAPH_DIR/graph_CRC.txt $GRAPH_DIR/graph_RCC.txt ../outpu.txt -stream -block_size -interval -prinft -source
+    ./dawn_gpu_v1 -algo $GRAPH_DIR ../output.txt -stream -block_size -interval -prinft -source
+    ./dawn_gpu_v1 -algo $GRAPH_DIR ../output.txt -stream -block_size -interval -prinft -sourceList
 ````
 
-**algo** is the algorithm, where **Default** is the default version and **Big** is the version for large-scale graph.
+**algo** is the algorithm, where **Default** is the default version and **Mssp** is the version for multi-source shortest path problem.
 
 **stream** is the CUDAstreams and **block_size** is the block_size on GPU, which are adjusted according to GPU hardware resources.

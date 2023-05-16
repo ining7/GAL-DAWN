@@ -46,7 +46,7 @@ If compilation succeeds without errors, you can run your code as before, for exa
 
 ```c++
 cd $PROJECT_ROOT/build
-./dawn_cpu_v1 CG $GRAPH_DIR/mouse_gene.mtx ../output.txt 100 false 0
+./dawn_cpu_v1 SG $GRAPH_DIR/mouse_gene.mtx ../output.txt 100 false 0
 
 ./dawn_gpu_v1 Default $GRAPH_DIR/mouse_gene.mtx ../output.txt 4 256 100 false 0
 
@@ -84,7 +84,13 @@ OS:  Ubuntu 20.04 and above
 
 ## 5.Release version
 
-For the CPU version, FG is fine-grained parallel version and CG is the coarse-grained parallel version. The fine-grained parallel version of DAWN only requires the path statistics at the end of each loop to be executed in serial, while the coarse-grained parallel version has no serial phase and the data between threads are completely independent.
+| Version | Implementation |
+| ------ | ------ |
+| TG |  Version of Thread Parallel|
+| SG |  Version of Stream Parallel|
+|Mssp | Version of Multi-source based on Stream Parallel|
+
+Currently, on the Single-Processor, SG allocates one thread per stream. On Multi-Processor, SG will allocate multiple threads per stream. (It will be supported in the next version.)
 
 For the GPU version, you can use Default, please make sure that there is enough GPU memory for the graph.
 
@@ -104,11 +110,13 @@ Please modify the **graph.share** in the Default mode in the **dawn_gpu_v1.cu** 
 
 ## 5.Release result
 
-On the test machine with i5-13600KF, FG and CG achieves average speedup of 1.857&times; and 7.632&times; over GDS, respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.738&times; and 2.231&times;, over running on the 20-thread i5-13600KF.
+On the test machine with i5-13600KF, TG and SG achieves average speedup of 4.535&times; and 4.178&times; over SSSP and BFS from Gunrock (hereinafter referred to as GDS and BFS), respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.845&times; and 2.357&times;, over running on the 20-thread i5-13600KF.
 
-On the test machine with i5-13600KF, CG need 10GB free memory to solve the Graph kmer_V1r with 214M nodes and 465M edges, which require average 92 minutes for 21.4K nodes in the graph and average 0.257 seconds for SSSP. For Graph wiki-Talk with 2.39M nodes and 5M egdes, DAWN can compelet work of APSP problem in 1475 secconds. We hope that our work can make it possible for everyone to widely use personal computers to analyze the graphs over 200M nodes, although at present we need a little patience to wait for the results.
+On the test machine with i5-13600KF, SG need more than 10GB free memory to solve the large graph [281K,214M].
 
-On the test machine with RTX3080TI, dawn_gpu_v1 achieves average speedup of 6.336x, 1.509X and 5.291x over FG, CG and GDS.
+On the test machine with RTX3080TI, DAWN achieves average speedup of 6.336&times;, 2.779&times; 4.534&times; and 4.173&times;, over TG, SG, GDS and BFS, respectively.
+
+We provide the file **check_by_networkx.py**, based on networkx, which can be used to check the results printed by DAWN.
 
 ## 6.New version
 

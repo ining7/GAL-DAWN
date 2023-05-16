@@ -7,6 +7,8 @@ public:
 
   void runSsspGpuCsr(Graph& graph, std::string& output_path);
 
+  void runMsspGpuCsr(Graph& graph, std::string& output_path);
+
   float ssspGpuCsr(Graph&       graph,
                    int          source,
                    cudaStream_t streams,
@@ -158,16 +160,10 @@ void DAWN::GPU::runApspGpuCsr(DAWN::Graph& graph, std::string& output_path)
   cudaMallocManaged((void**)&d_A_col, sizeof(int) * graph.nnz);
   std::cerr << "Copy graph" << std::endl;
 
-  for (int i = 0; i < graph.nnz; i++) {
-    if (i < graph.rows + 1) {
-      d_A_row_ptr[i] = graph.csrA.row_ptr[i];
-    }
-    d_A_col[i] = graph.csrA.col[i];
-  }
-  // cudaMemcpy(d_A_row_ptr, graph.csrA.row_ptr, (graph.rows + 1) * sizeof(int),
-  //            cudaMemcpyHostToDevice);
-  // cudaMemcpy(d_A_col, graph.csrA.col, graph.nnz * sizeof(int),
-  //            cudaMemcpyHostToDevice);
+  cudaMemcpy(d_A_row_ptr, graph.csrA.row_ptr, (graph.rows + 1) * sizeof(int),
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(d_A_col, graph.csrA.col, graph.nnz * sizeof(int),
+             cudaMemcpyHostToDevice);
 
   // Create streams
   cudaStream_t streams[graph.stream];
@@ -179,24 +175,79 @@ void DAWN::GPU::runApspGpuCsr(DAWN::Graph& graph, std::string& output_path)
   std::cout
     << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
     << std::endl;
-  if (graph.csrB.row_ptr[graph.source] == graph.csrB.row_ptr[graph.source + 1])
-    std::cout << "Source is isolated node, please check" << std::endl;
   for (int i = 0; i < graph.rows; i++) {
-    if (graph.csrB.row_ptr[i] == graph.csrB.row_ptr[i + 1]) {
+    int source = i;
+    if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
+      printf("Source [%d] is isolated node\n", source);
       tool.infoprint(proEntry, graph.rows, graph.interval, graph.thread,
                      elapsed_time);
       continue;
     }
-
-    int source      = i;
     int cuda_stream = source % graph.stream;
-    // printf("i = %d\n", i);
     elapsed_time += ssspGpuCsr(graph, source, streams[cuda_stream], d_A_row_ptr,
                                d_A_col, output_path);
     ++proEntry;
-
     tool.infoprint(proEntry, graph.rows, graph.interval, graph.thread,
+                   elapsed_time);
+  }
+  std::cout
+    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    << std::endl;
+  // Output elapsed time and free remaining resources
+  std::cout << " Elapsed time: " << elapsed_time / (graph.thread * 1000)
+            << std::endl;
+
+  // Synchronize streams
+  for (int i = 0; i < graph.stream; i++) {
+    cudaStreamSynchronize(streams[i]);
+    cudaStreamDestroy(streams[i]);
+  }
+
+  // Free memory on device
+  cudaFree(d_A_row_ptr);
+  cudaFree(d_A_col);
+}
+
+void DAWN::GPU::runMsspGpuCsr(DAWN::Graph& graph, std::string& output_path)
+{
+  float elapsed_time = 0.0;
+  int   proEntry     = 0;
+
+  cudaMallocManaged((void**)&d_A_row_ptr, sizeof(int) * (graph.rows + 1));
+  cudaMallocManaged((void**)&d_A_col, sizeof(int) * graph.nnz);
+  std::cerr << "Copy graph" << std::endl;
+
+  cudaMemcpy(d_A_row_ptr, graph.csrA.row_ptr, (graph.rows + 1) * sizeof(int),
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(d_A_col, graph.csrA.col, graph.nnz * sizeof(int),
+             cudaMemcpyHostToDevice);
+
+  // Create streams
+  cudaStream_t streams[graph.stream];
+  for (int i = 0; i < graph.stream; i++) {
+    cudaStreamCreate(&streams[i]);
+  }
+
+  Tool tool;
+  std::cout
+    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    << std::endl;
+
+  for (int i = 0; i < graph.msource.size(); i++) {
+    int source = graph.msource[i] % graph.rows;
+    if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+      ++proEntry;
+      printf("Source [%d] is isolated node\n", source);
+      tool.infoprint(proEntry, graph.msource.size(), graph.interval,
+                     graph.thread, elapsed_time);
+      continue;
+    }
+    int cuda_stream = source % graph.stream;
+    elapsed_time += ssspGpuCsr(graph, source, streams[cuda_stream], d_A_row_ptr,
+                               d_A_col, output_path);
+    ++proEntry;
+    tool.infoprint(proEntry, graph.msource.size(), graph.interval, graph.thread,
                    elapsed_time);
   }
   std::cout
@@ -265,10 +316,11 @@ float DAWN::GPU::ssspGpuCsr(DAWN::Graph& graph,
 {
   int   dim   = 1;
   int   entry = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
-  int   entry_last = entry;
-  bool* output     = new bool[graph.rows];
-  bool* input      = new bool[graph.rows];
-  int*  result     = new int[graph.rows];
+  int   entry_last   = entry;
+  bool* output       = new bool[graph.rows];
+  bool* input        = new bool[graph.rows];
+  int*  result       = new int[graph.rows];
+  float elapsed_time = 0.0f;
   omp_set_dynamic(true);
 #pragma omp parallel for
   for (int j = 0; j < graph.rows; j++) {
@@ -319,9 +371,9 @@ float DAWN::GPU::ssspGpuCsr(DAWN::Graph& graph,
     shared_mem_size = sizeof(int) * (4);
   }
 
-  auto start = std::chrono::high_resolution_clock::now();
   while (dim < graph.dim) {
     dim++;
+    auto start = std::chrono::high_resolution_clock::now();
     cudaMemcpyAsync(d_dim, &dim, sizeof(int), cudaMemcpyHostToDevice, streams);
     if (graph.share) {
       vecMatOpeCsrShare<<<num_blocks, block_size, shared_mem_size, streams>>>(
@@ -331,12 +383,8 @@ float DAWN::GPU::ssspGpuCsr(DAWN::Graph& graph,
       vecMatOpeCsr<<<num_blocks, block_size, shared_mem_size, streams>>>(
         d_input, d_output, d_result, d_row, d_source, d_dim, d_entry);
     }
-    cudaMemcpyAsync(d_input, d_output, sizeof(bool) * graph.rows,
-                    cudaMemcpyDeviceToDevice, streams);
-    cudaMemsetAsync(d_output, false, sizeof(bool) * graph.rows, streams);
     cudaMemcpyAsync(&entry, d_entry, sizeof(int), cudaMemcpyDeviceToHost,
                     streams);
-
     if ((entry > entry_last) && (entry < (graph.rows - 1))) {
       entry_last = entry;
       if (entry_last >= (graph.rows - 1))
@@ -344,9 +392,14 @@ float DAWN::GPU::ssspGpuCsr(DAWN::Graph& graph,
     } else {
       break;
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    elapsed_time += elapsed.count();
+
+    cudaMemcpyAsync(d_input, d_output, sizeof(bool) * graph.rows,
+                    cudaMemcpyDeviceToDevice, streams);
+    cudaMemsetAsync(d_output, false, sizeof(bool) * graph.rows, streams);
   }
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed = end - start;
 
   graph.entry += entry_last;
 
@@ -370,5 +423,5 @@ float DAWN::GPU::ssspGpuCsr(DAWN::Graph& graph,
   cudaFreeAsync(d_result, streams);
   cudaFreeAsync(d_entry, streams);
 
-  return elapsed.count();
+  return elapsed_time;
 }

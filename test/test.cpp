@@ -5,7 +5,7 @@ int main(int argc, char* argv[])
   DAWN::CPU   runCpu;
   DAWN::Graph graph;
   std::string algo = argv[1];
-  if ((algo == "FG") || (algo == "CG")) {
+  if ((algo == "TG") || (algo == "SG")) {
     std::string input_path  = argv[2];
     std::string output_path = argv[3];
     graph.interval = atoi(argv[4]);  // 请保证打印间隔小于节点总数，建议10-1000
@@ -17,15 +17,15 @@ int main(int argc, char* argv[])
     } else
       graph.prinft = false;
 
-    if (algo == "CG") {
+    if (algo == "SG") {
       graph.thread = 20;
       graph.createGraphCsr(input_path, graph);
-      runCpu.runApspCGCsr(graph, output_path);
+      runCpu.runApspSGCsr(graph, output_path);
       return 0;
     } else {
       graph.thread = 1;
       graph.createGraphCsr(input_path, graph);
-      runCpu.runApspFGCsr(graph, output_path);
+      runCpu.runApspTGCsr(graph, output_path);
       return 0;
     }
   }
