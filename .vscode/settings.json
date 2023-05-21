@@ -70,5 +70,9 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp"
-    }
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.formatting.provider": "none"
 }
