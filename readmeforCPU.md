@@ -46,7 +46,7 @@ sudo chmod +x ../process.sh
 sudo bash ../process.sh
 ```
 
-Please note that the normal operation of the batch script needs to ensure that the test machine meets the minimum requirements. Insufficient memory or GPU memory needs to be manually adjusted according to amount of resources.
+Please note that the normal operation of the batch script needs to ensure that the test machine meets the minimum requirements.
 
 ```c++
 CPU: Multi-threaded processor supporting OpenMP API

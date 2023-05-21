@@ -44,5 +44,7 @@ sorted_nodes = sorted(shortest_paths.keys())
 with open(args.output_file, "w") as f:
     for node in sorted_nodes:
         length = shortest_paths[node]
-        f.write("{} {} {}\n".format(args.source_node, node, length))
+        if args.source_node!=node :
+            f.write("{} {} {}\n".format(args.source_node, node, length))
+
 

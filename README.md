@@ -74,10 +74,22 @@ sudo bash ../process.sh
 
 Please note that the normal operation of the batch script needs to ensure that the test machine meets the minimum requirements. Insufficient memory or GPU memory needs to be manually adjusted according to amount of resources.
 
+### For general graphs
+
 ```c++
 CPU: Multi-threaded processor supporting OpenMP API
-RAM: 8GB or more
+RAM: 4GB or more
 GPU: 1GB or more
+Compiler: NVCC of CUDA 11.0 above
+OS:  Ubuntu 20.04 and above
+```
+
+### For large-scale graphs
+
+```c++
+CPU: Multi-threaded processor supporting OpenMP API
+RAM: 10GB or more
+GPU: 4GB or more
 Compiler: NVCC of CUDA 11.0 above
 OS:  Ubuntu 20.04 and above
 ```
@@ -110,11 +122,11 @@ Please modify the **graph.share** in the Default mode in the **dawn_gpu_v1.cu** 
 
 ## 5.Release result
 
-On the test machine with i5-13600KF, TG and SG achieves average speedup of 4.535&times; and 4.178&times; over SSSP and BFS from Gunrock (hereinafter referred to as GDS and BFS), respectively. On the 64-thread AMD EPYC 7T83, various version of DAWN achieved speedups of 1.845&times; and 2.357&times;, over running on the 20-thread i5-13600KF.
+On the test machine with i5-13600KF, SG achieves average speedup of 4.535&times; and 4.178&times; over SSSP and BFS from Gunrock (hereinafter referred to as GDS and BFS), respectively. On the test machine with i5-13600KF, DAWN need more than 10GB free memory to solve the large graph [281K,214M].
 
-On the test machine with i5-13600KF, SG need more than 10GB free memory to solve the large graph [281K,214M].
+On the 64-thread AMD EPYC 7T83, DAWN achieved speedups of 17.735&times; and 19.176&times;, over over SSSP and BFS from Gunrock, respectively.
 
-On the test machine with RTX3080TI, DAWN achieves average speedup of 6.336&times;, 2.779&times; 4.534&times; and 4.173&times;, over TG, SG, GDS and BFS, respectively.
+On the test machine with RTX3080TI, DAWN achieves average speedup of 2.779&times; 4.534&times; and 4.173&times;, over SG, GDS and BFS, respectively.
 
 We provide the file **check_by_networkx.py**, based on networkx, which can be used to check the results printed by DAWN.
 

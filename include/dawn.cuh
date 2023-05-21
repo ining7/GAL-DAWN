@@ -179,7 +179,7 @@ void DAWN::GPU::runApspGpuCsr(DAWN::Graph& graph, std::string& output_path)
     int source = i;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
-      printf("Source [%d] is isolated node\n", source);
+      // printf("Source [%d] is isolated node\n", source);
       tool.infoprint(proEntry, graph.rows, graph.interval, graph.thread,
                      elapsed_time);
       continue;

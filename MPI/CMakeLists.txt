@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # 设置CUDA架构
 set(CMAKE_CUDA_ARCHITECTURES "86")
-set(CMAKE_CUDA_COMPILER "/usr/local/cuda-12.0/bin/nvcc")
+set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 
 # 查找MPI
 find_package(MPI REQUIRED)
