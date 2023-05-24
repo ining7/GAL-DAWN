@@ -227,18 +227,16 @@ float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
       for (int k = graph.csrA.row_ptr[j]; k < graph.csrA.row_ptr[j + 1]; k++) {
         if (input[graph.csrA.col[k]]) {
           output[j] = true;
+          if ((result[j] == 0) && (j != source)) {
+            result[j] = dim;
+            entry++;
+          }
           break;
         }
       }
     }
-    for (int j = 0; j < graph.rows; j++) {
-      if ((result[j] == 0) && (output[j] == true) && (j != source)) {
-        result[j] = dim;
-        entry++;
-      }
-      input[j]  = output[j];
-      output[j] = false;
-    }
+    std::memmove(input, output, graph.rows * sizeof(bool));
+    std::fill_n(output, graph.rows, false);
     if ((entry > entry_last) && (entry < entry_max)) {
       entry_last = entry;
       if (entry_last >= entry_max)
