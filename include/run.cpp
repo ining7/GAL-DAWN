@@ -31,7 +31,7 @@ void CPU::runApspSGCsr(Graph& graph, std::string& output_path)
   std::cout
     << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
     << std::endl;
-#pragma omp parallel for
+#pragma omp parallel for num_threads(graph.stream)
   for (int i = 0; i < graph.rows; i++) {
     if (graph.csrB.row_ptr[i] == graph.csrB.row_ptr[i + 1]) {
       ++proEntry;
@@ -198,45 +198,40 @@ float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
   int   entry = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
   int   entry_last = entry;
   int   entry_max  = graph.rows - 1;
+  int   alphaPtr   = entry;
   bool* output     = new bool[graph.rows];
   bool* input      = new bool[graph.rows];
+  int*  alpha      = new int[graph.rows];
+  int*  delta      = new int[graph.rows];
   int*  result     = new int[graph.rows];
-  float elapsed    = 0.0f;
+
+  float elapsed = 0.0f;
   std::fill_n(input, graph.rows, false);
   std::fill_n(output, graph.rows, false);
   std::fill_n(result, graph.rows, 0);
-  // for (int j = 0; j < graph.rows; j++) {
-  //   input[j]  = false;
-  //   output[j] = false;
-  //   result[j] = 0;
-  // }
+  std::fill_n(alpha, graph.rows, 0);
+  std::fill_n(delta, graph.rows, 0);
+
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
     input[graph.csrB.col[i]]  = true;
     output[graph.csrB.col[i]] = true;
     result[graph.csrB.col[i]] = 1;
+
+    alpha[i - graph.csrB.row_ptr[source]] = graph.csrB.col[i];
   }
+
+  int change = round(graph.rows / 2);
 
   auto start = std::chrono::high_resolution_clock::now();
   while (dim < graph.dim) {
     dim++;
-
-    for (int j = 0; j < graph.rows; j++) {
-      if (graph.csrA.row_ptr[j] == graph.csrA.row_ptr[j + 1])
-        continue;
-      for (int k = graph.csrA.row_ptr[j]; k < graph.csrA.row_ptr[j + 1]; k++) {
-        if (input[graph.csrA.col[k]]) {
-          output[j] = true;
-          if ((result[j] == 0) && (j != source)) {
-            result[j] = dim;
-            entry++;
-          }
-          break;
-        }
-      }
-    }
-    std::memmove(input, output, graph.rows * sizeof(bool));
-    std::fill_n(output, graph.rows, false);
+    // if (entry_last < change) {
+    SOVM(graph, alpha, alphaPtr, delta, output, result, dim);
+    entry += alphaPtr;
+    // } else {
+    //   BOVM(graph, output, input, result, dim, entry);
+    // }
     if ((entry > entry_last) && (entry < entry_max)) {
       entry_last = entry;
       if (entry_last >= entry_max)
@@ -253,8 +248,12 @@ float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
 
   delete[] output;
   output = nullptr;
-  delete[] input;
-  input = nullptr;
+  // delete[] input;
+  // input = nullptr;
+  delete[] alpha;
+  alpha = nullptr;
+  delete[] delta;
+  delta = nullptr;
   // 输出结果
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
@@ -265,6 +264,59 @@ float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
   result = nullptr;
 
   return elapsed;
+}
+
+void CPU::BOVM(Graph& graph,
+               bool*& output,
+               bool*& input,
+               int*&  result,
+               int    dim,
+               int&   entry)
+{
+  std::memmove(input, output, graph.rows * sizeof(bool));
+  for (int j = 0; j < graph.rows; j++) {
+    if (result[j])
+      continue;
+    int start = graph.csrA.row_ptr[j];
+    int end   = graph.csrA.row_ptr[j + 1];
+    if (start != end) {
+      for (int k = start; k < end; k++) {
+        if (input[graph.csrA.col[k]]) {
+          output[j] = true;
+          result[j] = dim;
+          entry++;
+          break;
+        }
+      }
+    }
+  }
+}
+
+void CPU::SOVM(Graph& graph,
+               int*&  alpha,
+               int&   alphaPtr,
+               int*&  delta,
+               bool*& beta,
+               int*&  result,
+               int    dim)
+{
+  int tmpPtr = 0;
+  for (int j = 0; j < alphaPtr; j++) {
+    int start = graph.csrB.row_ptr[alpha[j]];
+    int end   = graph.csrB.row_ptr[alpha[j] + 1];
+    if (start == end)
+      continue;
+    for (int k = start; k < end; k++) {
+      if (!beta[graph.csrB.col[k]]) {
+        delta[tmpPtr] = graph.csrB.col[k];
+        tmpPtr++;
+        beta[graph.csrB.col[k]]   = true;
+        result[graph.csrB.col[k]] = dim;
+      }
+    }
+  }
+  std::memcpy(alpha, delta, tmpPtr * sizeof(int));
+  alphaPtr = tmpPtr;
 }
 
 void CPU::runApspTGCsm(Graph& graph, std::string& output_path)

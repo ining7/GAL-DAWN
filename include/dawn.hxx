@@ -1,4 +1,5 @@
 #include "access.h"
+#include <thrust/host_vector.h>
 namespace DAWN {
 class Graph {
 public:
@@ -79,6 +80,22 @@ public:
   float ssspPCsm(Graph& graph, int source, std::string& output_path);
 
   float ssspSCsm(Graph& graph, int source, std::string& output_path);
+
+  // BOVM
+  void BOVM(Graph& graph,
+            bool*& output,
+            bool*& input,
+            int*&  result,
+            int    dim,
+            int&   entry);
+  // SOVM
+  void SOVM(Graph& graph,
+            int*&  alpha,
+            int&   alphaPtr,
+            int*&  delta,
+            bool*& beta,
+            int*&  result,
+            int    dim);
 };
 
 class Tool {

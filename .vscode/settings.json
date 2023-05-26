@@ -69,7 +69,10 @@
         "thread": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "codecvt": "cpp",
+        "__nullptr": "cpp",
+        "__locale": "cpp"
     },
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"

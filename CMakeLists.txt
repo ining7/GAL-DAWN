@@ -24,6 +24,9 @@ project(dawn_gpu_mssp LANGUAGES CXX CUDA)
 
 # 添加头文件路径
 include_directories(include)
+find_package(CUDA REQUIRED)
+include_directories(${CUDA_INCLUDE_DIRS})
+
 
 # 添加可执行目标
 add_executable(dawn_cpu_v1 apsp/dawn_cpu_v1.cpp include/dawn.hxx include/tool.cpp include/graph.cpp include/run.cpp include/access.h)
