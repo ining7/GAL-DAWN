@@ -122,7 +122,7 @@ Please modify the **graph.share** in the Default mode in the **dawn_gpu_v1.cu** 
 
 ## 5.Release result
 
-On the test machine with i5-13600KF, SG achieves average speedup of 1212.523&times; and 1,315.953&times; over BFS and SSSP from Gunrock (hereinafter referred to as GDS and BFS), respectively. On the test machine with i5-13600KF, DAWN need more than 10GB free memory to solve the large graph [281K,214M].
+On the test machine with i5-13600KF, SG achieves average speedup of 1212.524&times; and 1,315.953&times; over BFS and SSSP from Gunrock (hereinafter referred to as GDS and BFS), respectively. On the test machine with i5-13600KF, DAWN need more than 10GB free memory to solve the large graph [281K,214M].
 
 On the 64-thread AMD EPYC 7T83, DAWN achieved speedups of 17.735&times; and 19.176&times;, over over SSSP and BFS from Gunrock, respectively.
 
@@ -136,4 +136,4 @@ The version of DWAN on the weighted graph will be include in DAWN2.0, and we wil
 
 ## 7.Decumentation
 
-Please refer to [decument/Decumentation_v1](https://github.com/ining7/SC2023/blob/f37c968a6a7d2195587354fb7592261e70a4d2c8/document%C2%A0%E6%96%87%E6%A1%A3/Decumentation_v1.md) for commands.
+Please refer to [decument/Decumentation_v1](https://github.com/lxrzlyr/SC2023/blob/eb9080f76c2950981a4dac72141d4991eff8b9db/document/Decumentation_v1.md) for commands.
