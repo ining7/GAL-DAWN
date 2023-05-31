@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 
     if (algo == "SG") {
       graph.source = atoi(argv[6]);
-      graph.stream = 20;
+      graph.stream = 14;
       graph.thread = 20;
       graph.createGraphCsr(input_path, graph);
       runCpu.runApspSGCsr(graph, output_path);
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
       graph.thread = 20;
       graph.createGraphCsr(input_path, graph);
       graph.readList(sourceList, graph);
-      runCpu.runMsspCpuCsr(graph, output_path);
+      runCpu.runMsspSCpuCsr(graph, output_path);
       return 0;
     }
   }

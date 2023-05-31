@@ -18,8 +18,7 @@ int main(int argc, char* argv[])
   graph.stream = 1;
   graph.thread = 20;
   graph.createGraphCsr(input_path, graph);
-  graph.readList(input_path, graph);
-  runCpu.runMsspCpuCsr(graph, output_path);
+  runCpu.runSsspCpuCsr(graph, output_path);
 
   return 0;
 }

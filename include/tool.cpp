@@ -123,6 +123,25 @@ void Tool::outfile(int n, int* result, int source, std::string& output_path)
   outfile.close();
 }
 
+void Tool::outfile(int                      n,
+                   thrust::host_vector<int> result,
+                   int                      source,
+                   std::string&             output_path)
+{
+  std::ofstream outfile(output_path);
+  if (!outfile.is_open()) {
+    std::cerr << "Error opening file " << output_path << std::endl;
+    return;
+  }
+  std::cout << "Start outfile" << std::endl;
+  for (int j = 0; j < n; j++) {
+    if ((source != j) && (result[j] > 0))
+      outfile << source << " " << j << " " << result[j] << std::endl;
+  }
+  std::cout << "End outfile" << std::endl;
+  outfile.close();
+}
+
 void Tool::infoprint(int   entry,
                      int   total,
                      int   interval,

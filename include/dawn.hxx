@@ -58,8 +58,10 @@ public:
 
   void runApspSGCsr(Graph& graph, std::string& output_path);
 
-  // SSSP run
-  void runMsspCpuCsr(Graph& graph, std::string& output_path);
+  // MSSP run
+  void runMsspSCpuCsr(Graph& graph, std::string& output_path);
+
+  void runMsspPCpuCsr(Graph& graph, std::string& output_path);
 
   void runSsspCpuCsr(Graph& graph, std::string& output_path);
 
@@ -96,6 +98,14 @@ public:
             bool*& beta,
             int*&  result,
             int    dim);
+
+  void SOVMP(Graph& graph,
+             bool*& alpha,
+             int&   alphaPtr,
+             bool*& delta,
+             bool*& beta,
+             int*&  result,
+             int    dim);
 };
 
 class Tool {
@@ -112,6 +122,10 @@ public:
   infoprint(int entry, int total, int interval, int thread, float elapsed_time);
 
   void outfile(int n, int* result, int source, std::string& output_path);
+  void outfile(int                      n,
+               thrust::host_vector<int> result,
+               int                      source,
+               std::string&             output_path);
 };
 
 }  // namespace DAWN
