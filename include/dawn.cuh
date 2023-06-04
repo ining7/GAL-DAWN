@@ -319,10 +319,10 @@ float DAWN::GPU::SSSPSOVMP(DAWN::Graph& graph,
   auto start = std::chrono::high_resolution_clock::now();
   while (dim < graph.dim) {
     dim++;
-    for (int i = 0; i < graph.rows; i++) {
-      if (alpha[i] > 0)
-        printf("alpha[%d] = %d\n", i, alpha[i]);
-    }
+    // for (int i = 0; i < graph.rows; i++) {
+    //   if (alpha[i] > 0)
+    //     printf("alpha[%d] = %d\n", i, alpha[i]);
+    // }
     SOVMPKernel<<<num_blocks, block_size, 0, streams>>>(
       d_row_ptr, d_col, d_alpha, d_delta, d_beta, d_result, rows, dim);
     cudaMemcpyAsync(alpha, d_alpha, rows * sizeof(bool), cudaMemcpyDeviceToHost,

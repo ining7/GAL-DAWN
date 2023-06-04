@@ -91,13 +91,12 @@ public:
             int    dim,
             int&   entry);
   // SOVM
-  void SOVM(Graph& graph,
-            int*&  alpha,
-            int&   alphaPtr,
-            int*&  delta,
-            bool*& beta,
-            int*&  result,
-            int    dim);
+  void SOVMS(Graph& graph,
+             int*&  alpha,
+             int&   alphaPtr,
+             int*&  delta,
+             int*&  result,
+             int    dim);
 
   void SOVMP(Graph& graph,
              bool*& alpha,

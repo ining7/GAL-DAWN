@@ -96,6 +96,13 @@ void Graph::createGraphCsr(std::string& input_path, DAWN::Graph& graph)
   tool.transport(graph.rows, graph.nnz, graph.coo);
   tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
 
+  for (int j = 0; j < 40; j++) {
+    printf("graph.csrA.row_ptr[%d]=%d\n", j, graph.csrA.row_ptr[j]);
+  }
+  for (int j = 0; j < 40; j++) {
+    printf("graph.csrA.col[%d]=%d\n", j, graph.csrA.col[j]);
+  }
+
   delete[] graph.coo.col;
   graph.coo.col = NULL;
   delete[] graph.coo.row;

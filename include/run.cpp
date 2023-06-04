@@ -173,7 +173,6 @@ float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
   bool* output   = new bool[graph.rows];
   bool* input    = new bool[graph.rows];
   bool* alpha    = new bool[graph.rows];
-  int*  delta    = new int[graph.rows];
   int*  result   = new int[graph.rows];
 
   float elapsed = 0.0f;
@@ -181,7 +180,6 @@ float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
   std::fill_n(output, graph.rows, false);
   std::fill_n(result, graph.rows, 0);
   std::fill_n(alpha, graph.rows, false);
-  std::fill_n(delta, graph.rows, 0);
 
 #pragma omp parallel for
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
@@ -191,9 +189,8 @@ float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
     alpha[graph.csrB.col[i]]  = true;
     result[graph.csrB.col[i]] = 1;
   }
-
   auto start = std::chrono::high_resolution_clock::now();
-  while (dim < graph.dim) {
+  while (dim < graph.rows) {
     dim++;
     SOVMP(graph, alpha, alphaPtr, input, output, result, dim);
     entry = alphaPtr;
@@ -213,8 +210,6 @@ float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
   input = nullptr;
   delete[] alpha;
   alpha = nullptr;
-  delete[] delta;
-  delta = nullptr;
   // 输出结果
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
@@ -229,43 +224,29 @@ float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
 
 float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
 {
-  int   dim   = 1;
-  int   entry = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
-  int   entry_last = entry;
-  int   entry_max  = graph.rows - 1;
-  int   alphaPtr   = entry;
-  bool* output     = new bool[graph.rows];
-  bool* input      = new bool[graph.rows];
-  int*  alpha      = new int[graph.rows];
-  int*  delta      = new int[graph.rows];
-  int*  result     = new int[graph.rows];
+  int  dim      = 1;
+  int  entry    = 0;
+  int  alphaPtr = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
+  int* alpha    = new int[graph.rows];
+  int* delta    = new int[graph.rows];
+  int* result   = new int[graph.rows];
 
   float elapsed = 0.0f;
-  std::fill_n(input, graph.rows, false);
-  std::fill_n(output, graph.rows, false);
   std::fill_n(result, graph.rows, 0);
   std::fill_n(alpha, graph.rows, 0);
   std::fill_n(delta, graph.rows, 0);
 
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
-    input[graph.csrB.col[i]]  = true;
-    output[graph.csrB.col[i]] = true;
-    result[graph.csrB.col[i]] = 1;
-
+    result[graph.csrB.col[i]]             = 1;
     alpha[i - graph.csrB.row_ptr[source]] = graph.csrB.col[i];
   }
-
   auto start = std::chrono::high_resolution_clock::now();
-  while (dim < graph.dim) {
+  while (dim < graph.rows) {
     dim++;
-    SOVMS(graph, alpha, alphaPtr, delta, output, result, dim);
+    SOVMS(graph, alpha, alphaPtr, delta, result, dim);
     entry += alphaPtr;
-    if ((entry > entry_last) && (entry < entry_max)) {
-      entry_last = entry;
-      if (entry_last >= entry_max)
-        break;
-    } else {
+    if (!alphaPtr) {
       break;
     }
   }
@@ -273,12 +254,8 @@ float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
   std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
   elapsed += elapsed_tmp.count();
 
-  graph.entry += entry_last;
+  graph.entry += entry;
 
-  delete[] output;
-  output = nullptr;
-  delete[] input;
-  input = nullptr;
   delete[] alpha;
   alpha = nullptr;
   delete[] delta;
@@ -325,7 +302,6 @@ void CPU::SOVMS(Graph& graph,
                 int*&  alpha,
                 int&   alphaPtr,
                 int*&  delta,
-                bool*& beta,
                 int*&  result,
                 int    dim)
 {
@@ -333,14 +309,13 @@ void CPU::SOVMS(Graph& graph,
   for (int j = 0; j < alphaPtr; j++) {
     int start = graph.csrB.row_ptr[alpha[j]];
     int end   = graph.csrB.row_ptr[alpha[j] + 1];
-    if (start == end)
-      continue;
-    for (int k = start; k < end; k++) {
-      if (!beta[graph.csrB.col[k]]) {
-        delta[tmpPtr] = graph.csrB.col[k];
-        tmpPtr++;
-        beta[graph.csrB.col[k]]   = true;
-        result[graph.csrB.col[k]] = dim;
+    if (start != end) {
+      for (int k = start; k < end; k++) {
+        if (!result[graph.csrB.col[k]]) {
+          delta[tmpPtr] = graph.csrB.col[k];
+          ++tmpPtr;
+          result[graph.csrB.col[k]] = dim;
+        }
       }
     }
   }
