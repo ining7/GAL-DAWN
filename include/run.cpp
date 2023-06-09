@@ -232,20 +232,14 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
 {
   int    step    = 1;
   float* result  = new float[graph.rows];
-  bool*  alpha   = new bool[graph.rows];
-  bool*  beta    = new bool[graph.rows];
   float  elapsed = 0.0f;
   float  INF     = 1.0 * 0xfffffff;
   bool   ptr;
   std::fill_n(result, graph.rows, INF);
-  std::fill_n(alpha, graph.rows, false);
-  std::fill_n(beta, graph.rows, false);
-
 #pragma omp parallel for
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
     result[graph.csrB.col[i]] = graph.csrB.val[i];
-    alpha[graph.csrB.col[i]]  = true;
   }
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -254,27 +248,18 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
     ptr = false;
 #pragma omp parallel for
     for (int j = 0; j < graph.rows; j++) {
-      if (alpha[j]) {
+      if (result[j]) {
         for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
              k++) {
-          int   index = graph.csrB.col[k];
-          float tmp   = result[j] + graph.csrB.val[k];
-          if (result[index] > tmp) {
-            result[index] = tmp;
-            beta[index]   = true;
+          int index = graph.csrB.col[k];
+          if (result[index] > result[j] + graph.csrB.val[k]) {
+            result[index] = result[j] + graph.csrB.val[k];
             if (!ptr)
               ptr = true;
           }
         }
       }
     }
-    std::copy_n(beta, graph.rows, alpha);
-    std::fill_n(beta, graph.rows, false);
-    // #pragma omp parallel for
-    //     for (int j = 0; j < graph.rows; j++) {
-    //       alpha[j] = beta[j];
-    //       beta[j]  = false;
-    //     }
     if (!ptr)
       break;
   }
@@ -288,10 +273,6 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
     Tool tool;
     tool.outfile(graph.rows, result, source, output_path);
   }
-  delete[] beta;
-  beta = nullptr;
-  delete[] alpha;
-  alpha = nullptr;
   delete[] result;
   result = nullptr;
   return elapsed;
@@ -352,19 +333,14 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
   int step = 1;
 
   float* result  = new float[graph.rows];
-  bool*  alpha   = new bool[graph.rows];
-  bool*  beta    = new bool[graph.rows];
   float  elapsed = 0.0f;
   float  INF     = 1.0 * 0xfffffff;
   bool   ptr;
   std::fill_n(result, graph.rows, INF);
-  std::fill_n(alpha, graph.rows, false);
-  std::fill_n(beta, graph.rows, false);
 
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
     result[graph.csrB.col[i]] = graph.csrB.val[i];
-    alpha[graph.csrB.col[i]]  = true;
   }
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -372,22 +348,19 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
     step++;
     ptr = false;
     for (int j = 0; j < graph.rows; j++) {
-      if (alpha[j]) {
+      if (result[j] != INF) {
         for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
              k++) {
           int   index = graph.csrB.col[k];
           float tmp   = result[j] + graph.csrB.val[k];
           if (result[index] > tmp) {
             result[index] = tmp;
-            beta[index]   = true;
             if (!ptr)
               ptr = true;
           }
         }
       }
     }
-    std::copy_n(beta, graph.rows, alpha);
-    std::fill_n(beta, graph.rows, false);
     if (!ptr)
       break;
   }
@@ -402,10 +375,6 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
     Tool tool;
     tool.outfile(graph.rows, result, source, output_path);
   }
-  delete[] beta;
-  beta = nullptr;
-  delete[] alpha;
-  alpha = nullptr;
   delete[] result;
   result = nullptr;
   return elapsed;
