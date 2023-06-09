@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.cu": "cpp",
+        "*.cuh": "cuda-cpp",
         "chrono": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -72,7 +73,9 @@
         "valarray": "cpp",
         "codecvt": "cpp",
         "__nullptr": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "cassert": "cpp",
+        "__config": "cpp"
     },
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"

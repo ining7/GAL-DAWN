@@ -9,7 +9,8 @@ int main(int argc, char* argv[])
     std::string input_path  = argv[2];
     std::string output_path = argv[3];
     graph.interval = atoi(argv[4]);  // 请保证打印间隔小于节点总数，建议10-1000
-    std::string prinft = argv[5];
+    std::string prinft   = argv[5];
+    std::string weighted = argv[7];
 
     if (prinft == "true") {
       graph.prinft = true;
@@ -17,20 +18,29 @@ int main(int argc, char* argv[])
     } else
       graph.prinft = false;
 
+    if (weighted == "weighted") {
+      graph.weighted = true;
+      std::cout << "Weighted Graph" << std::endl;
+    } else {
+      graph.weighted = false;
+    }
+
     if (algo == "SG") {
       graph.source = atoi(argv[6]);
-      graph.stream = 20;
+      graph.stream = 14;
       graph.thread = 20;
-      graph.createGraphCsr(input_path, graph);
-      runCpu.runApspSGCsr(graph, output_path);
+      float tmp    = 0.0f;
+      graph.createGraph(input_path, graph);
+      runCpu.runApspSG(graph, output_path);
+
       return 0;
     }
     if (algo == "TG") {
       graph.source = atoi(argv[6]);
       graph.stream = 1;
       graph.thread = 20;
-      graph.createGraphCsr(input_path, graph);
-      runCpu.runApspTGCsr(graph, output_path);
+      graph.createGraph(input_path, graph);
+      runCpu.runApspTG(graph, output_path);
       return 0;
     }
     if (algo == "Mssp") {
@@ -38,9 +48,9 @@ int main(int argc, char* argv[])
 
       graph.stream = 20;
       graph.thread = 20;
-      graph.createGraphCsr(input_path, graph);
+      graph.createGraph(input_path, graph);
       graph.readList(sourceList, graph);
-      runCpu.runMsspCpuCsr(graph, output_path);
+      runCpu.runMsspSCpu(graph, output_path);
       return 0;
     }
   }

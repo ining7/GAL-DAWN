@@ -3,14 +3,15 @@ namespace DAWN {
 
 void Tool::transport(int n, int nnz, DAWN::Graph::Coo& coo)
 {
-  std::vector<std::pair<int, int>> tmp;
+  std::vector<std::pair<int, std::pair<int, float>>> tmp;
   for (int i = 0; i < nnz; i++) {
-    tmp.push_back({coo.row[i], coo.col[i]});
+    tmp.push_back({coo.row[i], {coo.col[i], coo.val[i]}});
   }
   std::sort(tmp.begin(), tmp.end());
   for (int i = 0; i < nnz; i++) {
-    coo.row[i] = tmp[i].second;
+    coo.row[i] = tmp[i].second.first;
     coo.col[i] = tmp[i].first;
+    coo.val[i] = tmp[i].second.second;
   }
 }
 
@@ -108,6 +109,43 @@ void Tool::coo2Csm(int n, int nnz, DAWN::Graph::Csm& csm, DAWN::Graph::Coo& coo)
 }
 
 void Tool::outfile(int n, int* result, int source, std::string& output_path)
+{
+  std::ofstream outfile(output_path);
+  if (!outfile.is_open()) {
+    std::cerr << "Error opening file " << output_path << std::endl;
+    return;
+  }
+  std::cout << "Start outfile" << std::endl;
+  for (int j = 0; j < n; j++) {
+    if ((source != j) && (result[j] > 0))
+      outfile << source << " " << j << " " << result[j] << std::endl;
+  }
+  std::cout << "End outfile" << std::endl;
+  outfile.close();
+}
+
+void Tool::outfile(int n, float* result, int source, std::string& output_path)
+{
+  std::ofstream outfile(output_path);
+  if (!outfile.is_open()) {
+    std::cerr << "Error opening file " << output_path << std::endl;
+    return;
+  }
+  std::cout << "Start outfile" << std::endl;
+  for (int j = 0; j < n; j++) {
+    if ((source != j) && (result[j] > 0))
+      outfile << source << " " << j << " " << std::fixed << std::setprecision(6)
+              << result[j] << std::endl;
+    // outfile << source << " " << j << " " << (int)result[j] << std::endl;
+  }
+  std::cout << "End outfile" << std::endl;
+  outfile.close();
+}
+
+void Tool::outfile(int                      n,
+                   thrust::host_vector<int> result,
+                   int                      source,
+                   std::string&             output_path)
 {
   std::ofstream outfile(output_path);
   if (!outfile.is_open()) {

@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
         std::cerr << "Error opening file " << input_path << std::endl;
         return 0;
       }
-      graph.createGraphCsr(input_path, graph);
-      gpurun.runSsspGpuCsr(graph, output_path);
+      graph.createGraph(input_path, graph);
+      gpurun.runSsspGpu(graph, output_path);
     }
 
     if (algo == "Test") {
@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
       graph.block_size = block_size;
       graph.interval   = 10;
       graph.stream     = 1;
-      graph.createGraphCsr(input_path, graph);
-      gpurun.runSsspGpuCsr(graph, output_path);
+      graph.createGraph(input_path, graph);
+      gpurun.runSsspGpu(graph, output_path);
     }
   } else {
     std::cout << "Algorithm is illegal!" << std::endl;
