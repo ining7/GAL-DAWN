@@ -96,6 +96,7 @@ void Graph::createGraph(std::string& input_path, DAWN::Graph& graph)
   } else {
     graph.readGraph(input_path, graph);
   }
+
   tool.coo2Csr(graph.rows, graph.nnz, graph.csrA, graph.coo);
   tool.transport(graph.rows, graph.nnz, graph.coo);
   tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
@@ -193,7 +194,8 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph)
     if (rows != cols) {
       graph.coo.row[i] = rows;
       graph.coo.col[i] = cols;
-      graph.coo.val[i] = 1.0f;
+      graph.coo.val[i] = 1.0 * (rand() % 10);
+      // graph.coo.val[i] = 1.0f;
       i++;
     }
   }
