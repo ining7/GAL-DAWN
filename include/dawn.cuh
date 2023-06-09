@@ -6,18 +6,18 @@
 namespace DAWN {
 class GPU {
 public:
-  void runApspGpuCsr(Graph& graph, std::string& output_path);
+  void runApspGpu(Graph& graph, std::string& output_path);
 
-  void runSsspGpuCsr(Graph& graph, std::string& output_path);
+  void runSsspGpu(Graph& graph, std::string& output_path);
 
-  void runMsspGpuCsr(Graph& graph, std::string& output_path);
+  void runMsspGpu(Graph& graph, std::string& output_path);
 
-  float ssspGpuCsr(DAWN::Graph&               graph,
-                   int                        source,
-                   cudaStream_t               streams,
-                   thrust::device_vector<int> d_row_ptr,
-                   thrust::device_vector<int> d_col,
-                   std::string&               output_path);
+  float ssspGpu(DAWN::Graph&               graph,
+                int                        source,
+                cudaStream_t               streams,
+                thrust::device_vector<int> d_row_ptr,
+                thrust::device_vector<int> d_col,
+                std::string&               output_path);
   float SSSPSOVMP(DAWN::Graph& graph,
                   int          source,
                   cudaStream_t streams,
@@ -31,35 +31,31 @@ public:
 __device__ __managed__ int* d_row_ptr;
 __device__ __managed__ int* d_col;
 
-__global__ void BOVMCsr(bool* input,
-                        bool* output,
-                        int*  result,
-                        int*  rows,
-                        int*  source,
-                        int*  dim,
-                        int*  d_entry);
-__global__ void BOVMCsrShare(bool* input,
-                             bool* output,
-                             int*  result,
-                             int*  rows,
-                             int*  source,
-                             int*  dim,
-                             int*  d_entry);
-__global__ void SOVMCsr(bool* alpha,
-                        bool* delta,
-                        bool* beta,
-                        int*  result,
-                        int*  d_row_ptr,
-                        int*  d_col,
-                        int   rows,
-                        int   dim);
+__global__ void BOVM(bool* input,
+                     bool* output,
+                     int*  result,
+                     int*  rows,
+                     int*  source,
+                     int*  dim,
+                     int*  d_entry);
+__global__ void BOVMShare(bool* input,
+                          bool* output,
+                          int*  result,
+                          int*  rows,
+                          int*  source,
+                          int*  dim,
+                          int*  d_entry);
+__global__ void SOVM(bool* alpha,
+                     bool* delta,
+                     bool* beta,
+                     int*  result,
+                     int*  d_row_ptr,
+                     int*  d_col,
+                     int   rows,
+                     int   dim);
 
-__global__ void BOVMCsr(bool* input,
-                        bool* output,
-                        int*  result,
-                        int*  rows,
-                        int*  dim,
-                        int*  d_entry)
+__global__ void
+BOVM(bool* input, bool* output, int* result, int* rows, int* dim, int* d_entry)
 {
   extern __shared__ int shared[];  // 声明共享内存
 
@@ -85,12 +81,12 @@ __global__ void BOVMCsr(bool* input,
   }
 }
 
-__global__ void BOVMCsrShare(bool* input,
-                             bool* output,
-                             int*  result,
-                             int*  rows,
-                             int*  dim,
-                             int*  d_entry)
+__global__ void BOVMShare(bool* input,
+                          bool* output,
+                          int*  result,
+                          int*  rows,
+                          int*  dim,
+                          int*  d_entry)
 {
   extern __shared__ int shared[];  // 声明共享内存
   __syncthreads();
@@ -116,14 +112,14 @@ __global__ void BOVMCsrShare(bool* input,
   }
 }
 
-__global__ void SOVMCsr(bool* alpha,
-                        bool* delta,
-                        bool* beta,
-                        int*  result,
-                        int*  d_row_ptr,
-                        int*  d_col,
-                        int   rows,
-                        int   dim)
+__global__ void SOVM(bool* alpha,
+                     bool* delta,
+                     bool* beta,
+                     int*  result,
+                     int*  d_row_ptr,
+                     int*  d_col,
+                     int   rows,
+                     int   dim)
 {
   int j = blockIdx.x * blockDim.x + threadIdx.x;
   __syncthreads();
@@ -168,12 +164,12 @@ __global__ void SOVMPKernel(const int* row_ptr,
   }
 }
 
-float DAWN::GPU::ssspGpuCsr(DAWN::Graph&               graph,
-                            int                        source,
-                            cudaStream_t               streams,
-                            thrust::device_vector<int> d_row_ptr,
-                            thrust::device_vector<int> d_col,
-                            std::string&               output_path)
+float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
+                         int                        source,
+                         cudaStream_t               streams,
+                         thrust::device_vector<int> d_row_ptr,
+                         thrust::device_vector<int> d_col,
+                         std::string&               output_path)
 {
   int dim = 1;
 
@@ -216,7 +212,7 @@ float DAWN::GPU::ssspGpuCsr(DAWN::Graph&               graph,
   while (dim < graph.dim) {
     dim++;
     auto start = std::chrono::high_resolution_clock::now();
-    SOVMCsr<<<num_blocks, block_size, shared_mem_size, streams>>>(
+    SOVM<<<num_blocks, block_size, shared_mem_size, streams>>>(
       d_alpha.data().get(), d_delta.data().get(), d_beta.data().get(),
       d_result.data().get(), d_row_ptr.data().get(), d_col.data().get(),
       graph.rows, dim);
@@ -444,7 +440,7 @@ void DAWN::GPU::Test(DAWN::Graph& graph, std::string& output_path)
   cudaFree(d_col);
 }
 
-void DAWN::GPU::runApspGpuCsr(DAWN::Graph& graph, std::string& output_path)
+void DAWN::GPU::runApspGpu(DAWN::Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0;
   int   proEntry     = 0;
@@ -478,8 +474,8 @@ void DAWN::GPU::runApspGpuCsr(DAWN::Graph& graph, std::string& output_path)
       continue;
     }
     int cuda_stream = source % graph.stream;
-    elapsed_time += ssspGpuCsr(graph, source, streams[cuda_stream], d_row_ptr,
-                               d_col, output_path);
+    elapsed_time += ssspGpu(graph, source, streams[cuda_stream], d_row_ptr,
+                            d_col, output_path);
     ++proEntry;
     tool.infoprint(proEntry, graph.rows, graph.interval, graph.thread,
                    elapsed_time);
@@ -498,7 +494,7 @@ void DAWN::GPU::runApspGpuCsr(DAWN::Graph& graph, std::string& output_path)
   }
 }
 
-void DAWN::GPU::runMsspGpuCsr(DAWN::Graph& graph, std::string& output_path)
+void DAWN::GPU::runMsspGpu(DAWN::Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0;
   int   proEntry     = 0;
@@ -529,8 +525,8 @@ void DAWN::GPU::runMsspGpuCsr(DAWN::Graph& graph, std::string& output_path)
       continue;
     }
     int cuda_stream = source % graph.stream;
-    elapsed_time += ssspGpuCsr(graph, source, streams[cuda_stream], d_row_ptr,
-                               d_col, output_path);
+    elapsed_time += ssspGpu(graph, source, streams[cuda_stream], d_row_ptr,
+                            d_col, output_path);
     ++proEntry;
     tool.infoprint(proEntry, graph.msource.size(), graph.interval, graph.thread,
                    elapsed_time);
@@ -549,7 +545,7 @@ void DAWN::GPU::runMsspGpuCsr(DAWN::Graph& graph, std::string& output_path)
   }
 }
 
-void DAWN::GPU::runSsspGpuCsr(DAWN::Graph& graph, std::string& output_path)
+void DAWN::GPU::runSsspGpu(DAWN::Graph& graph, std::string& output_path)
 {
   int source = graph.source;
   if (graph.csrB.row_ptr[source] == 0) {
@@ -570,7 +566,7 @@ void DAWN::GPU::runSsspGpuCsr(DAWN::Graph& graph, std::string& output_path)
             << std::endl;
 
   float elapsed_time =
-    ssspGpuCsr(graph, source, stream, d_row_ptr, d_col, output_path);
+    ssspGpu(graph, source, stream, d_row_ptr, d_col, output_path);
 
   std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"

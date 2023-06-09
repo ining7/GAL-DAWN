@@ -7,6 +7,7 @@ int main(int argc, char* argv[])
   std::string algo        = argv[1];
   std::string input_path  = argv[2];
   std::string output_path = argv[3];
+  graph.weighted          = true;
   if ((algo == "Default") || (algo == "Test") || (algo == "Mssp")) {
     if (algo == "Default") {
       graph.stream       = atoi(argv[4]);
@@ -30,8 +31,8 @@ int main(int argc, char* argv[])
         std::cerr << "Error opening file " << input_path << std::endl;
         return 0;
       }
-      graph.createGraphCsr(input_path, graph);
-      gpurun.runApspGpuCsr(graph, output_path);
+      graph.createGraphGPU(input_path, graph);
+      gpurun.runApspGpu(graph, output_path);
     }
 
     if (algo == "Test") {
@@ -58,8 +59,8 @@ int main(int argc, char* argv[])
         graph.stream = 8;
       }
 
-      graph.createGraphCsr(input_path, graph);
-      gpurun.runApspGpuCsr(graph, output_path);
+      graph.createGraphGPU(input_path, graph);
+      gpurun.runApspGpu(graph, output_path);
     }
     if (algo == "Mssp") {
       std::cout << "Mssp" << std::endl;
@@ -85,9 +86,9 @@ int main(int argc, char* argv[])
       } else {
         graph.stream = 8;
       }
-      graph.createGraphCsr(input_path, graph);
+      graph.createGraphGPU(input_path, graph);
       graph.readList(sourceList, graph);
-      gpurun.runMsspGpuCsr(graph, output_path);
+      gpurun.runMsspGpu(graph, output_path);
     }
   } else {
     std::cout << "Algorithm is illegal!" << std::endl;

@@ -29,8 +29,8 @@ int main(int argc, char* argv[])
   } else {
     graph.stream = 8;
   }
-  graph.createGraphCsr(input_path, graph);
+  graph.createGraph(input_path, graph);
   graph.readList(sourceList, graph);
-  gpurun.runMsspGpuCsr(graph, output_path);
+  gpurun.runMsspGpu(graph, output_path);
   return 0;
 }

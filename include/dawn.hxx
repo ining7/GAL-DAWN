@@ -38,15 +38,19 @@ public:
   bool             prinft;  // 是否打印结果
   int              source;  // 打印的节点
   bool             share;
+  bool             weighted;
   std::vector<int> msource;
+  float            MAX = (float)pow(2, 30);
 
-  void createGraphCsr(std::string& input_path, Graph& graph);
+  void createGraph(std::string& input_path, Graph& graph);
+
+  void createGraphGPU(std::string& input_path, DAWN::Graph& graph);
 
   void createGraphCsm(std::string& input_path, Graph& graph);
 
   void readGraph(std::string& input_path, Graph& graph);
 
-  void readGraphWeighted(std::string& input_path, Graph& graph);
+  void readGraphW(std::string& input_path, Graph& graph);
 
   void readList(std::string& input_path, DAWN::Graph& graph);
 };
@@ -54,21 +58,25 @@ public:
 class CPU {
 public:
   // APSP run
-  void runApspTGCsr(Graph& graph, std::string& output_path);
+  void runApspTG(Graph& graph, std::string& output_path);
 
-  void runApspSGCsr(Graph& graph, std::string& output_path);
+  void runApspSG(Graph& graph, std::string& output_path);
 
   // MSSP run
-  void runMsspSCpuCsr(Graph& graph, std::string& output_path);
+  void runMsspSCpu(Graph& graph, std::string& output_path);
 
-  void runMsspPCpuCsr(Graph& graph, std::string& output_path);
+  void runMsspPCpu(Graph& graph, std::string& output_path);
 
-  void runSsspCpuCsr(Graph& graph, std::string& output_path);
+  void runSsspCpu(Graph& graph, std::string& output_path);
 
   // SSSP
-  float ssspPCsr(Graph& graph, int source, std::string& output_path);
+  float ssspP(Graph& graph, int source, std::string& output_path);
 
-  float ssspSCsr(Graph& graph, int source, std::string& output_path);
+  float ssspS(Graph& graph, int source, std::string& output_path);
+
+  float ssspPW(Graph& graph, int source, std::string& output_path);
+
+  float ssspSW(Graph& graph, int source, std::string& output_path);
 
   // APSP run
   void runApspTGCsm(Graph& graph, std::string& output_path);
@@ -85,24 +93,24 @@ public:
 
   // BOVM
   void BOVM(Graph& graph,
-            bool*& output,
             bool*& input,
+            bool*& output,
             int*&  result,
             int    dim,
-            int&   entry);
+            bool&  ptr);
+
   // SOVM
   void SOVMS(Graph& graph,
              int*&  alpha,
-             int&   alphaPtr,
+             int&   ptr,
              int*&  delta,
              int*&  result,
              int    dim);
 
   void SOVMP(Graph& graph,
              bool*& alpha,
-             int&   alphaPtr,
+             int&   ptr,
              bool*& delta,
-             bool*& beta,
              int*&  result,
              int    dim);
 };
@@ -121,10 +129,13 @@ public:
   infoprint(int entry, int total, int interval, int thread, float elapsed_time);
 
   void outfile(int n, int* result, int source, std::string& output_path);
+
   void outfile(int                      n,
                thrust::host_vector<int> result,
                int                      source,
                std::string&             output_path);
+
+  void outfile(int n, float* result, int source, std::string& output_path);
 };
 
 }  // namespace DAWN

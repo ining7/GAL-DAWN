@@ -1,6 +1,6 @@
 #include "dawn.hxx"
 namespace DAWN {
-void CPU::runApspTGCsr(Graph& graph, std::string& output_path)
+void CPU::runApspTG(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0;
   Tool  tool;
@@ -13,7 +13,11 @@ void CPU::runApspTGCsr(Graph& graph, std::string& output_path)
       tool.infoprint(i, graph.rows, graph.interval, graph.stream, elapsed_time);
       continue;
     }
-    elapsed_time += ssspPCsr(graph, i, output_path);
+    if (graph.weighted) {
+      elapsed_time += ssspPW(graph, i, output_path);
+    } else {
+      elapsed_time += ssspP(graph, i, output_path);
+    }
     tool.infoprint(i, graph.rows, graph.interval, graph.stream, elapsed_time);
   }
   std::cout
@@ -23,11 +27,12 @@ void CPU::runApspTGCsr(Graph& graph, std::string& output_path)
   std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
 }
 
-void CPU::runApspSGCsr(Graph& graph, std::string& output_path)
+void CPU::runApspSG(Graph& graph, std::string& output_path)
 {
   Tool  tool;
   float elapsed_time = 0.0;
   int   proEntry     = 0;
+  float time         = 0.0f;
   std::cout
     << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
     << std::endl;
@@ -39,7 +44,11 @@ void CPU::runApspSGCsr(Graph& graph, std::string& output_path)
                      elapsed_time);
       continue;
     }
-    float time = ssspSCsr(graph, i, output_path);
+    if (graph.weighted) {
+      time = ssspSW(graph, i, output_path);
+    } else {
+      time = ssspS(graph, i, output_path);
+    }
 #pragma omp critical
     {
       elapsed_time += time;
@@ -56,25 +65,17 @@ void CPU::runApspSGCsr(Graph& graph, std::string& output_path)
             << std::endl;
 }
 
-void CPU::runMsspPCpuCsr(Graph& graph, std::string& output_path)
+void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
+  float time         = 0.0f;
   int   proEntry     = 0;
   std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             << std::endl;
   Tool tool;
 
-  delete[] graph.csrA.col;
-  graph.csrA.col = NULL;
-  delete[] graph.csrA.row_ptr;
-  graph.csrA.row_ptr = NULL;
-  delete[] graph.csrA.val;
-  graph.csrA.val = NULL;
-  delete[] graph.csrB.val;
-  graph.csrB.val = NULL;
-
-#pragma omp parallel for num_threads(graph.stream)
+#pragma omp parallel for
   for (int i = 0; i < graph.msource.size(); i++) {
     int source = graph.msource[i] % graph.rows;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
@@ -84,7 +85,11 @@ void CPU::runMsspPCpuCsr(Graph& graph, std::string& output_path)
                      graph.stream, elapsed_time);
       continue;
     }
-    float time = ssspPCsr(graph, source, output_path);
+    if (graph.weighted) {
+      time = ssspSW(graph, i, output_path);
+    } else {
+      time = ssspS(graph, i, output_path);
+    }
 #pragma omp critical
     {
       elapsed_time += time;
@@ -102,7 +107,7 @@ void CPU::runMsspPCpuCsr(Graph& graph, std::string& output_path)
             << std::endl;
 }
 
-void CPU::runMsspSCpuCsr(Graph& graph, std::string& output_path)
+void CPU::runMsspSCpu(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
   int   proEntry     = 0;
@@ -129,7 +134,11 @@ void CPU::runMsspSCpuCsr(Graph& graph, std::string& output_path)
                      graph.stream, elapsed_time);
       continue;
     }
-    elapsed_time += ssspPCsr(graph, source, output_path);
+    if (graph.weighted) {
+      elapsed_time += ssspPW(graph, source, output_path);
+    } else {
+      elapsed_time += ssspP(graph, source, output_path);
+    }
     ++proEntry;
 
     tool.infoprint(proEntry, graph.msource.size(), graph.interval, graph.stream,
@@ -144,19 +153,23 @@ void CPU::runMsspSCpuCsr(Graph& graph, std::string& output_path)
             << std::endl;
 }
 
-void CPU::runSsspCpuCsr(Graph& graph, std::string& output_path)
+void CPU::runSsspCpu(Graph& graph, std::string& output_path)
 {
   int source = graph.source;
   if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
-
+  float elapsed_time = 0.0f;
   std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             << std::endl;
-
-  float elapsed_time = ssspPCsr(graph, source, output_path);
+  if (graph.weighted) {
+    std::cout << "weighted" << std::endl;
+    elapsed_time += ssspPW(graph, source, output_path);
+  } else {
+    elapsed_time += ssspP(graph, source, output_path);
+  }
 
   std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
@@ -165,36 +178,31 @@ void CPU::runSsspCpuCsr(Graph& graph, std::string& output_path)
   std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
 }
 
-float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
+float CPU::ssspP(Graph& graph, int source, std::string& output_path)
 {
-  int   dim      = 1;
-  int   entry    = true;
-  int   alphaPtr = true;
-  bool* output   = new bool[graph.rows];
-  bool* input    = new bool[graph.rows];
-  bool* alpha    = new bool[graph.rows];
-  int*  result   = new int[graph.rows];
+  int   dim    = 1;
+  int   ptr    = false;
+  bool* output = new bool[graph.rows];
+  bool* input  = new bool[graph.rows];
+  int*  result = new int[graph.rows];
 
   float elapsed = 0.0f;
   std::fill_n(input, graph.rows, false);
   std::fill_n(output, graph.rows, false);
   std::fill_n(result, graph.rows, 0);
-  std::fill_n(alpha, graph.rows, false);
 
 #pragma omp parallel for
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
     input[graph.csrB.col[i]]  = true;
     output[graph.csrB.col[i]] = true;
-    alpha[graph.csrB.col[i]]  = true;
     result[graph.csrB.col[i]] = 1;
   }
   auto start = std::chrono::high_resolution_clock::now();
   while (dim < graph.rows) {
     dim++;
-    SOVMP(graph, alpha, alphaPtr, input, output, result, dim);
-    entry = alphaPtr;
-    if (!entry) {
+    SOVMP(graph, input, ptr, output, result, dim);
+    if (!ptr) {
       break;
     }
   }
@@ -208,8 +216,6 @@ float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
   output = nullptr;
   delete[] input;
   input = nullptr;
-  delete[] alpha;
-  alpha = nullptr;
   // 输出结果
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
@@ -222,7 +228,57 @@ float CPU::ssspPCsr(Graph& graph, int source, std::string& output_path)
   return elapsed;
 }
 
-float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
+float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
+{
+  int    step    = 1;
+  float* result  = new float[graph.rows];
+  float  elapsed = 0.0f;
+  float  INF     = 1.0 * 0xfffffff;
+  bool   ptr;
+  std::fill_n(result, graph.rows, INF);
+#pragma omp parallel for
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    result[graph.csrB.col[i]] = graph.csrB.val[i];
+  }
+
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < graph.rows) {
+    step++;
+    ptr = false;
+#pragma omp parallel for
+    for (int j = 0; j < graph.rows; j++) {
+      if (result[j]) {
+        for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
+             k++) {
+          int index = graph.csrB.col[k];
+          if (result[index] > result[j] + graph.csrB.val[k]) {
+            result[index] = result[j] + graph.csrB.val[k];
+            if (!ptr)
+              ptr = true;
+          }
+        }
+      }
+    }
+    if (!ptr)
+      break;
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  // 输出结果
+  if ((graph.prinft) && (source == graph.source)) {
+    printf("Start prinft\n");
+    Tool tool;
+    tool.outfile(graph.rows, result, source, output_path);
+  }
+  delete[] result;
+  result = nullptr;
+  return elapsed;
+}
+
+float CPU::ssspS(Graph& graph, int source, std::string& output_path)
 {
   int  dim      = 1;
   int  entry    = 0;
@@ -272,12 +328,62 @@ float CPU::ssspSCsr(Graph& graph, int source, std::string& output_path)
   return elapsed;
 }
 
+float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
+{
+  int    step    = 1;
+  float* result  = new float[graph.rows];
+  float  elapsed = 0.0f;
+  float  INF     = 1.0 * 0xfffffff;
+  bool   ptr;
+  std::fill_n(result, graph.rows, INF);
+
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    result[graph.csrB.col[i]] = graph.csrB.val[i];
+  }
+
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < graph.rows) {
+    step++;
+    ptr = false;
+    for (int j = 0; j < graph.rows; j++) {
+      if (result[j]) {
+        for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
+             k++) {
+          int index = graph.csrB.col[k];
+          if (result[index] > result[j] + graph.csrB.val[k]) {
+            result[index] = result[j] + graph.csrB.val[k];
+            if (!ptr)
+              ptr = true;
+          }
+        }
+      }
+    }
+    if (!ptr)
+      break;
+  }
+
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  // 输出结果
+  if ((graph.prinft) && (source == graph.source)) {
+    printf("Start prinft\n");
+    Tool tool;
+    tool.outfile(graph.rows, result, source, output_path);
+  }
+  delete[] result;
+  result = nullptr;
+  return elapsed;
+}
+
 void CPU::BOVM(Graph& graph,
-               bool*& output,
                bool*& input,
+               bool*& output,
                int*&  result,
                int    dim,
-               int&   entry)
+               bool&  ptr)
 {
   std::memmove(input, output, graph.rows * sizeof(bool));
   for (int j = 0; j < graph.rows; j++) {
@@ -290,7 +396,8 @@ void CPU::BOVM(Graph& graph,
         if (input[graph.csrA.col[k]]) {
           output[j] = true;
           result[j] = dim;
-          entry++;
+          if (!ptr)
+            ptr = true;
           break;
         }
       }
@@ -300,13 +407,13 @@ void CPU::BOVM(Graph& graph,
 
 void CPU::SOVMS(Graph& graph,
                 int*&  alpha,
-                int&   alphaPtr,
+                int&   ptr,
                 int*&  delta,
                 int*&  result,
                 int    dim)
 {
   int tmpPtr = 0;
-  for (int j = 0; j < alphaPtr; j++) {
+  for (int j = 0; j < ptr; j++) {
     int start = graph.csrB.row_ptr[alpha[j]];
     int end   = graph.csrB.row_ptr[alpha[j] + 1];
     if (start != end) {
@@ -320,18 +427,17 @@ void CPU::SOVMS(Graph& graph,
     }
   }
   std::memcpy(alpha, delta, tmpPtr * sizeof(int));
-  alphaPtr = tmpPtr;
+  ptr = tmpPtr;
 }
 
 void CPU::SOVMP(Graph& graph,
                 bool*& alpha,
-                int&   alphaPtr,
+                int&   ptr,
                 bool*& delta,
-                bool*& beta,
                 int*&  result,
                 int    dim)
 {
-  alphaPtr = false;
+  ptr = false;
 #pragma omp parallel for
   for (int j = 0; j < graph.rows; j++) {
     if (alpha[j]) {
@@ -339,9 +445,10 @@ void CPU::SOVMP(Graph& graph,
       int end   = graph.csrB.row_ptr[j + 1];
       if (start != end) {
         for (int k = start; k < end; k++) {
-          if (!delta[graph.csrB.col[k]]) {
-            beta[graph.csrB.col[k]]   = true;
+          if (!result[graph.csrB.col[k]]) {
             result[graph.csrB.col[k]] = dim;
+            if (!ptr)
+              ptr = true;
           }
         }
       }
@@ -349,11 +456,9 @@ void CPU::SOVMP(Graph& graph,
   }
 #pragma omp parallel for
   for (int j = 0; j < graph.rows; j++) {
-    if (beta[j] && (!delta[j])) {
+    if (result[j] && (!delta[j])) {
       alpha[j] = true;
-      delta[j] = beta[j];
-      if (!alphaPtr)
-        alphaPtr = true;
+      delta[j] = true;
     } else {
       alpha[j] = false;
     }
@@ -364,9 +469,9 @@ void CPU::runApspTGCsm(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0;
   Tool  tool;
-  std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
+               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            << std::endl;
 
   for (int i = 0; i < graph.rows; i++) {
     if (graph.csmB.row[i] == 0) {
@@ -388,9 +493,9 @@ void CPU::runApspSGCsm(Graph& graph, std::string& output_path)
   Tool  tool;
   float elapsed_time = 0.0;
   int   proEntry     = 0;
-  std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
+               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            << std::endl;
 #pragma omp parallel for
   for (int i = 0; i < graph.rows; i++) {
     if (graph.csmB.row[i] == 0) {
