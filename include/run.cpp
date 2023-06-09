@@ -330,7 +330,8 @@ float CPU::ssspS(Graph& graph, int source, std::string& output_path)
 
 float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
 {
-  int    step    = 1;
+  int step = 1;
+
   float* result  = new float[graph.rows];
   float  elapsed = 0.0f;
   float  INF     = 1.0 * 0xfffffff;
@@ -347,12 +348,13 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
     step++;
     ptr = false;
     for (int j = 0; j < graph.rows; j++) {
-      if (result[j]) {
+      if (result[j] != INF) {
         for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
              k++) {
-          int index = graph.csrB.col[k];
-          if (result[index] > result[j] + graph.csrB.val[k]) {
-            result[index] = result[j] + graph.csrB.val[k];
+          int   index = graph.csrB.col[k];
+          float tmp   = result[j] + graph.csrB.val[k];
+          if (result[index] > tmp) {
+            result[index] = tmp;
             if (!ptr)
               ptr = true;
           }

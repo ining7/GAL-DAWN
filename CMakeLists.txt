@@ -13,10 +13,10 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-project(dawn_cpu_v1 LANGUAGES CXX)
+project(dawn_cpu_apsp LANGUAGES CXX)
 project(dawn_cpu_sssp LANGUAGES CXX)
 project(dawn_cpu_mssp LANGUAGES CXX)
-project(dawn_gpu_v1 LANGUAGES CXX CUDA)
+project(dawn_gpu_apsp LANGUAGES CXX CUDA)
 project(dawn_gpu_sssp LANGUAGES CXX CUDA)
 project(dawn_gpu_mssp LANGUAGES CXX CUDA)
 # project(test LANGUAGES CXX)
@@ -27,12 +27,11 @@ include_directories(include)
 find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 
-
 # 添加可执行目标
-add_executable(dawn_cpu_v1 apsp/dawn_cpu_v1.cpp include/dawn.hxx include/tool.cpp include/graph.cpp include/run.cpp include/access.h)
+add_executable(dawn_cpu_apsp apsp/dawn_cpu_apsp.cpp include/dawn.hxx include/tool.cpp include/graph.cpp include/run.cpp include/access.h)
 add_executable(dawn_cpu_sssp sssp/dawn_cpu_sssp.cpp include/dawn.hxx include/tool.cpp include/graph.cpp include/run.cpp include/access.h)
 add_executable(dawn_cpu_mssp mssp/dawn_cpu_mssp.cpp include/dawn.hxx include/tool.cpp include/graph.cpp include/run.cpp include/access.h)
-add_executable(dawn_gpu_v1 apsp/dawn_gpu_v1.cu include/dawn.cuh include/dawn.hxx include/tool.cpp include/graph.cpp include/access.h)
+add_executable(dawn_gpu_apsp apsp/dawn_gpu_apsp.cu include/dawn.cuh include/dawn.hxx include/tool.cpp include/graph.cpp include/access.h)
 add_executable(dawn_gpu_sssp sssp/dawn_gpu_sssp.cu include/dawn.cuh include/dawn.hxx include/tool.cpp include/graph.cpp include/access.h)
 add_executable(dawn_gpu_mssp mssp/dawn_gpu_mssp.cu include/dawn.cuh include/dawn.hxx include/tool.cpp include/graph.cpp include/access.h)
 
@@ -46,8 +45,8 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler -fopenmp")
 # 添加OpenMP支持
 find_package(OpenMP REQUIRED)
 if(OPENMP_FOUND)
-    target_link_libraries(dawn_gpu_v1 PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(dawn_cpu_v1 PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(dawn_gpu_apsp PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(dawn_cpu_apsp PUBLIC OpenMP::OpenMP_CXX)
     target_link_libraries(dawn_cpu_sssp PUBLIC OpenMP::OpenMP_CXX)
     target_link_libraries(dawn_gpu_sssp PUBLIC OpenMP::OpenMP_CXX)
     target_link_libraries(dawn_cpu_mssp PUBLIC OpenMP::OpenMP_CXX)
