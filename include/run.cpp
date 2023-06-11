@@ -385,7 +385,6 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
     std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
     elapsed += elapsed_tmp.count();
     std::memmove(alpha, beta, graph.rows);
-    // std::copy_n(beta, graph.rows, alpha);
     std::fill_n(beta, graph.rows, false);
     if (!ptr)
       break;
