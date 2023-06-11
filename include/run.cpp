@@ -262,7 +262,7 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
           if (result[index] > tmp) {
             result[index] = tmp;
             beta[index]   = true;
-            if (!ptr)
+            if ((!ptr) && (index != source))
               ptr = true;
           }
         }
@@ -270,11 +270,6 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
     }
     std::copy_n(beta, graph.rows, alpha);
     std::fill_n(beta, graph.rows, false);
-    // #pragma omp parallel for
-    //     for (int j = 0; j < graph.rows; j++) {
-    //       alpha[j] = beta[j];
-    //       beta[j]  = false;
-    //     }
     if (!ptr)
       break;
   }
@@ -367,10 +362,10 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
     alpha[graph.csrB.col[i]]  = true;
   }
 
-  auto start = std::chrono::high_resolution_clock::now();
   while (step < graph.rows) {
     step++;
-    ptr = false;
+    ptr        = false;
+    auto start = std::chrono::high_resolution_clock::now();
     for (int j = 0; j < graph.rows; j++) {
       if (alpha[j]) {
         for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
@@ -380,21 +375,20 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
           if (result[index] > tmp) {
             result[index] = tmp;
             beta[index]   = true;
-            if (!ptr)
+            if ((!ptr) && (index != source))
               ptr = true;
           }
         }
       }
     }
-    std::copy_n(beta, graph.rows, alpha);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+    elapsed += elapsed_tmp.count();
+    std::memmove(alpha, beta, graph.rows);
     std::fill_n(beta, graph.rows, false);
     if (!ptr)
       break;
   }
-
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
 
   // 输出结果
   if ((graph.prinft) && (source == graph.source)) {

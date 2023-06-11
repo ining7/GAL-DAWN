@@ -2,7 +2,7 @@
 
 DAWN is a novel shortest paths algorithm, which is suitable for weighted and unweighted graphs. DAWN requires $O(m)$ space and $O(S_{wcc} \cdot E_{wcc})$ times on the unweighted graphs, which can also process SSSP tasks and requires $O(m)$ and $O(E_{wcc})$ time on the connected and unconnected graphs. $S_{wcc}$ and $E_{wcc}$ denote the number of nodes and edges included in the largest WCC (Weakly Connected Component) in the graphs.
 
-At parent, DAWN cannot run on the graph with negative weighted. If we determine after a thorough investigation that DAWN cannot handle negative-weighted graphs, we will inform you accordingly.  
+DAWN is capable of solving the APSP and SSSP problems on graphs with negative weights, and can automatically exclude the influence of negative weight cycles.  
 
 ## Quick Start Guide
 
