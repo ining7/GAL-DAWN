@@ -10,6 +10,7 @@ int main(int argc, char* argv[])
     std::string output_path = argv[3];
     graph.interval = atoi(argv[4]);  // 请保证打印间隔小于节点总数，建议10-1000
     std::string prinft   = argv[5];
+    graph.source         = atoi(argv[6]);
     std::string weighted = argv[7];
 
     if (prinft == "true") {
@@ -27,7 +28,7 @@ int main(int argc, char* argv[])
 
     if (algo == "SG") {
       graph.source = atoi(argv[6]);
-      graph.stream = 14;
+      graph.stream = 20;
       graph.thread = 20;
       float tmp    = 0.0f;
       graph.createGraph(input_path, graph);
@@ -50,7 +51,7 @@ int main(int argc, char* argv[])
       graph.thread = 20;
       graph.createGraph(input_path, graph);
       graph.readList(sourceList, graph);
-      runCpu.runMsspSCpu(graph, output_path);
+      runCpu.runMsspPCpu(graph, output_path);
       return 0;
     }
   }

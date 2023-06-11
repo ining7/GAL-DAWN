@@ -136,6 +136,10 @@ public:
                std::string&             output_path);
 
   void outfile(int n, float* result, int source, std::string& output_path);
+  void outfile(int                        n,
+               thrust::host_vector<float> result,
+               int                        source,
+               std::string&               output_path);
 };
 
 }  // namespace DAWN
