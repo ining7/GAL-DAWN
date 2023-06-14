@@ -36,7 +36,7 @@ void CPU::runApspSG(Graph& graph, std::string& output_path)
   std::cout
     << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
     << std::endl;
-#pragma omp parallel for num_threads(graph.stream)
+#pragma omp parallel for
   for (int i = 0; i < graph.rows; i++) {
     if (graph.csrB.row_ptr[i] == graph.csrB.row_ptr[i + 1]) {
       ++proEntry;
@@ -277,6 +277,8 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
   std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
   elapsed += elapsed_tmp.count();
 
+  // printf("Step is [%d]\n", step);
+
   // 输出结果
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
@@ -389,6 +391,8 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
     if (!ptr)
       break;
   }
+
+  // printf("Step is [%d]\n", step);
 
   // 输出结果
   if ((graph.prinft) && (source == graph.source)) {

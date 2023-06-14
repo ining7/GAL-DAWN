@@ -97,7 +97,7 @@ void Graph::createGraph(std::string& input_path, DAWN::Graph& graph)
     graph.readGraph(input_path, graph);
   }
 
-  tool.coo2Csr(graph.rows, graph.nnz, graph.csrA, graph.coo);
+  // tool.coo2Csr(graph.rows, graph.nnz, graph.csrA, graph.coo);
   tool.transport(graph.rows, graph.nnz, graph.coo);
   tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
 
@@ -107,12 +107,6 @@ void Graph::createGraph(std::string& input_path, DAWN::Graph& graph)
   graph.coo.row = NULL;
   delete[] graph.coo.val;
   graph.coo.val = NULL;
-  delete[] graph.csrA.col;
-  graph.csrA.col = NULL;
-  delete[] graph.csrA.row_ptr;
-  graph.csrA.row_ptr = NULL;
-  delete[] graph.csrA.val;
-  graph.csrA.val = NULL;
 
   std::cout << "Initialize Input Matrices" << std::endl;
 }
@@ -160,7 +154,7 @@ void Graph::createGraphGPU(std::string& input_path, DAWN::Graph& graph)
   } else {
     graph.readGraph(input_path, graph);
   }
-  tool.coo2Csr(graph.rows, graph.nnz, graph.csrA, graph.coo);
+  // tool.coo2Csr(graph.rows, graph.nnz, graph.csrA, graph.coo);
   tool.transport(graph.rows, graph.nnz, graph.coo);
   tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
 
@@ -194,8 +188,8 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph)
     if (rows != cols) {
       graph.coo.row[i] = rows;
       graph.coo.col[i] = cols;
-      graph.coo.val[i] = 1.0 * (rand() % 10);
-      // graph.coo.val[i] = 1.0f;
+      // graph.coo.val[i] = 1.0 * (rand() % 10);
+      graph.coo.val[i] = 1.0f;
       i++;
     }
   }
@@ -250,6 +244,8 @@ void Graph::readGraphW(std::string& input_path, DAWN::Graph& graph)
       graph.coo.row[i] = rows;
       graph.coo.col[i] = cols;
       graph.coo.val[i] = vals;
+      // graph.coo.val[i] = (float)((rand() % 200) / 100);
+      // graph.coo.val[i] = 1.0f;
       i++;
     }
   }

@@ -131,12 +131,33 @@ void Tool::outfile(int n, float* result, int source, std::string& output_path)
     std::cerr << "Error opening file " << output_path << std::endl;
     return;
   }
+  int INF = 0xfffffff;
   std::cout << "Start outfile" << std::endl;
   for (int j = 0; j < n; j++) {
-    if ((source != j) && (result[j] > 0))
+    if ((source != j) && (result[j] < INF) && (result[j] > 0))
       outfile << source << " " << j << " " << std::fixed << std::setprecision(6)
               << result[j] << std::endl;
-    // outfile << source << " " << j << " " << (int)result[j] << std::endl;
+  }
+  std::cout << "End outfile" << std::endl;
+  outfile.close();
+}
+
+void Tool::outfile(int                        n,
+                   thrust::host_vector<float> result,
+                   int                        source,
+                   std::string&               output_path)
+{
+  std::ofstream outfile(output_path);
+  if (!outfile.is_open()) {
+    std::cerr << "Error opening file " << output_path << std::endl;
+    return;
+  }
+  float INF = 1.0 * 0xfffffff;
+  std::cout << "Start outfile" << std::endl;
+  for (int j = 0; j < n; j++) {
+    if ((source != j) && (result[j] < INF) && (result[j] > 0))
+      outfile << source << " " << j << " " << std::fixed << std::setprecision(6)
+              << result[j] << std::endl;
   }
   std::cout << "End outfile" << std::endl;
   outfile.close();
@@ -152,9 +173,10 @@ void Tool::outfile(int                      n,
     std::cerr << "Error opening file " << output_path << std::endl;
     return;
   }
+  int INF = 0xfffffff;
   std::cout << "Start outfile" << std::endl;
   for (int j = 0; j < n; j++) {
-    if ((source != j) && (result[j] > 0))
+    if ((source != j) && (result[j] < INF) && (result[j] > 0))
       outfile << source << " " << j << " " << result[j] << std::endl;
   }
   std::cout << "End outfile" << std::endl;
