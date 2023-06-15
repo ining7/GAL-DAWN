@@ -48,11 +48,8 @@ int main(int argc, char* argv[])
       graph.thread   = 1;
       graph.interval = 100;
       graph.share    = false;
-      if (graph.share) {
-        graph.stream = 32;
-      } else {
-        graph.stream = 32;
-      }
+      graph.stream   = 8;
+
       if (weighted == "weighted") {
         graph.weighted = true;
         std::cout << "Weighted Graph" << std::endl;
@@ -83,11 +80,8 @@ int main(int argc, char* argv[])
       graph.thread   = 1;
       graph.interval = 100;
       graph.share    = false;
-      if (graph.share) {
-        graph.stream = 2;
-      } else {
-        graph.stream = 8;
-      }
+      graph.stream   = 4;
+
       graph.createGraphGPU(input_path, graph);
       graph.readList(sourceList, graph);
       gpurun.runMsspGpu(graph, output_path);

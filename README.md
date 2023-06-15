@@ -52,11 +52,11 @@ If compilation succeeds without errors, you can run your code as before, for exa
 
 ```c++
 cd $PROJECT_ROOT/build
-./dawn_cpu_v1 SG $GRAPH_DIR/mouse_gene.mtx ../output.txt 100 false 0 unweighted
+./dawn_cpu_apsp SG $GRAPH_DIR/mouse_gene.mtx ../output.txt 100 false 0 unweighted
 
-./dawn_cpu_v1 SG $GRAPH_DIR/cage10.mtx ../output.txt 100 false 0 weighted
+./dawn_cpu_apsp SG $GRAPH_DIR/cage10.mtx ../output.txt 100 false 0 weighted
 
-./dawn_gpu_v1 Default $GRAPH_DIR/mouse_gene.mtx ../output.txt 4 256 100 false 0
+./dawn_gpu_apsp Default $GRAPH_DIR/mouse_gene.mtx ../output.txt 4 256 100 false 0 unweighted
 
 ```
 
@@ -162,6 +162,14 @@ Thank you for citing our work.
       eprint={2208.04514},
       archivePrefix={arXiv},
       primaryClass={cs.DC}
+}
+@misc{feng2023expanding,
+      title={Expanding the Scope of DAWN: A Novel Version for Weighted Shortest Path Problem}, 
+      author={Yelai Feng},
+      year={2023},
+      eprint={2306.07872},
+      archivePrefix={arXiv},
+      primaryClass={cs.DS}
 }
 ```
 

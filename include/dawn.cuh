@@ -103,6 +103,7 @@ __global__ void SOVM(const int* row_ptr,
         }
       }
     }
+    alpha[j] = false;
   }
 }
 
@@ -183,7 +184,6 @@ float DAWN::GPU::ssspGpuW(DAWN::Graph&                 graph,
     Tool tool;
     tool.outfile(graph.rows, h_result, source, output_path);
   }
-  cudaFreeAsync(&d_ptr, streams);
   return elapsed_time;
 }
 
@@ -196,8 +196,7 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
 {
   int step = 1;
 
-  thrust::host_vector<bool> h_alpha(graph.rows, false);
-  thrust::host_vector<bool> h_beta(graph.rows, false);
+  thrust::host_vector<bool> h_input(graph.rows, false);
   thrust::host_vector<int>  h_result(graph.rows, 0);
   thrust::host_vector<bool> h_ptr(1, false);
 
@@ -206,7 +205,7 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
 #pragma omp parallel for
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
-    h_alpha[graph.csrB.col[i]]  = true;
+    h_input[graph.csrB.col[i]]  = true;
     h_result[graph.csrB.col[i]] = 1;
   }
   thrust::device_vector<bool> d_alpha(graph.rows, false);
@@ -214,8 +213,8 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
   thrust::device_vector<int>  d_result(graph.rows, 0);
   thrust::device_vector<bool> d_ptr(1, false);
 
-  thrust::copy(h_alpha.begin(), h_alpha.end(), d_alpha.begin());
-  thrust::copy(h_alpha.begin(), h_alpha.end(), d_beta.begin());
+  thrust::copy(h_input.begin(), h_input.end(), d_alpha.begin());
+  thrust::copy(h_input.begin(), h_input.end(), d_beta.begin());
   thrust::copy(h_result.begin(), h_result.end(), d_result.begin());
 
   // Launch kernel
@@ -227,33 +226,41 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
   // } else {
   //   shared_mem_size = sizeof(int) * (8);
   // }
-  auto start = std::chrono::high_resolution_clock::now();
+  // auto start = std::chrono::high_resolution_clock::now();
   while (step < graph.rows) {
     step++;
+    auto start = std::chrono::high_resolution_clock::now();
+
     if (!(step % 2)) {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
         d_row_ptr.data().get(), d_col.data().get(), d_alpha.data().get(),
         d_beta.data().get(), d_result.data().get(), graph.rows, step,
         d_ptr.data().get());
-      thrust::fill_n(d_alpha.begin(), graph.rows, false);
+      // thrust::fill_n(d_alpha.begin(), graph.rows, false);
     } else {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
         d_row_ptr.data().get(), d_col.data().get(), d_beta.data().get(),
         d_alpha.data().get(), d_result.data().get(), graph.rows, step,
         d_ptr.data().get());
-      thrust::fill_n(d_beta.begin(), graph.rows, false);
+      // thrust::fill_n(d_beta.begin(), graph.rows, false);
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    elapsed_time += elapsed.count();
     // thrust::copy_n(d_beta.begin(), graph.rows, d_alpha.begin());
 
-    // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
-    if (!d_ptr[0]) {
-      break;
+    if (!(step % 5)) {
+      // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
+      bool ptr = d_ptr[0];
+      if (!ptr) {
+        break;
+      }
     }
   }
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed = end - start;
-  elapsed_time += elapsed.count();
-
+  // auto end = std::chrono::high_resolution_clock::now();
+  // std::chrono::duration<double, std::milli> elapsed = end - start;
+  // elapsed_time += elapsed.count();
   // printf("Step is [%d]\n", step);
 
   // 输出结果
@@ -263,7 +270,7 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
     Tool tool;
     tool.outfile(graph.rows, h_result, source, output_path);
   }
-  cudaFreeAsync(&d_ptr, streams);
+
   return elapsed_time;
 }
 
