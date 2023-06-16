@@ -12,12 +12,11 @@ int main(int argc, char* argv[])
 
   if ((algo == "Default") || (algo == "Test")) {
     if (algo == "Default") {
-      graph.stream         = atoi(argv[4]);
-      graph.block_size     = atoi(argv[5]);
-      graph.interval       = atoi(argv[6]);
-      std::string prinft   = argv[7];
-      graph.source         = atoi(argv[8]);
-      std::string weighted = argv[9];
+      graph.stream         = 1;
+      graph.block_size     = atoi(argv[4]);
+      std::string prinft   = argv[5];
+      graph.source         = atoi(argv[6]);
+      std::string weighted = argv[7];
 
       if (prinft == "true") {
         graph.prinft = true;
@@ -37,24 +36,20 @@ int main(int argc, char* argv[])
     }
 
     if (algo == "Test") {
-      graph.block_size     = atoi(argv[4]);
-      std::string prinft   = argv[5];
-      graph.source         = atoi(argv[6]);
-      std::string weighted = argv[7];
+      std::string prinft   = argv[4];
+      graph.source         = atoi(argv[5]);
+      std::string weighted = argv[6];
       if (prinft == "true") {
         graph.prinft = true;
         std::cout << "Prinft source " << graph.source << std::endl;
       } else {
         graph.prinft = false;
       }
-      graph.thread   = 1;
-      graph.interval = 100;
-      graph.share    = false;
-      if (graph.share) {
-        graph.stream = 16;
-      } else {
-        graph.stream = 16;
-      }
+      graph.thread     = 1;
+      graph.block_size = 256;
+      graph.share      = false;
+      graph.stream     = 1;
+
       if (weighted == "weighted") {
         graph.weighted = true;
         std::cout << "Weighted Graph" << std::endl;
@@ -67,3 +62,7 @@ int main(int argc, char* argv[])
   }
   return 0;
 }
+//./dawn_gpu_sssp Default $GRAPH_DIR/XXX.mtx ../output.txt 256
+// false 0 unweighted
+//./dawn_gpu_sssp Test $GRAPH_DIR/XXX.mtx ../output.txt
+// false 0 unweighted

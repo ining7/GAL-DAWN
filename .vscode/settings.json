@@ -1,6 +1,6 @@
 {
     "files.associations": {
-        "*.cu": "cpp",
+        "*.cu": "cuda-cpp",
         "*.cuh": "cuda-cpp",
         "chrono": "cpp",
         "array": "cpp",

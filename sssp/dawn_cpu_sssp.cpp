@@ -24,9 +24,11 @@ int main(int argc, char* argv[])
     graph.weighted = false;
   }
   graph.stream = 1;
-  graph.thread = 20;
+  graph.thread = omp_get_num_threads();
   graph.createGraph(input_path, graph);
   runCpu.runSsspCpu(graph, output_path);
 
   return 0;
 }
+// ./dawn_cpu_sssp $GRAPH_DIR/XX.mtx ../output.txt false 0 unweighted//
+// ./dawn_cpu_sssp $GRAPH_DIR/XX.mtx ../output.txt false 0 weighted

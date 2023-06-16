@@ -26,18 +26,18 @@ public:
                  thrust::device_vector<int>   d_col,
                  thrust::device_vector<float> d_val,
                  std::string&                 output_path);
-  void  Test(DAWN::Graph& graph, std::string& output_path);
 };
 }  // namespace DAWN
 
-__global__ void SOVM(const int* row_ptr,
-                     const int* col,
-                     bool*      alpha,
-                     bool*      beta,
-                     int*       result,
-                     int        rows,
-                     int        step,
-                     bool*      ptr);
+__device__ static float atomicMin(float* address, float value);
+__global__ void         SOVM(const int* row_ptr,
+                             const int* col,
+                             bool*      alpha,
+                             bool*      beta,
+                             int*       result,
+                             int        rows,
+                             int        step,
+                             bool*      ptr);
 
 __global__ void GOVM(const int*   row_ptr,
                      const int*   col,
@@ -69,7 +69,7 @@ __global__ void GOVM(const int*   row_ptr,
         int   index = col[k];
         float tmp   = result[j] + val[k];
         if (result[index] > tmp) {
-          atomicExch(&result[index], tmp);
+          atomicMin(&result[index], tmp);
           beta[index] = true;
           if ((!ptr[0]) && (index != source))
             ptr[0] = true;
@@ -78,6 +78,29 @@ __global__ void GOVM(const int*   row_ptr,
     }
   }
 }
+
+/**
+ * @brief CUDA natively doesn't support atomicMin on float based addresses and
+ * values. This is a workaround (as of CUDA 11.1, there've been no support).
+ * (This function has been copy from Gunrock)
+ *
+ * @param address
+ * @param value
+ * @return float
+ */
+__device__ static float atomicMin(float* address, float value)
+{
+  int* addr_as_int = reinterpret_cast<int*>(address);
+  int  old         = *addr_as_int;
+  int  expected;
+  do {
+    expected = old;
+    old      = ::atomicCAS(addr_as_int, expected,
+                           __float_as_int(::fminf(value, __int_as_float(expected))));
+  } while (expected != old);
+  return __int_as_float(old);
+}
+
 __global__ void SOVM(const int* row_ptr,
                      const int* col,
                      bool*      alpha,
@@ -167,8 +190,12 @@ float DAWN::GPU::ssspGpuW(DAWN::Graph&                 graph,
     // thrust::copy_n(d_beta.begin(), graph.rows, d_alpha.begin());
     // thrust::fill_n(d_beta.begin(), graph.rows, false);
     // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
-    if (!d_ptr[0]) {
-      break;
+    if (!(step % 5)) {
+      // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
+      bool ptr = d_ptr[0];
+      if (!ptr) {
+        break;
+      }
     }
   }
   auto end = std::chrono::high_resolution_clock::now();
@@ -177,7 +204,7 @@ float DAWN::GPU::ssspGpuW(DAWN::Graph&                 graph,
 
   // printf("Step is [%d]\n", step);
 
-  // 输出结果
+  // Output
   if ((graph.prinft) && (source == graph.source)) {
     thrust::copy(d_result.begin(), d_result.end(), h_result.begin());
     printf("Start prinft\n");
@@ -236,19 +263,16 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
         d_row_ptr.data().get(), d_col.data().get(), d_alpha.data().get(),
         d_beta.data().get(), d_result.data().get(), graph.rows, step,
         d_ptr.data().get());
-      // thrust::fill_n(d_alpha.begin(), graph.rows, false);
     } else {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
         d_row_ptr.data().get(), d_col.data().get(), d_beta.data().get(),
         d_alpha.data().get(), d_result.data().get(), graph.rows, step,
         d_ptr.data().get());
-      // thrust::fill_n(d_beta.begin(), graph.rows, false);
     }
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
     elapsed_time += elapsed.count();
-    // thrust::copy_n(d_beta.begin(), graph.rows, d_alpha.begin());
 
     if (!(step % 5)) {
       // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
@@ -263,7 +287,6 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
   // elapsed_time += elapsed.count();
   // printf("Step is [%d]\n", step);
 
-  // 输出结果
   if ((graph.prinft) && (source == graph.source)) {
     thrust::copy(d_result.begin(), d_result.end(), h_result.begin());
     printf("Start prinft\n");
@@ -285,10 +308,6 @@ void DAWN::GPU::runApspGpu(DAWN::Graph& graph, std::string& output_path)
   thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
   thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
   thrust::copy_n(graph.csrB.val, graph.nnz, d_val.begin());
-  // for (int i = 0; i < 30; i++)
-  //   printf("d_col[%d] = %d\n", i, h_col[i]);
-  // for (int i = 0; i < 30; i++)
-  //   printf("d_row_ptr[%d] = %d\n", i, h_row_ptr[i]);
 
   // Create streams
   cudaStream_t streams[graph.stream];
@@ -355,7 +374,7 @@ void DAWN::GPU::runMsspGpu(DAWN::Graph& graph, std::string& output_path)
 
   Tool tool;
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
     << std::endl;
 
   for (int i = 0; i < graph.msource.size(); i++) {
@@ -380,7 +399,7 @@ void DAWN::GPU::runMsspGpu(DAWN::Graph& graph, std::string& output_path)
                    elapsed_time);
   }
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
     << std::endl;
   // Output elapsed time and free remaining resources
   std::cout << " Elapsed time: " << elapsed_time / (graph.thread * 1000)
@@ -411,10 +430,6 @@ void DAWN::GPU::runSsspGpu(DAWN::Graph& graph, std::string& output_path)
   cudaStream_t stream;
   cudaStreamCreate(&stream);
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
-
   float elapsed_time = 0.0f;
   if (graph.weighted) {
     elapsed_time +=
@@ -424,9 +439,6 @@ void DAWN::GPU::runSsspGpu(DAWN::Graph& graph, std::string& output_path)
       ssspGpu(graph, source, stream, d_row_ptr, d_col, output_path);
   }
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
   // Output elapsed time and free remaining resources
   std::cout << " Elapsed time: " << elapsed_time / (graph.thread * 1000)
             << std::endl;
