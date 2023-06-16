@@ -3,8 +3,8 @@
 # Use "sudo bash process_full_sssp.sh" to run the script
 
 # Modify the absolute path of MAIN and GRAPH_DIR, or the relative path based on the directory where it is located.
-MAIN="/home/lxr/code/SC2023/build/dawn_cpu_apsp" #需要修改为main地址
-GRAPH_DIR="/home/lxr/code/test_graph/dawnw"
+MAIN="/home/lxr/code/SC2023/build/dawn_gpu_apsp" #需要修改为main地址
+GRAPH_DIR="/home/lxr/code/test_graph_big"
 OUTPUT="/home/lxr/code/SC2023/out.txt"
 Algorithm="Mssp"
 Interval="100"
@@ -12,8 +12,8 @@ Prinft="false"
 Source="0"
 SourceList="/home/lxr/code/SC2023/sourceList.txt"
 Stream="4"
-Block_size="1024"
-Weighted="weighted"
+Block_size="32"
+Weighted="unweighted"
 
 # Check if the GRAPH_DIR path exists and contains any mtx files
 if [[ ! -d "${GRAPH_DIR}" ]]; then
@@ -22,7 +22,7 @@ if [[ ! -d "${GRAPH_DIR}" ]]; then
 fi
 
 # Set directory path for the graph log files
-LOG_DIR="/home/lxr/code/SC2023/log/mssp_log"
+LOG_DIR="/home/lxr/code/SC2023/log/log_unweighted"
 
 # Create LOG_DIR if it doesn't exist already
 [[ ! -d "${LOG_DIR}" ]] && mkdir "${LOG_DIR}"
@@ -39,9 +39,9 @@ for file in ${GRAPH_DIR}/*.mtx; do
     filename="${filename%.*}"
     echo "Proccessing ${file}! Please check the log file for details."
     # Run full_sssp on the mtx file and redirect output to logfile
-    "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Interval}" "${Prinft}" "${SourceList}" "${Weighted}"| tee "${LOG_DIR}/${filename}_log.txt" #cpu
+    # "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Interval}" "${Prinft}" "${SourceList}" "${Weighted}"| tee "${LOG_DIR}/${filename}_log.txt" #cpu
     # "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Stream}" "${Block_size}" "${Interval}" "${Prinft}" "${Source}" | tee "${LOG_DIR}/${filename}_log.txt" #gpu
-    # "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Block_size}" "${Prinft}" "${SourceList}" | tee "${LOG_DIR}/${filename}_log.txt" #mssp
+    "${MAIN}" "${Algorithm}" "${file}" "${OUTPUT}" "${Block_size}" "${Prinft}" "${SourceList}" "${Weighted}"| tee "${LOG_DIR}/${filename}_log.txt" #mssp
 done
 
 echo "All done!"

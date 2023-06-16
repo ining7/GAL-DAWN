@@ -70,7 +70,7 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
   float elapsed_time = 0.0f;
   float time         = 0.0f;
   int   proEntry     = 0;
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
+  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             << std::endl;
   Tool tool;
@@ -99,7 +99,7 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
                    elapsed_time);
   }
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end "
+  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             << std::endl;
   // Output elapsed time and free remaining resources
@@ -111,7 +111,7 @@ void CPU::runMsspSCpu(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
   int   proEntry     = 0;
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
+  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             << std::endl;
   Tool tool;
@@ -145,7 +145,7 @@ void CPU::runMsspSCpu(Graph& graph, std::string& output_path)
                    elapsed_time);
   }
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end "
+  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
                "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             << std::endl;
   // Output elapsed time and free remaining resources
@@ -161,20 +161,13 @@ void CPU::runSsspCpu(Graph& graph, std::string& output_path)
     exit(0);
   }
   float elapsed_time = 0.0f;
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
   if (graph.weighted) {
     std::cout << "weighted" << std::endl;
     elapsed_time += ssspPW(graph, source, output_path);
   } else {
     elapsed_time += ssspP(graph, source, output_path);
   }
-
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
-  // Output elapsed time and free remaining resources
+  // Output elapsed time
   std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
 }
 
@@ -216,7 +209,7 @@ float CPU::ssspP(Graph& graph, int source, std::string& output_path)
   output = nullptr;
   delete[] input;
   input = nullptr;
-  // 输出结果
+  // Output
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
     Tool tool;
@@ -260,7 +253,7 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
           int   index = graph.csrB.col[k];
           float tmp   = result[j] + graph.csrB.val[k];
           if (result[index] > tmp) {
-            result[index] = tmp;
+            result[index] = std::min(result[index], tmp);
             beta[index]   = true;
             if ((!ptr) && (index != source))
               ptr = true;
@@ -279,7 +272,7 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
 
   // printf("Step is [%d]\n", step);
 
-  // 输出结果
+  // Output
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
     Tool tool;
@@ -332,7 +325,7 @@ float CPU::ssspS(Graph& graph, int source, std::string& output_path)
   alpha = nullptr;
   delete[] delta;
   delta = nullptr;
-  // 输出结果
+  // Output
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
     Tool tool;
@@ -394,7 +387,7 @@ float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
 
   // printf("Step is [%d]\n", step);
 
-  // 输出结果
+  // Output
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
     Tool tool;
@@ -560,15 +553,8 @@ void CPU::runSsspCpuCsm(Graph& graph, std::string& output_path)
     exit(0);
   }
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
-
   float elapsed_time = ssspPCsm(graph, source, output_path);
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
   // Output elapsed time and free remaining resources
   std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
 }
@@ -636,7 +622,7 @@ float CPU::ssspPCsm(Graph& graph, int source, std::string& output_path)
   output = nullptr;
   delete[] input;
   input = nullptr;
-  // 输出结果
+  // Output
   if ((graph.prinft) && (source == graph.source)) {
     Tool tool;
     tool.outfile(graph.rows, result, source, output_path);
@@ -702,7 +688,7 @@ float CPU::ssspSCsm(Graph& graph, int source, std::string& output_path)
   output = nullptr;
   delete[] input;
   input = nullptr;
-  // 输出结果
+  // Output
   if ((graph.prinft) && (source == graph.source)) {
     Tool tool;
     tool.outfile(graph.rows, result, source, output_path);

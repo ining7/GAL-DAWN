@@ -3,23 +3,23 @@
 namespace DAWN {
 class Graph {
 public:
-  struct Csr         // 一维CSR
+  struct Csr
   {
-    int*   row_ptr;  // CSR行指针
-    int*   col;      // CSR列索引
-    float* val;      // CSR值
+    int*   row_ptr;
+    int*   col;
+    float* val;
   };
   struct Coo
   {
-    int*   row;   // COO行指针
-    int*   col;   // COO列索引
-    float* val;   // COO值
+    int*   row;
+    int*   col;
+    float* val;
   };
-  struct Csm      // 二维CSR
+  struct Csm
   {
-    int*    row;  // CSR行指针
-    int**   col;  // CSR列索引
-    float** val;  // CSR值
+    int*    row;
+    int**   col;
+    float** val;
   };
   int              rows;
   int              cols;
@@ -35,8 +35,8 @@ public:
   int              interval;
   int              stream;
   int              block_size;
-  bool             prinft;  // 是否打印结果
-  int              source;  // 打印的节点
+  bool             prinft;  // prinft the result
+  int              source;
   bool             share;
   bool             weighted;
   std::vector<int> msource;

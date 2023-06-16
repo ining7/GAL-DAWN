@@ -33,25 +33,15 @@ int main(int argc, char* argv[])
       graph.createGraphGPU(input_path, graph);
       gpurun.runApspGpu(graph, output_path);
     }
-
     if (algo == "Test") {
-      graph.block_size     = atoi(argv[4]);
-      std::string prinft   = argv[5];
-      graph.source         = atoi(argv[6]);
-      std::string weighted = argv[7];
+      std::string prinft   = argv[4];
+      graph.source         = atoi(argv[5]);
+      std::string weighted = argv[6];
       if (prinft == "true") {
         graph.prinft = true;
         std::cout << "Prinft source " << graph.source << std::endl;
       } else {
         graph.prinft = false;
-      }
-      graph.thread   = 1;
-      graph.interval = 100;
-      graph.share    = false;
-      if (graph.share) {
-        graph.stream = 32;
-      } else {
-        graph.stream = 32;
       }
       if (weighted == "weighted") {
         graph.weighted = true;
@@ -59,15 +49,24 @@ int main(int argc, char* argv[])
       } else {
         graph.weighted = false;
       }
+
+      graph.thread     = 1;
+      graph.interval   = 100;
+      graph.share      = false;
+      graph.stream     = 8;
+      graph.block_size = 256;
+
       graph.createGraphGPU(input_path, graph);
       gpurun.runApspGpu(graph, output_path);
     }
     if (algo == "Mssp") {
       std::cout << "Mssp" << std::endl;
-      graph.block_size       = atoi(argv[4]);
-      std::string prinft     = argv[5];
-      std::string sourceList = argv[6];
-      std::string weighted   = argv[7];
+      graph.stream           = atoi(argv[4]);
+      graph.block_size       = atoi(argv[5]);
+      graph.interval         = atoi(argv[6]);
+      std::string prinft     = argv[7];
+      std::string sourceList = argv[8];
+      std::string weighted   = argv[9];
       if (prinft == "true") {
         graph.prinft = true;
         std::cout << "Prinft source " << graph.source << std::endl;
@@ -80,14 +79,9 @@ int main(int argc, char* argv[])
       } else {
         graph.weighted = false;
       }
-      graph.thread   = 1;
-      graph.interval = 100;
-      graph.share    = false;
-      if (graph.share) {
-        graph.stream = 2;
-      } else {
-        graph.stream = 8;
-      }
+      graph.thread = 1;
+      graph.share  = false;
+
       graph.createGraphGPU(input_path, graph);
       graph.readList(sourceList, graph);
       gpurun.runMsspGpu(graph, output_path);
@@ -98,3 +92,9 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+//./dawn_gpu_apsp Default $GRAPH_DIR/XXX.mtx ../output.txt 4 256 100
+// false 0 unweighted
+//./dawn_gpu_apsp Test $GRAPH_DIR/XXX.mtx ../output.txt
+// false 0 unweighted
+//./dawn_gpu_mssp Mssp $GRAPH_DIR/XXX.mtx ../output.txt 4 256 100
+// false sourceList unweighted
