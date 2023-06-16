@@ -178,14 +178,6 @@ Thank you for citing our work.
       archivePrefix={arXiv},
       primaryClass={cs.DC}
 }
-@misc{feng2023expanding,
-      title={Expanding the Scope of DAWN: A Novel Version for Weighted Shortest Path Problem}, 
-      author={Yelai Feng},
-      year={2023},
-      eprint={2306.07872},
-      archivePrefix={arXiv},
-      primaryClass={cs.DS}
-}
 ```
 
 ## Copyright & License
