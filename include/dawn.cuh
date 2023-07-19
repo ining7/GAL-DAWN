@@ -30,14 +30,15 @@ public:
 }  // namespace DAWN
 
 __device__ static float atomicMin(float* address, float value);
-__global__ void         SOVM(const int* row_ptr,
-                             const int* col,
-                             bool*      alpha,
-                             bool*      beta,
-                             int*       result,
-                             int        rows,
-                             int        step,
-                             bool*      ptr);
+
+__global__ void SOVM(const int* row_ptr,
+                     const int* col,
+                     bool*      alpha,
+                     bool*      beta,
+                     int*       result,
+                     int        rows,
+                     int        step,
+                     bool*      ptr);
 
 __global__ void GOVM(const int*   row_ptr,
                      const int*   col,
@@ -48,36 +49,6 @@ __global__ void GOVM(const int*   row_ptr,
                      int          rows,
                      int          source,
                      bool*        ptr);
-
-__global__ void GOVM(const int*   row_ptr,
-                     const int*   col,
-                     const float* val,
-                     bool*        alpha,
-                     bool*        beta,
-                     float*       result,
-                     int          rows,
-                     int          source,
-                     bool*        ptr)
-{
-  ptr[0] = false;
-  int j  = blockIdx.x * blockDim.x + threadIdx.x;
-  if ((j < rows) && (alpha[j])) {
-    int start = row_ptr[j];
-    int end   = row_ptr[j + 1];
-    if (start != end) {
-      for (int k = start; k < end; k++) {
-        int   index = col[k];
-        float tmp   = result[j] + val[k];
-        if (result[index] > tmp) {
-          atomicMin(&result[index], tmp);
-          beta[index] = true;
-          if ((!ptr[0]) && (index != source))
-            ptr[0] = true;
-        }
-      }
-    }
-  }
-}
 
 /**
  * @brief CUDA natively doesn't support atomicMin on float based addresses and
@@ -127,6 +98,36 @@ __global__ void SOVM(const int* row_ptr,
       }
     }
     alpha[j] = false;
+  }
+}
+
+__global__ void GOVM(const int*   row_ptr,
+                     const int*   col,
+                     const float* val,
+                     bool*        alpha,
+                     bool*        beta,
+                     float*       result,
+                     int          rows,
+                     int          source,
+                     bool*        ptr)
+{
+  ptr[0] = false;
+  int j  = blockIdx.x * blockDim.x + threadIdx.x;
+  if ((j < rows) && (alpha[j])) {
+    int start = row_ptr[j];
+    int end   = row_ptr[j + 1];
+    if (start != end) {
+      for (int k = start; k < end; k++) {
+        int   index = col[k];
+        float tmp   = result[j] + val[k];
+        if (result[index] > tmp) {
+          atomicMin(&result[index], tmp);
+          beta[index] = true;
+          if ((!ptr[0]) && (index != source))
+            ptr[0] = true;
+        }
+      }
+    }
   }
 }
 
@@ -274,7 +275,7 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
     std::chrono::duration<double, std::milli> elapsed = end - start;
     elapsed_time += elapsed.count();
 
-    if (!(step % 5)) {
+    if (!(step % 15)) {
       // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
       bool ptr = d_ptr[0];
       if (!ptr) {

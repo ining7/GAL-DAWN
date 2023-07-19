@@ -411,18 +411,18 @@ void CPU::BOVM(Graph& graph,
 {
   std::memmove(input, output, graph.rows * sizeof(bool));
   for (int j = 0; j < graph.rows; j++) {
-    if (result[j])
-      continue;
-    int start = graph.csrA.row_ptr[j];
-    int end   = graph.csrA.row_ptr[j + 1];
-    if (start != end) {
-      for (int k = start; k < end; k++) {
-        if (input[graph.csrA.col[k]]) {
-          output[j] = true;
-          result[j] = dim;
-          if (!ptr)
-            ptr = true;
-          break;
+    if (!result[j]) {
+      int start = graph.csrA.row_ptr[j];
+      int end   = graph.csrA.row_ptr[j + 1];
+      if (start != end) {
+        for (int k = start; k < end; k++) {
+          if (input[graph.csrA.col[k]]) {
+            output[j] = true;
+            result[j] = dim;
+            if (!ptr)
+              ptr = true;
+            break;
+          }
         }
       }
     }

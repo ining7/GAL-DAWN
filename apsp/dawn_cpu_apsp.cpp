@@ -28,8 +28,8 @@ int main(int argc, char* argv[])
 
     if (algo == "SG") {
       graph.source = atoi(argv[6]);
-      graph.stream = omp_get_num_threads();
-      graph.thread = omp_get_num_threads();
+      graph.stream = 20;
+      graph.thread = 20;
       float tmp    = 0.0f;
       graph.createGraph(input_path, graph);
       runCpu.runApspSG(graph, output_path);
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     if (algo == "TG") {
       graph.source = atoi(argv[6]);
       graph.stream = 1;
-      graph.thread = omp_get_num_threads();
+      graph.thread = 20;
       graph.createGraph(input_path, graph);
       runCpu.runApspTG(graph, output_path);
       return 0;
@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
     if (algo == "Mssp") {
       std::string sourceList = argv[6];
 
-      graph.stream = omp_get_num_threads();
-      graph.thread = omp_get_num_threads();
+      graph.stream = 20;
+      graph.thread = 20;
       graph.createGraph(input_path, graph);
       graph.readList(sourceList, graph);
       runCpu.runMsspPCpu(graph, output_path);

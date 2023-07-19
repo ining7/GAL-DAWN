@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
       graph.thread     = 1;
       graph.interval   = 100;
       graph.share      = false;
-      graph.stream     = 8;
-      graph.block_size = 256;
+      graph.stream     = 16;
+      graph.block_size = 1024;
 
       graph.createGraphGPU(input_path, graph);
       gpurun.runApspGpu(graph, output_path);
