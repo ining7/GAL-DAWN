@@ -155,7 +155,7 @@ We provide the file **check_unweighted.py** and **check_weighted.py**, based on 
 
 ### 7.Decumentation
 
-Please refer to [decument/Decumentation_v1](https://github.com/lxrzlyr/SC2023/blob/eb9080f76c2950981a4dac72141d4991eff8b9db/document/Decumentation_v1.md) for commands.
+Please refer to [document/Documentation_v1](https://github.com/lxrzlyr/SC2023/blob/eb9080f76c2950981a4dac72141d4991eff8b9db/document/Decumentation_v1.md) for commands.
 
 ## New version
 
