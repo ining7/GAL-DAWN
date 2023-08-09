@@ -153,9 +153,9 @@ On the test machine with RTX3080TI, DAWN achieves average speedup of 313.763&tim
 
 We provide the file **check_unweighted.py** and **check_weighted.py**, based on networkx, which can be used to check the results printed by DAWN.
 
-### 7.Decumentation
+### 7.Documentation
 
-Please refer to [decument/Decumentation_v1](https://github.com/lxrzlyr/SC2023/blob/eb9080f76c2950981a4dac72141d4991eff8b9db/document/Decumentation_v1.md) for commands.
+Please refer to [document/Documentation_v1](https://github.com/lxrzlyr/SC2023/blob/eb9080f76c2950981a4dac72141d4991eff8b9db/document/Decumentation_v1.md) for commands.
 
 ## New version
 
