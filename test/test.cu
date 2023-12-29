@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
     graph.thread     = 1;
     graph.interval   = 10;
     graph.stream     = 1;
-    graph.createGraphCsr(input_path, graph);
-    gpurun.runApspGpuCsr(graph, output_path);
+    graph.createGraph(input_path, graph);
+    gpurun.runApspGpu(graph, output_path);
   }
   return 0;
 }

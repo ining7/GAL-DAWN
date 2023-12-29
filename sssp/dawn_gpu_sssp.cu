@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
       } else {
         graph.weighted = false;
       }
-      graph.createGraphGPU(input_path, graph);
+      graph.createGraph(input_path, graph);
       gpurun.runSsspGpu(graph, output_path);
     }
 
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
       } else {
         graph.weighted = false;
       }
-      graph.createGraphGPU(input_path, graph);
+      graph.createGraph(input_path, graph);
       gpurun.runSsspGpu(graph, output_path);
     }
   }

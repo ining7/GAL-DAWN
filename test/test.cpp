@@ -19,13 +19,13 @@ int main(int argc, char* argv[])
 
     if (algo == "SG") {
       graph.thread = 20;
-      graph.createGraphCsr(input_path, graph);
-      runCpu.runApspSGCsr(graph, output_path);
+      graph.createGraph(input_path, graph);
+      runCpu.runApspSG(graph, output_path);
       return 0;
     } else {
       graph.thread = 1;
-      graph.createGraphCsr(input_path, graph);
-      runCpu.runApspTGCsr(graph, output_path);
+      graph.createGraph(input_path, graph);
+      runCpu.runApspTG(graph, output_path);
       return 0;
     }
   }

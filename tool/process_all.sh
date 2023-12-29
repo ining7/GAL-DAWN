@@ -3,7 +3,7 @@
 # Use "sudo bash process_full_sssp.sh" to run the script
 
 # Modify the absolute path of MAIN and GRAPH_DIR, or the relative path based on the directory where it is located.
-MAIN="/home/lxr/code/SC2023/build/dawn_gpu_apsp" #需要修改为main地址
+MAIN="/home/lxr/code/DAWN-An-Noval-SSSP-APSP-Algorithm/build" #需要修改为main地址
 GRAPH_DIR="/home/lxr/code/test_graph_big"
 OUTPUT="/home/lxr/code/SC2023/out.txt"
 Algorithm="Mssp"

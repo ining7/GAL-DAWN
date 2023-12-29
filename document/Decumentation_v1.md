@@ -1,25 +1,19 @@
 # 1.Class
 
 ```c++
-   class Graph {
+class Graph {
 public:
-  struct Csr         // 一维CSR
+  struct Csr
   {
-    int*   row_ptr;  // CSR行指针
-    int*   col;      // CSR列索引
-    float* val;      // CSR值
+    int*   row_ptr;
+    int*   col;
+    float* val;
   };
   struct Coo
   {
-    int*   row;   // COO行指针
-    int*   col;   // COO列索引
-    float* val;   // COO值
-  };
-  struct Csm      // 二维CSR
-  {
-    int*    row;  // CSM行指针
-    int**   col;  // CSM列索引
-    float** val;  // CSM值
+    int*   row;
+    int*   col;
+    float* val;
   };
   int              rows;
   int              cols;
@@ -27,26 +21,28 @@ public:
   Csr              csrA;
   Csr              csrB;
   Coo              coo;
-  Csm              csmA;
-  Csm              csmB;
-  int              dim;
   uint64_t         entry;
   int              thread;
   int              interval;
   int              stream;
   int              block_size;
-  bool             prinft;  // 是否打印结果
-  int              source;  // 打印的节点
+  bool             prinft;  // prinft the result
+  int              source;
   bool             share;
+  bool             weighted;
+  bool             directed;
   std::vector<int> msource;
+  float            MAX = (float)pow(2, 30);
 
-  void createGraphCsr(std::string& input_path, Graph& graph);
-
-  void createGraphCsm(std::string& input_path, Graph& graph);
+  void createGraph(std::string& input_path, Graph& graph);
 
   void readGraph(std::string& input_path, Graph& graph);
 
-  void readGraphWeighted(std::string& input_path, Graph& graph);
+  void readGraphW(std::string& input_path, Graph& graph);
+
+  void readGraphD(std::string& input_path, DAWN::Graph& graph);
+
+  void readGraphDW(std::string& input_path, DAWN::Graph& graph);
 
   void readList(std::string& input_path, DAWN::Graph& graph);
 };
@@ -70,18 +66,6 @@ public:
 
   float ssspSCsr(Graph& graph, int source, std::string& output_path);
 
-  // APSP run
-  void runApspTGCsm(Graph& graph, std::string& output_path);
-
-  void runApspSGCsm(Graph& graph, std::string& output_path);
-
-  // SSSP run
-  void runSsspCpuCsm(Graph& graph, std::string& output_path);
-
-  // SSSP
-  float ssspPCsm(Graph& graph, int source, std::string& output_path);
-
-  float ssspSCsm(Graph& graph, int source, std::string& output_path);
 };
 ````
 
@@ -90,11 +74,7 @@ public:
 public:
   void coo2Csr(int n, int nnz, Graph::Csr& csr, Graph::Coo& coo);
 
-  void csr2Csm(int n, int nnz, Graph::Csm& csm, Graph::Csr& csr);
-
-  void coo2Csm(int n, int nnz, Graph::Csm& csm, Graph::Coo& coo);
-
-  void transport(int n, int nnz, Graph::Coo& coo);
+  void transpose(int n, int nnz, Graph::Coo& coo);
 
   void
   infoprint(int entry, int total, int interval, int thread, float elapsed_time);
@@ -119,16 +99,6 @@ public:
                    int*         d_A_col,
                    std::string& output_path);
 
-  void runApspGpuCsm(Graph& graph, std::string& output_path);
-
-  void runSsspGpuCsm(Graph& graph, std::string& output_path);
-
-  float ssspGpuCsm(Graph&       graph,
-                   int          source,
-                   cudaStream_t streams,
-                   int*         d_A_row_ptr,
-                   int*         d_A_col,
-                   std::string& output_path);
 };
 ````
 
@@ -138,14 +108,12 @@ __global__ void vecMatOpeCsr(bool* input,
                              int*  result,
                              int*  rows,
                              int*  source,
-                             int*  dim,
                              int*  d_entry);
 __global__ void vecMatOpeCsrShare(bool* input,
                                   bool* output,
                                   int*  result,
                                   int*  rows,
                                   int*  source,
-                                  int*  dim,
                                   int*  d_entry);
 ````
 

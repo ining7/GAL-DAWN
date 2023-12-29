@@ -1,7 +1,7 @@
 #include "dawn.hxx"
 namespace DAWN {
 
-void Tool::transport(int n, int nnz, DAWN::Graph::Coo& coo)
+void Tool::transposeW(int nnz, DAWN::Graph::Coo& coo)
 {
   std::vector<std::pair<int, std::pair<int, float>>> tmp;
   for (int i = 0; i < nnz; i++) {
@@ -15,7 +15,23 @@ void Tool::transport(int n, int nnz, DAWN::Graph::Coo& coo)
   }
 }
 
-void Tool::coo2Csr(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo)
+void Tool::transpose(int nnz, DAWN::Graph::Coo& coo)
+{
+  std::vector<std::pair<int, int>> tmp;
+  for (int i = 0; i < nnz; i++) {
+    tmp.push_back({coo.row[i], coo.col[i]});
+  }
+  std::sort(tmp.begin(), tmp.end());
+  for (int i = 0; i < nnz; i++) {
+    coo.row[i] = tmp[i].second;
+    coo.col[i] = tmp[i].first;
+  }
+}
+
+void Tool::coo2CsrW(int               n,
+                    int               nnz,
+                    DAWN::Graph::Csr& csr,
+                    DAWN::Graph::Coo& coo)
 {
   csr.val     = new float[nnz];
   csr.row_ptr = new int[n + 1];
@@ -40,72 +56,27 @@ void Tool::coo2Csr(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo)
   delete[] row_count;
 }
 
-void Tool::csr2Csm(int n, int nnz, DAWN::Graph::Csm& csm, DAWN::Graph::Csr& csr)
+void Tool::coo2Csr(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo)
 {
-  csm.val = new float*[n];
-  csm.row = new int[n];
-  csm.col = new int*[n];
-  std::fill_n(csm.row, n, 0);
-#pragma omp parallel for
-  for (int i = 0; i < n; i++) {
-    csm.row[i] = csr.row_ptr[i + 1] - csr.row_ptr[i];
-  }
-
-#pragma omp parallel for
-  for (int i = 0; i < n; i++) {
-    if (csm.row[i] == 0) {
-      csm.val[i]    = new float[1];
-      csm.val[i][0] = 0.0f;
-      csm.col[i]    = new int[1];
-      csm.col[i][0] = 0;
-    }
-    csm.val[i] = new float[csm.row[i]];
-    csm.col[i] = new int[csm.row[i]];
-    std::fill_n(csm.val[i], csm.row[i], 0.0f);
-    std::fill_n(csm.col[i], csm.row[i], 0);
-  }
-
-// 将每个非零元素填充到csrval和csrcol中
-#pragma omp parallel for
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < csm.row[i]; j++) {
-      csm.col[i][j] = csr.col[csr.row_ptr[i] + j];
-      csm.val[i][j] = csr.val[csr.row_ptr[i] + j];
-    }
-  }
-}
-
-void Tool::coo2Csm(int n, int nnz, DAWN::Graph::Csm& csm, DAWN::Graph::Coo& coo)
-{
-  csm.val = new float*[n];
-  csm.row = new int[n];
-  csm.col = new int*[n];
-  std::fill_n(csm.row, n, 0);
+  csr.row_ptr = new int[n + 1];
+  csr.col     = new int[nnz];
+  // 统计每一列的非零元素数目
+  int* row_count = new int[n]();
   for (int i = 0; i < nnz; i++) {
-    csm.row[coo.col[i]]++;
+    row_count[coo.col[i]]++;
   }
+  csr.row_ptr[0] = 0;
+  for (int i = 1; i <= n; i++) {
+    csr.row_ptr[i] = csr.row_ptr[i - 1] + row_count[i - 1];
+  }
+// 将每个非零元素填充到csr.col中
 #pragma omp parallel for
   for (int i = 0; i < n; i++) {
-    if (csm.row[i] == 0) {
-      csm.val[i]    = new float[1];
-      csm.val[i][0] = 0.0f;
-      csm.col[i]    = new int[1];
-      csm.col[i][0] = 0;
-    }
-    csm.val[i] = new float[csm.row[i]];
-    csm.col[i] = new int[csm.row[i]];
-    std::fill_n(csm.val[i], csm.row[i], 0.0f);
-    std::fill_n(csm.col[i], csm.row[i], 0);
-  }
-
-  int tmp = 0;
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < csm.row[i]; j++) {
-      csm.col[i][j] = coo.row[tmp];
-      csm.val[i][j] = coo.val[tmp];
-      tmp++;
+    for (int j = csr.row_ptr[i]; j < csr.row_ptr[i + 1]; j++) {
+      csr.col[j] = coo.row[j];
     }
   }
+  delete[] row_count;
 }
 
 void Tool::outfile(int n, int* result, int source, std::string& output_path)

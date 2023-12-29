@@ -15,21 +15,12 @@ public:
     int*   col;
     float* val;
   };
-  struct Csm
-  {
-    int*    row;
-    int**   col;
-    float** val;
-  };
   int              rows;
   int              cols;
   uint64_t         nnz;
   Csr              csrA;
   Csr              csrB;
   Coo              coo;
-  Csm              csmA;
-  Csm              csmB;
-  int              dim;
   uint64_t         entry;
   int              thread;
   int              interval;
@@ -39,18 +30,19 @@ public:
   int              source;
   bool             share;
   bool             weighted;
+  bool             directed;
   std::vector<int> msource;
   float            MAX = (float)pow(2, 30);
 
   void createGraph(std::string& input_path, Graph& graph);
 
-  void createGraphGPU(std::string& input_path, DAWN::Graph& graph);
-
-  void createGraphCsm(std::string& input_path, Graph& graph);
-
   void readGraph(std::string& input_path, Graph& graph);
 
   void readGraphW(std::string& input_path, Graph& graph);
+
+  void readGraphD(std::string& input_path, DAWN::Graph& graph);
+
+  void readGraphDW(std::string& input_path, DAWN::Graph& graph);
 
   void readList(std::string& input_path, DAWN::Graph& graph);
 };
@@ -78,26 +70,13 @@ public:
 
   float ssspSW(Graph& graph, int source, std::string& output_path);
 
-  // APSP run
-  void runApspTGCsm(Graph& graph, std::string& output_path);
-
-  void runApspSGCsm(Graph& graph, std::string& output_path);
-
-  // SSSP run
-  void runSsspCpuCsm(Graph& graph, std::string& output_path);
-
-  // SSSP
-  float ssspPCsm(Graph& graph, int source, std::string& output_path);
-
-  float ssspSCsm(Graph& graph, int source, std::string& output_path);
-
   // BOVM
   void BOVM(Graph& graph,
             bool*& input,
             bool*& output,
             int*&  result,
-            int    dim,
-            bool&  ptr);
+            bool&  ptr,
+            int    step);
 
   // SOVM
   void SOVMS(Graph& graph,
@@ -105,25 +84,25 @@ public:
              int&   ptr,
              int*&  delta,
              int*&  result,
-             int    dim);
+             int    step);
 
   void SOVMP(Graph& graph,
              bool*& alpha,
              int&   ptr,
              bool*& delta,
              int*&  result,
-             int    dim);
+             int    step);
 };
 
 class Tool {
 public:
   void coo2Csr(int n, int nnz, Graph::Csr& csr, Graph::Coo& coo);
 
-  void csr2Csm(int n, int nnz, Graph::Csm& csm, Graph::Csr& csr);
+  void coo2CsrW(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo);
 
-  void coo2Csm(int n, int nnz, Graph::Csm& csm, Graph::Coo& coo);
+  void transpose(int nnz, Graph::Coo& coo);
 
-  void transport(int n, int nnz, Graph::Coo& coo);
+  void transposeW(int nnz, DAWN::Graph::Coo& coo);
 
   void
   infoprint(int entry, int total, int interval, int thread, float elapsed_time);

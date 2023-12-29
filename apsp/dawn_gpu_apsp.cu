@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
       } else {
         graph.weighted = false;
       }
-      graph.createGraphGPU(input_path, graph);
+      graph.createGraph(input_path, graph);
       gpurun.runApspGpu(graph, output_path);
     }
     if (algo == "Test") {
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
       graph.stream     = 16;
       graph.block_size = 1024;
 
-      graph.createGraphGPU(input_path, graph);
+      graph.createGraph(input_path, graph);
       gpurun.runApspGpu(graph, output_path);
     }
     if (algo == "Mssp") {
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
       graph.thread = 1;
       graph.share  = false;
 
-      graph.createGraphGPU(input_path, graph);
+      graph.createGraph(input_path, graph);
       graph.readList(sourceList, graph);
       gpurun.runMsspGpu(graph, output_path);
     }
