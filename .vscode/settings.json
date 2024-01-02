@@ -2,6 +2,7 @@
     "files.associations": {
         "*.cu": "cuda-cpp",
         "*.cuh": "cuda-cpp",
+        "*.tex": "latex",
         "chrono": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -75,7 +76,14 @@
         "__nullptr": "cpp",
         "__locale": "cpp",
         "cassert": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     },
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"
