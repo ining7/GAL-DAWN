@@ -20,10 +20,10 @@ void Graph::createGraph(std::string& input_path, DAWN::Graph& graph)
     ss >> object >> format >> field >> symmetry;
     if (symmetry != "symmetric") {
       graph.directed = true;
-      std::cout << "directed graph" << std::endl;
+      // std::cout << "directed graph" << std::endl;
     } else {
       graph.directed = false;
-      std::cout << "undirected graph" << std::endl;
+      // std::cout << "undirected graph" << std::endl;
     }
   } else {
     std::cout << "invalid file" << std::endl;
@@ -37,69 +37,36 @@ void Graph::createGraph(std::string& input_path, DAWN::Graph& graph)
     ss >> rows >> cols >> nnz;
     break;
   }
-  std::cout << rows << " " << cols << " " << nnz << std::endl;
+  // std::cout << rows << " " << cols << " " << nnz << std::endl;
   file.close();
 
   graph.rows  = rows;
   graph.cols  = cols;
+  graph.nnz   = nnz;
   graph.entry = 0;
 
   std::cout << "Read Input Graph" << std::endl;
 
   if (graph.directed) {
     if (graph.weighted) {
-      graph.coo.val = new float[nnz * 2];
-      std::fill_n(graph.coo.val, 0.0f, nnz * 2);
-      std::cout << "readGraphDW" << std::endl;
+      // std::cout << "readGraphDW" << std::endl;
       graph.readGraphDW(input_path, graph);
 
     } else {
-      std::cout << "readGraphD" << std::endl;
+      // std::cout << "readGraphD" << std::endl;
       graph.readGraphD(input_path, graph);
     }
   } else {
-    graph.coo.col = new int[nnz];
-    graph.coo.row = new int[nnz];
-    std::fill_n(graph.coo.col, 0, nnz);
-    std::fill_n(graph.coo.row, 0, nnz);
     if (graph.weighted) {
-      graph.coo.val = new float[nnz];
-      std::fill_n(graph.coo.val, 0.0f, nnz);
-      std::cout << "readGraphW" << std::endl;
+      // std::cout << "readGraphW" << std::endl;
       graph.readGraphW(input_path, graph);
     } else {
-      std::cout << "readGraph" << std::endl;
+      // std::cout << "readGraph" << std::endl;
       graph.readGraph(input_path, graph);
     }
   }
-  std::cout << "Initialize Input Matrices" << std::endl;
+  // std::cout << "Initialize Input Matrices" << std::endl;
 }
-
-// 定义一个自定义的比较函数，用于按照 pair
-// 的第一个元素升序排列，当第一个元素相同时，按照第二个元素升序排列
-auto compare = [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-  if (a.first != b.first) {
-    return a.first < b.first;  // 按照 pair 中的第一个元素升序排序
-  } else {
-    return a.second < b.second;  // 当第一个元素相同时，按照第二个元素升序排序
-  }
-};
-
-auto compareD = [](const std::tuple<int, int, int>& a,
-                   const std::tuple<int, int, int>& b) {
-  // 按照第一个元素升序排序
-  if (std::get<0>(a) != std::get<0>(b)) {
-    return std::get<0>(a) >
-           std::get<0>(b);  // 这里是大顶堆，如果需要小顶堆改为 <
-  }
-  // 如果第一个元素相等，则按照第二个元素升序排序
-  if (std::get<1>(a) != std::get<1>(b)) {
-    return std::get<1>(a) >
-           std::get<1>(b);  // 这里是大顶堆，如果需要小顶堆改为 <
-  }
-  // 如果前两个元素也相等，则按照第三个元素升序排序
-  return std::get<2>(a) > std::get<2>(b);  // 这里是大顶堆，如果需要小顶堆改为 <
-};
 
 void Graph::readGraph(std::string& input_path, DAWN::Graph& graph)
 {
@@ -111,12 +78,10 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph)
   std::string line;
 
   // 使用自定义的比较函数定义优先队列
-  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>,
-                      decltype(compare)>
-    s(compare);
+  std::priority_queue<std::pair<int, int>> s;
 
   int rows, cols;
-  int i = 0;
+
   while (std::getline(file, line)) {
     if (line[0] == '%')
       continue;
@@ -136,18 +101,19 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph)
   graph.coo.row = new int[graph.nnz];
   std::fill_n(graph.coo.col, graph.nnz, 0);
   std::fill_n(graph.coo.row, graph.nnz, 0);
+  int i = graph.nnz - 1;
 
   while (!s.empty()) {
     graph.coo.row[i] = s.top().first;
     graph.coo.col[i] = s.top().second;
-    i++;
+    --i;
     s.pop();
   }
 
-  std::cout << "nnz: " << graph.nnz << std::endl;
+  // std::cout << "nnz: " << graph.nnz << std::endl;
 
   DAWN::Tool tool;
-  tool.transpose(graph.nnz, graph.coo);
+  // tool.transpose(graph.nnz, graph.coo);
   tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
 
   delete[] graph.coo.col;
@@ -165,8 +131,14 @@ void Graph::readGraphD(std::string& input_path, DAWN::Graph& graph)
   }
   std::string line;
 
+  graph.coo.col = new int[graph.nnz];
+  graph.coo.row = new int[graph.nnz];
+  std::fill_n(graph.coo.col, graph.nnz, 0);
+  std::fill_n(graph.coo.row, graph.nnz, 0);
+
   int rows, cols;
   int i = 0;
+
   while (std::getline(file, line)) {
     if (line[0] == '%')
       continue;
@@ -177,12 +149,22 @@ void Graph::readGraphD(std::string& input_path, DAWN::Graph& graph)
     if (rows != cols) {
       graph.coo.row[i] = rows;
       graph.coo.col[i] = cols;
+      ++i;
     }
   }
   file.close();
 
   graph.nnz = i;
   std::cout << "nnz: " << graph.nnz << std::endl;
+
+  DAWN::Tool tool;
+  tool.transpose(graph.nnz, graph.coo);
+  tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
+
+  delete[] graph.coo.col;
+  graph.coo.col = NULL;
+  delete[] graph.coo.row;
+  graph.coo.row = NULL;
 }
 
 void Graph::readGraphW(std::string& input_path, DAWN::Graph& graph)
@@ -194,10 +176,11 @@ void Graph::readGraphW(std::string& input_path, DAWN::Graph& graph)
   }
   std::string line;
 
+  // 使用自定义的比较函数定义优先队列
+  std::priority_queue<std::tuple<int, int, float>> s;
+
   int   rows, cols;
   float vals;
-  int   i = 0;
-
   while (std::getline(file, line)) {
     if (line[0] == '%')
       continue;
@@ -206,20 +189,40 @@ void Graph::readGraphW(std::string& input_path, DAWN::Graph& graph)
     rows--;
     cols--;
     if (rows != cols) {
-      graph.coo.row[i] = rows;
-      graph.coo.col[i] = cols;
-      graph.coo.val[i] = vals;
-      i++;
-      graph.coo.row[i] = cols;
-      graph.coo.col[i] = rows;
-      graph.coo.val[i] = vals;
-      i++;
+      s.push({rows, cols, vals});
+      s.push({cols, rows, vals});
     }
   }
   file.close();
 
-  graph.nnz = i;
-  std::cout << "nnz: " << graph.nnz << std::endl;
+  graph.nnz     = s.size();
+  graph.coo.col = new int[graph.nnz];
+  graph.coo.row = new int[graph.nnz];
+  graph.coo.val = new float[graph.nnz];
+  std::fill_n(graph.coo.col, graph.nnz, 0);
+  std::fill_n(graph.coo.row, graph.nnz, 0);
+  std::fill_n(graph.coo.val, graph.nnz, 0.0f);
+  int i = graph.nnz - 1;
+
+  while (!s.empty()) {
+    graph.coo.row[i] = std::get<0>(s.top());
+    graph.coo.col[i] = std::get<1>(s.top());
+    graph.coo.val[i] = std::get<2>(s.top());
+    --i;
+    s.pop();
+  }
+
+  // std::cout << "nnz: " << graph.nnz << std::endl;
+
+  DAWN::Tool tool;
+  tool.coo2CsrW(graph.rows, graph.nnz, graph.csrB, graph.coo);
+
+  delete[] graph.coo.col;
+  graph.coo.col = NULL;
+  delete[] graph.coo.row;
+  graph.coo.row = NULL;
+  delete[] graph.coo.val;
+  graph.coo.val = NULL;
 }
 
 void Graph::readGraphDW(std::string& input_path, DAWN::Graph& graph)
@@ -231,10 +234,17 @@ void Graph::readGraphDW(std::string& input_path, DAWN::Graph& graph)
   }
   std::string line;
 
+  graph.coo.col = new int[graph.nnz];
+  graph.coo.row = new int[graph.nnz];
+  graph.coo.val = new float[graph.nnz];
+  std::fill_n(graph.coo.col, graph.nnz, 0);
+  std::fill_n(graph.coo.row, graph.nnz, 0);
+  std::fill_n(graph.coo.val, graph.nnz, 0.0f);
+
   int   rows, cols;
   float vals;
   int   i = 0;
-
+  std::cout << "nnz: " << graph.nnz << std::endl;
   while (std::getline(file, line)) {
     if (line[0] == '%')
       continue;
@@ -246,13 +256,24 @@ void Graph::readGraphDW(std::string& input_path, DAWN::Graph& graph)
       graph.coo.row[i] = rows;
       graph.coo.col[i] = cols;
       graph.coo.val[i] = vals;
-      i++;
+      ++i;
     }
   }
   file.close();
 
   graph.nnz = i;
   std::cout << "nnz: " << graph.nnz << std::endl;
+
+  DAWN::Tool tool;
+  tool.transposeW(graph.nnz, graph.coo);
+  tool.coo2CsrW(graph.rows, graph.nnz, graph.csrB, graph.coo);
+
+  delete[] graph.coo.col;
+  graph.coo.col = NULL;
+  delete[] graph.coo.row;
+  graph.coo.row = NULL;
+  delete[] graph.coo.val;
+  graph.coo.val = NULL;
 }
 
 void Graph::readList(std::string& input_path, DAWN::Graph& graph)

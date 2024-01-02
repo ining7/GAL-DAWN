@@ -23,8 +23,8 @@ void Tool::transpose(int nnz, DAWN::Graph::Coo& coo)
   }
   std::sort(tmp.begin(), tmp.end());
   for (int i = 0; i < nnz; i++) {
-    coo.row[i] = tmp[i].second;
-    coo.col[i] = tmp[i].first;
+    coo.row[i] = tmp[i].first;
+    coo.col[i] = tmp[i].second;
   }
 }
 
@@ -39,7 +39,7 @@ void Tool::coo2CsrW(int               n,
   // 统计每一列的非零元素数目
   int* row_count = new int[n]();
   for (int i = 0; i < nnz; i++) {
-    row_count[coo.col[i]]++;
+    row_count[coo.row[i]]++;
   }
   csr.row_ptr[0] = 0;
   for (int i = 1; i <= n; i++) {
@@ -49,7 +49,7 @@ void Tool::coo2CsrW(int               n,
 #pragma omp parallel for
   for (int i = 0; i < n; i++) {
     for (int j = csr.row_ptr[i]; j < csr.row_ptr[i + 1]; j++) {
-      csr.col[j] = coo.row[j];
+      csr.col[j] = coo.col[j];
       csr.val[j] = coo.val[j];
     }
   }
@@ -63,7 +63,7 @@ void Tool::coo2Csr(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo)
   // 统计每一列的非零元素数目
   int* row_count = new int[n]();
   for (int i = 0; i < nnz; i++) {
-    row_count[coo.col[i]]++;
+    row_count[coo.row[i]]++;
   }
   csr.row_ptr[0] = 0;
   for (int i = 1; i <= n; i++) {
@@ -73,7 +73,7 @@ void Tool::coo2Csr(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo)
 #pragma omp parallel for
   for (int i = 0; i < n; i++) {
     for (int j = csr.row_ptr[i]; j < csr.row_ptr[i + 1]; j++) {
-      csr.col[j] = coo.row[j];
+      csr.col[j] = coo.col[j];
     }
   }
   delete[] row_count;

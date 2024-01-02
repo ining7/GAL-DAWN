@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
   } else {
     graph.weighted = false;
   }
-  graph.stream = omp_get_num_threads();
-  graph.thread = omp_get_num_threads();
+  graph.stream = 20;
+  graph.thread = 20;
   graph.createGraph(input_path, graph);
   graph.readList(sourceList, graph);
   runCpu.runMsspPCpu(graph, output_path);

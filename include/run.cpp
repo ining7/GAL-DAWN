@@ -70,9 +70,9 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
   float elapsed_time = 0.0f;
   float time         = 0.0f;
   int   proEntry     = 0;
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
+  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
+  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+  //           << std::endl;
   Tool tool;
 
 #pragma omp parallel for
@@ -80,9 +80,9 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
     int source = graph.msource[i] % graph.rows;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
-      printf("Source [%d] is isolated node\n", source);
-      tool.infoprint(proEntry, graph.msource.size(), graph.interval,
-                     graph.stream, elapsed_time);
+      // printf("Source [%d] is isolated node\n", source);
+      // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
+      //  graph.stream, elapsed_time);
       continue;
     }
     if (graph.weighted) {
@@ -95,34 +95,38 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
       elapsed_time += time;
       ++proEntry;
     }
-    tool.infoprint(proEntry, graph.msource.size(), graph.interval, graph.stream,
-                   elapsed_time);
+    // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
+    // graph.stream,
+    //  elapsed_time);
   }
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
-  // Output elapsed time and free remaining resources
-  std::cout << " Elapsed time: " << elapsed_time / (graph.stream * 1000)
-            << std::endl;
+  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
+  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+  //           << std::endl;
+  // // Output elapsed time and free remaining resources
+  // std::cout << " Elapsed time: " << elapsed_time / (graph.stream * 1000)
+  //           << std::endl;
+  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+  printf("%-21s%3.5lf\n", "Time:", elapsed_time / (graph.stream * 1000));
 }
 
 void CPU::runMsspSCpu(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
   int   proEntry     = 0;
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
+  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
+  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+  //           << std::endl;
   Tool tool;
 
   for (int i = 0; i < graph.msource.size(); i++) {
     int source = graph.msource[i] % graph.rows;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
-      printf("Source [%d] is isolated node\n", source);
-      tool.infoprint(proEntry, graph.msource.size(), graph.interval,
-                     graph.stream, elapsed_time);
+      // printf("Source [%d] is isolated node\n", source);
+      // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
+      //                graph.stream, elapsed_time);
       continue;
     }
     if (graph.weighted) {
@@ -132,16 +136,17 @@ void CPU::runMsspSCpu(Graph& graph, std::string& output_path)
     }
     ++proEntry;
 
-    tool.infoprint(proEntry, graph.msource.size(), graph.interval, graph.stream,
-                   elapsed_time);
+    // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
+    // graph.stream,elapsed_time);
   }
 
-  std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
-               "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            << std::endl;
+  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
+  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+  //           << std::endl;
   // Output elapsed time and free remaining resources
-  std::cout << " Elapsed time: " << elapsed_time / (graph.stream * 1000)
-            << std::endl;
+  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+  printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
 void CPU::runSsspCpu(Graph& graph, std::string& output_path)
@@ -159,7 +164,10 @@ void CPU::runSsspCpu(Graph& graph, std::string& output_path)
     elapsed_time += ssspP(graph, source, output_path);
   }
   // Output elapsed time
-  std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
+  // std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
+  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+  printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
 float CPU::ssspP(Graph& graph, int source, std::string& output_path)

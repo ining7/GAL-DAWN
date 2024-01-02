@@ -29,9 +29,13 @@ int main(int argc, char* argv[])
 
   graph.createGraph(input_path, graph);
   graph.readList(sourceList, graph);
-  gpurun.runMsspGpu(graph, output_path);
+  if (graph.weighted) {
+    gpurun.runMsspGpuW(graph, output_path);
+  } else {
+    gpurun.runMsspGpu(graph, output_path);
+  }
   return 0;
 }
 
-//./dawn_gpu_mssp $GRAPH_DIR/XXX.mtx ../output.txt 256
-// false sourceList unweighted
+//./dawn_gpu_mssp $GRAPH_DIR/XXX.mtx ../output.txt 256 false sourceList
+// unweighted

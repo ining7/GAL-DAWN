@@ -12,6 +12,8 @@ public:
 
   void runMsspGpu(Graph& graph, std::string& output_path);
 
+  void runMsspGpuW(DAWN::Graph& graph, std::string& output_path);
+
   float ssspGpu(DAWN::Graph&               graph,
                 int                        source,
                 cudaStream_t               streams,
@@ -254,10 +256,10 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
   // } else {
   //   shared_mem_size = sizeof(int) * (8);
   // }
-  // auto start = std::chrono::high_resolution_clock::now();
+  auto start = std::chrono::high_resolution_clock::now();
   while (step < graph.rows) {
     step++;
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
 
     if (!(step % 2)) {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
@@ -271,11 +273,11 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
         d_ptr.data().get());
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed = end - start;
-    elapsed_time += elapsed.count();
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double, std::milli> elapsed = end - start;
+    // elapsed_time += elapsed.count();
 
-    if (!(step % 15)) {
+    if (!(step % 3)) {
       // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
       bool ptr = d_ptr[0];
       if (!ptr) {
@@ -283,9 +285,9 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
       }
     }
   }
-  // auto end = std::chrono::high_resolution_clock::now();
-  // std::chrono::duration<double, std::milli> elapsed = end - start;
-  // elapsed_time += elapsed.count();
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed = end - start;
+  elapsed_time += elapsed.count();
   // printf("Step is [%d]\n", step);
 
   if ((graph.prinft) && (source == graph.source)) {
@@ -360,12 +362,12 @@ void DAWN::GPU::runMsspGpu(DAWN::Graph& graph, std::string& output_path)
   float elapsed_time = 0.0;
   int   proEntry     = 0;
 
-  thrust::device_vector<int>   d_row_ptr(graph.rows + 1, 0);
-  thrust::device_vector<int>   d_col(graph.nnz, 0);
-  thrust::device_vector<float> d_val(graph.nnz, 0);
+  thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
+  thrust::device_vector<int> d_col(graph.nnz, 0);
   thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
   thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
-  thrust::copy_n(graph.csrB.val, graph.nnz, d_val.begin());
+
+  std::cout << "Initialize Input Matrices" << std::endl;
 
   // Create streams
   cudaStream_t streams[graph.stream];
@@ -388,13 +390,66 @@ void DAWN::GPU::runMsspGpu(DAWN::Graph& graph, std::string& output_path)
       continue;
     }
     int cuda_stream = source % graph.stream;
-    if (graph.weighted) {
-      elapsed_time += ssspGpuW(graph, source, streams[cuda_stream], d_row_ptr,
-                               d_col, d_val, output_path);
-    } else {
-      elapsed_time += ssspGpu(graph, source, streams[cuda_stream], d_row_ptr,
-                              d_col, output_path);
+
+    elapsed_time += ssspGpu(graph, source, streams[cuda_stream], d_row_ptr,
+                            d_col, output_path);
+
+    ++proEntry;
+    tool.infoprint(proEntry, graph.msource.size(), graph.interval, graph.thread,
+                   elapsed_time);
+  }
+  std::cout
+    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    << std::endl;
+  // Output elapsed time and free remaining resources
+  std::cout << " Elapsed time: " << elapsed_time / (graph.thread * 1000)
+            << std::endl;
+
+  // Synchronize streams
+  for (int i = 0; i < graph.stream; i++) {
+    cudaStreamSynchronize(streams[i]);
+    cudaStreamDestroy(streams[i]);
+  }
+}
+
+void DAWN::GPU::runMsspGpuW(DAWN::Graph& graph, std::string& output_path)
+{
+  float elapsed_time = 0.0;
+  int   proEntry     = 0;
+
+  thrust::device_vector<int>   d_row_ptr(graph.rows + 1, 0);
+  thrust::device_vector<int>   d_col(graph.nnz, 0);
+  thrust::device_vector<float> d_val(graph.nnz, 0);
+  thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
+  thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
+  thrust::copy_n(graph.csrB.val, graph.nnz, d_val.begin());
+
+  std::cout << "Initialize Input Matrices" << std::endl;
+
+  // Create streams
+  cudaStream_t streams[graph.stream];
+  for (int i = 0; i < graph.stream; i++) {
+    cudaStreamCreate(&streams[i]);
+  }
+
+  Tool tool;
+  std::cout
+    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    << std::endl;
+
+  for (int i = 0; i < graph.msource.size(); i++) {
+    int source = graph.msource[i] % graph.rows;
+    if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+      ++proEntry;
+      printf("Source [%d] is isolated node\n", source);
+      tool.infoprint(proEntry, graph.msource.size(), graph.interval,
+                     graph.thread, elapsed_time);
+      continue;
     }
+    int cuda_stream = source % graph.stream;
+    elapsed_time += ssspGpuW(graph, source, streams[cuda_stream], d_row_ptr,
+                             d_col, d_val, output_path);
+
     ++proEntry;
     tool.infoprint(proEntry, graph.msource.size(), graph.interval, graph.thread,
                    elapsed_time);
