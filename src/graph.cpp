@@ -1,4 +1,4 @@
-#include "dawn.hxx"
+#include <dawn/dawn.hxx>
 namespace DAWN {
 void Graph::createGraph(std::string& input_path, DAWN::Graph& graph)
 {

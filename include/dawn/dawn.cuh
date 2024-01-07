@@ -212,7 +212,7 @@ float DAWN::GPU::ssspGpuW(DAWN::Graph&                 graph,
     thrust::copy(d_result.begin(), d_result.end(), h_result.begin());
     printf("Start prinft\n");
     Tool tool;
-    tool.outfile(graph.rows, h_result, source, output_path);
+    tool.outfile(graph.rows, h_result.date(), source, output_path);
   }
   return elapsed_time;
 }
@@ -294,7 +294,7 @@ float DAWN::GPU::ssspGpu(DAWN::Graph&               graph,
     thrust::copy(d_result.begin(), d_result.end(), h_result.begin());
     printf("Start prinft\n");
     Tool tool;
-    tool.outfile(graph.rows, h_result, source, output_path);
+    tool.outfile(graph.rows, h_result.data(), source, output_path);
   }
 
   return elapsed_time;

@@ -1,5 +1,5 @@
-#include "access.h"
-#include <thrust/host_vector.h>
+#include <dawn/access.h>
+// #include <thrust/host_vector.h>
 namespace DAWN {
 class Graph {
 public:
@@ -55,16 +55,21 @@ public:
   void runApspSG(Graph& graph, std::string& output_path);
 
   // MSSP run
-  void runMsspSCpu(Graph& graph, std::string& output_path);
+  void runMsspS(Graph& graph, std::string& output_path);
 
-  void runMsspPCpu(Graph& graph, std::string& output_path);
+  void runMsspP(Graph& graph, std::string& output_path);
 
-  void runSsspCpu(Graph& graph, std::string& output_path);
+  void runSssp(Graph& graph, std::string& output_path);
 
   // SSSP
   float ssspP(Graph& graph, int source, std::string& output_path);
 
   float ssspS(Graph& graph, int source, std::string& output_path);
+
+  float ssspS(Graph&              graph,
+              int                 source,
+              std::string&        output_path,
+              std::vector<float>& averageLenth);
 
   float ssspPW(Graph& graph, int source, std::string& output_path);
 
@@ -104,21 +109,16 @@ public:
 
   void transposeW(int nnz, DAWN::Graph::Coo& coo);
 
+  float averageShortestPath(int* result, int n);
+
+  float averageShortestPath(float* result, int n);
+
   void
   infoprint(int entry, int total, int interval, int thread, float elapsed_time);
 
   void outfile(int n, int* result, int source, std::string& output_path);
 
-  void outfile(int                      n,
-               thrust::host_vector<int> result,
-               int                      source,
-               std::string&             output_path);
-
   void outfile(int n, float* result, int source, std::string& output_path);
-  void outfile(int                        n,
-               thrust::host_vector<float> result,
-               int                        source,
-               std::string&               output_path);
 };
 
 }  // namespace DAWN

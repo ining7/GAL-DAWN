@@ -1,4 +1,4 @@
-#include "dawn.hxx"
+#include <dawn/dawn.hxx>
 namespace DAWN {
 void CPU::runApspTG(Graph& graph, std::string& output_path)
 {
@@ -65,7 +65,7 @@ void CPU::runApspSG(Graph& graph, std::string& output_path)
             << std::endl;
 }
 
-void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
+void CPU::runMsspP(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
   float time         = 0.0f;
@@ -74,6 +74,8 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
   //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
   //           << std::endl;
   Tool tool;
+
+  std::vector<float> averageLength(graph.rows, 0.0f);
 
 #pragma omp parallel for
   for (int i = 0; i < graph.msource.size(); i++) {
@@ -88,7 +90,7 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
     if (graph.weighted) {
       time = ssspSW(graph, i, output_path);
     } else {
-      time = ssspS(graph, i, output_path);
+      time = ssspS(graph, i, output_path, averageLength);
     }
 #pragma omp critical
     {
@@ -106,12 +108,14 @@ void CPU::runMsspPCpu(Graph& graph, std::string& output_path)
   // // Output elapsed time and free remaining resources
   // std::cout << " Elapsed time: " << elapsed_time / (graph.stream * 1000)
   //           << std::endl;
+  float length = tool.averageShortestPath(averageLength.data(), graph.rows);
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / (graph.stream * 1000));
+  printf("%-21s%5.5lf\n", "Average shortest paths Length:", length);
 }
 
-void CPU::runMsspSCpu(Graph& graph, std::string& output_path)
+void CPU::runMsspS(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
   int   proEntry     = 0;
@@ -149,7 +153,7 @@ void CPU::runMsspSCpu(Graph& graph, std::string& output_path)
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
-void CPU::runSsspCpu(Graph& graph, std::string& output_path)
+void CPU::runSssp(Graph& graph, std::string& output_path)
 {
   int source = graph.source;
   if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
@@ -330,6 +334,64 @@ float CPU::ssspS(Graph& graph, int source, std::string& output_path)
     Tool tool;
     tool.outfile(graph.rows, result, source, output_path);
   }
+
+  delete[] result;
+  result = nullptr;
+
+  return elapsed;
+}
+
+float CPU::ssspS(Graph&              graph,
+                 int                 source,
+                 std::string&        output_path,
+                 std::vector<float>& averageLenth)
+{
+  int  step     = 1;
+  int  entry    = 0;
+  int  alphaPtr = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
+  int* alpha    = new int[graph.rows];
+  int* delta    = new int[graph.rows];
+  int* result   = new int[graph.rows];
+
+  float elapsed = 0.0f;
+  std::fill_n(result, graph.rows, 0);
+  std::fill_n(alpha, graph.rows, 0);
+  std::fill_n(delta, graph.rows, 0);
+
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    result[graph.csrB.col[i]]             = 1;
+    alpha[i - graph.csrB.row_ptr[source]] = graph.csrB.col[i];
+  }
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < graph.rows) {
+    step++;
+    SOVMS(graph, alpha, alphaPtr, delta, result, step);
+    entry += alphaPtr;
+    if (!alphaPtr) {
+      break;
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  graph.entry += entry;
+
+  Tool tool;
+  averageLenth[source] = tool.averageShortestPath(result, graph.rows);
+
+  delete[] alpha;
+  alpha = nullptr;
+  delete[] delta;
+  delta = nullptr;
+  // Output
+  if ((graph.prinft) && (source == graph.source)) {
+    printf("Start prinft\n");
+    Tool tool;
+    tool.outfile(graph.rows, result, source, output_path);
+  }
+
   delete[] result;
   result = nullptr;
 
