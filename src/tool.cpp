@@ -1,4 +1,4 @@
-#include "dawn.hxx"
+#include <dawn/dawn.hxx>
 namespace DAWN {
 
 void Tool::transposeW(int nnz, DAWN::Graph::Coo& coo)
@@ -79,6 +79,60 @@ void Tool::coo2Csr(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo)
   delete[] row_count;
 }
 
+float Tool::averageShortestPath(int* result, int n)
+{
+  int64_t sum = 0;
+  int     i   = 0;
+  for (int j = 0; j < n; j++) {
+    if (result[j] > 0) {
+      sum += result[j];
+      ++i;
+    }
+  }
+  return 1.0f * sum / i;
+}
+
+float Tool::averageShortestPath(float* result, int n)
+{
+  int   i   = 0;
+  float sum = 0.0f;
+  float INF = 1.0 * 0xfffffff;
+  for (int j = 0; j < n; j++) {
+    if (result[j] > 0) {
+      sum += result[j];
+      ++i;
+    }
+  }
+  return sum / i;
+}
+
+// float Tool::averageShortestPath(thrust::host_vector<float> result)
+// {
+//   int   i   = 0;
+//   float sum = 0.0f;
+//   float INF = 1.0 * 0xfffffff;
+//   for (int j = 0; j < result.size(); j++) {
+//     if (result[j] > 0) {
+//       sum += result[j];
+//       ++i;
+//     }
+//   }
+//   return sum / i;
+// }
+
+// float Tool::averageShortestPath(thrust::host_vector<int> result)
+// {
+//   int64_t sum = 0;
+//   int     i   = 0;
+//   for (int j = 0; j < result.size(); j++) {
+//     if (result[j] > 0) {
+//       sum += result[j];
+//       ++i;
+//     }
+//   }
+//   return 1.0f * sum / i;
+// }
+
 void Tool::outfile(int n, int* result, int source, std::string& output_path)
 {
   std::ofstream outfile(output_path);
@@ -113,46 +167,47 @@ void Tool::outfile(int n, float* result, int source, std::string& output_path)
   outfile.close();
 }
 
-void Tool::outfile(int                        n,
-                   thrust::host_vector<float> result,
-                   int                        source,
-                   std::string&               output_path)
-{
-  std::ofstream outfile(output_path);
-  if (!outfile.is_open()) {
-    std::cerr << "Error opening file " << output_path << std::endl;
-    return;
-  }
-  float INF = 1.0 * 0xfffffff;
-  std::cout << "Start outfile" << std::endl;
-  for (int j = 0; j < n; j++) {
-    if ((source != j) && (result[j] < INF) && (result[j] > 0))
-      outfile << source << " " << j << " " << std::fixed << std::setprecision(6)
-              << result[j] << std::endl;
-  }
-  std::cout << "End outfile" << std::endl;
-  outfile.close();
-}
+// void Tool::outfile(int                        n,
+//                    thrust::host_vector<float> result,
+//                    int                        source,
+//                    std::string&               output_path)
+// {
+//   std::ofstream outfile(output_path);
+//   if (!outfile.is_open()) {
+//     std::cerr << "Error opening file " << output_path << std::endl;
+//     return;
+//   }
+//   float INF = 1.0 * 0xfffffff;
+//   std::cout << "Start outfile" << std::endl;
+//   for (int j = 0; j < n; j++) {
+//     if ((source != j) && (result[j] < INF) && (result[j] > 0))
+//       outfile << source << " " << j << " " << std::fixed <<
+//       std::setprecision(6)
+//               << result[j] << std::endl;
+//   }
+//   std::cout << "End outfile" << std::endl;
+//   outfile.close();
+// }
 
-void Tool::outfile(int                      n,
-                   thrust::host_vector<int> result,
-                   int                      source,
-                   std::string&             output_path)
-{
-  std::ofstream outfile(output_path);
-  if (!outfile.is_open()) {
-    std::cerr << "Error opening file " << output_path << std::endl;
-    return;
-  }
-  int INF = 0xfffffff;
-  std::cout << "Start outfile" << std::endl;
-  for (int j = 0; j < n; j++) {
-    if ((source != j) && (result[j] < INF) && (result[j] > 0))
-      outfile << source << " " << j << " " << result[j] << std::endl;
-  }
-  std::cout << "End outfile" << std::endl;
-  outfile.close();
-}
+// void Tool::outfile(int                      n,
+//                    thrust::host_vector<int> result,
+//                    int                      source,
+//                    std::string&             output_path)
+// {
+//   std::ofstream outfile(output_path);
+//   if (!outfile.is_open()) {
+//     std::cerr << "Error opening file " << output_path << std::endl;
+//     return;
+//   }
+//   int INF = 0xfffffff;
+//   std::cout << "Start outfile" << std::endl;
+//   for (int j = 0; j < n; j++) {
+//     if ((source != j) && (result[j] < INF) && (result[j] > 0))
+//       outfile << source << " " << j << " " << result[j] << std::endl;
+//   }
+//   std::cout << "End outfile" << std::endl;
+//   outfile.close();
+// }
 
 void Tool::infoprint(int   entry,
                      int   total,
