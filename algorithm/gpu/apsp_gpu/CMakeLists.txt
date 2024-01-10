@@ -1,11 +1,11 @@
 # Specify source and header files
-file(GLOB APSP_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/*.cpp")
+file(GLOB APSP_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cu")
 file(GLOB APSP_HEADERS "${CMAKE_SOURCE_DIR}/include/*.h" "${CMAKE_SOURCE_DIR}/include/*.cuh" "${CMAKE_SOURCE_DIR}/include/*.hxx")
 
 # Define the CUDA sources
 set(APSP_GPU_SOURCES
     apsp_gpu.cu
-    ${APSP_SOURCES_CPP}
+    ${APSP_SOURCES}
 )
 
 # Add the executable
@@ -21,9 +21,9 @@ set_property(TARGET apsp_gpu PROPERTY CUDA_ARCHITECTURES 86)
 
 # Add compile options for CUDA
 target_compile_options(apsp_gpu PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:
-    --generate-code arch=compute_86,code=sm_86
-    -Xcompiler -fopenmp
+    -Xcompiler -fopenmp -O3
 >)
+set_target_properties(apsp_gpu PROPERTIES CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES})
 
 # Find OpenMP package
 find_package(OpenMP REQUIRED)

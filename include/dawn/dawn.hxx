@@ -1,5 +1,5 @@
 #include <dawn/access.h>
-// #include <thrust/host_vector.h>
+
 namespace DAWN {
 class Graph {
 public:
@@ -50,30 +50,33 @@ public:
 class CPU {
 public:
   // APSP run
-  void runApspTG(Graph& graph, std::string& output_path);
+  void runAPSPTG(Graph& graph, std::string& output_path);
 
-  void runApspSG(Graph& graph, std::string& output_path);
+  void runAPSPSG(Graph& graph, std::string& output_path);
 
   // MSSP run
-  void runMsspS(Graph& graph, std::string& output_path);
+  void runMSSPTG(Graph& graph, std::string& output_path);
 
-  void runMsspP(Graph& graph, std::string& output_path);
+  void runMSSPSG(Graph& graph, std::string& output_path);
 
-  void runSssp(Graph& graph, std::string& output_path);
+  // SSSP run
+  void runSSSP(Graph& graph, std::string& output_path);
 
-  // SSSP
-  float ssspP(Graph& graph, int source, std::string& output_path);
+  void runBFS(Graph& graph, std::string& output_path);
 
-  float ssspS(Graph& graph, int source, std::string& output_path);
+  // kernel
+  float BFSp(Graph& graph, int source, std::string& output_path);
 
-  float ssspS(Graph&              graph,
-              int                 source,
-              std::string&        output_path,
-              std::vector<float>& averageLenth);
+  float BFSs(Graph& graph, int source, std::string& output_path);
 
-  float ssspPW(Graph& graph, int source, std::string& output_path);
+  float BFSs(Graph&              graph,
+             int                 source,
+             std::string&        output_path,
+             std::vector<float>& averageLenth);  // example
 
-  float ssspSW(Graph& graph, int source, std::string& output_path);
+  float SSSPs(Graph& graph, int source, std::string& output_path);
+
+  float SSSPp(Graph& graph, int source, std::string& output_path);
 
   // BOVM
   void BOVM(Graph& graph,

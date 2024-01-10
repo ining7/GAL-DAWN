@@ -8,10 +8,11 @@ int main(int argc, char* argv[])
   if ((algo == "TG") || (algo == "SG")) {
     std::string input_path  = argv[2];
     std::string output_path = argv[3];
-    graph.interval = atoi(argv[4]);  // 请保证打印间隔小于节点总数，建议10-1000
-    std::string prinft   = argv[5];
-    graph.source         = atoi(argv[6]);
-    std::string weighted = argv[7];
+    std::string prinft      = argv[4];
+    graph.source            = atoi(argv[5]);
+    std::string weighted    = argv[6];
+
+    graph.interval = 100;
 
     if (prinft == "true") {
       graph.prinft = true;
@@ -21,32 +22,31 @@ int main(int argc, char* argv[])
 
     if (weighted == "weighted") {
       graph.weighted = true;
-      std::cout << "Weighted Graph" << std::endl;
+      // std::cout << "Weighted Graph" << std::endl;
     } else {
       graph.weighted = false;
     }
 
     if (algo == "SG") {
       graph.source = atoi(argv[6]);
-      graph.stream = 20;
-      graph.thread = 20;
-      float tmp    = 0.0f;
+      graph.stream = omp_get_num_threads();
+      graph.thread = omp_get_num_threads();
       graph.createGraph(input_path, graph);
-      runCpu.runApspSG(graph, output_path);
+      runCpu.runAPSPSG(graph, output_path);
 
       return 0;
     }
     if (algo == "TG") {
       graph.source = atoi(argv[6]);
       graph.stream = 1;
-      graph.thread = 20;
+      graph.thread = omp_get_num_threads();
       graph.createGraph(input_path, graph);
-      runCpu.runApspTG(graph, output_path);
+      runCpu.runAPSPTG(graph, output_path);
       return 0;
     }
   }
   return 0;
 }
 
-// ./dawn_cpu_apsp SG $GRAPH_DIR/XX.mtx ../output.txt 100 false 0 unweighted//
-// ./dawn_cpu_apsp SG $GRAPH_DIR/XX.mtx ../output.txt 100 false 0 weighted
+// ./apsp_cpu SG $GRAPH_DIR/XX.mtx ../output.txt false 0 unweighted//
+// ./apsp_cpu SG $GRAPH_DIR/XX.mtx ../output.txt false 0 weighted

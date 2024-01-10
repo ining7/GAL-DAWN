@@ -1,6 +1,6 @@
 #include <dawn/dawn.hxx>
 namespace DAWN {
-void CPU::runApspTG(Graph& graph, std::string& output_path)
+void CPU::runAPSPTG(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0;
   Tool  tool;
@@ -13,11 +13,7 @@ void CPU::runApspTG(Graph& graph, std::string& output_path)
       tool.infoprint(i, graph.rows, graph.interval, graph.stream, elapsed_time);
       continue;
     }
-    if (graph.weighted) {
-      elapsed_time += ssspPW(graph, i, output_path);
-    } else {
-      elapsed_time += ssspP(graph, i, output_path);
-    }
+    elapsed_time += SSSPp(graph, i, output_path);
     tool.infoprint(i, graph.rows, graph.interval, graph.stream, elapsed_time);
   }
   std::cout
@@ -27,7 +23,7 @@ void CPU::runApspTG(Graph& graph, std::string& output_path)
   std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
 }
 
-void CPU::runApspSG(Graph& graph, std::string& output_path)
+void CPU::runAPSPSG(Graph& graph, std::string& output_path)
 {
   Tool  tool;
   float elapsed_time = 0.0;
@@ -45,9 +41,9 @@ void CPU::runApspSG(Graph& graph, std::string& output_path)
       continue;
     }
     if (graph.weighted) {
-      time = ssspSW(graph, i, output_path);
+      time = SSSPs(graph, i, output_path);
     } else {
-      time = ssspS(graph, i, output_path);
+      time = BFSs(graph, i, output_path);
     }
 #pragma omp critical
     {
@@ -65,15 +61,12 @@ void CPU::runApspSG(Graph& graph, std::string& output_path)
             << std::endl;
 }
 
-void CPU::runMsspP(Graph& graph, std::string& output_path)
+void CPU::runMSSPSG(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
   float time         = 0.0f;
   int   proEntry     = 0;
-  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
-  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-  //           << std::endl;
-  Tool tool;
+  Tool  tool;
 
   std::vector<float> averageLength(graph.rows, 0.0f);
 
@@ -82,32 +75,20 @@ void CPU::runMsspP(Graph& graph, std::string& output_path)
     int source = graph.msource[i] % graph.rows;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
-      // printf("Source [%d] is isolated node\n", source);
-      // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
-      //  graph.stream, elapsed_time);
       continue;
     }
     if (graph.weighted) {
-      time = ssspSW(graph, i, output_path);
+      time = SSSPs(graph, i, output_path);
     } else {
-      time = ssspS(graph, i, output_path, averageLength);
+      time = BFSs(graph, i, output_path, averageLength);
+      // time = BFSs(graph, i, output_path);
     }
 #pragma omp critical
     {
       elapsed_time += time;
       ++proEntry;
     }
-    // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
-    // graph.stream,
-    //  elapsed_time);
   }
-
-  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
-  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-  //           << std::endl;
-  // // Output elapsed time and free remaining resources
-  // std::cout << " Elapsed time: " << elapsed_time / (graph.stream * 1000)
-  //           << std::endl;
   float length = tool.averageShortestPath(averageLength.data(), graph.rows);
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
@@ -115,66 +96,57 @@ void CPU::runMsspP(Graph& graph, std::string& output_path)
   printf("%-21s%5.5lf\n", "Average shortest paths Length:", length);
 }
 
-void CPU::runMsspS(Graph& graph, std::string& output_path)
+void CPU::runMSSPTG(Graph& graph, std::string& output_path)
 {
   float elapsed_time = 0.0f;
   int   proEntry     = 0;
-  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start "
-  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-  //           << std::endl;
-  Tool tool;
-
+  Tool  tool;
   for (int i = 0; i < graph.msource.size(); i++) {
     int source = graph.msource[i] % graph.rows;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
-      // printf("Source [%d] is isolated node\n", source);
-      // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
-      //                graph.stream, elapsed_time);
       continue;
     }
     if (graph.weighted) {
-      elapsed_time += ssspPW(graph, source, output_path);
+      elapsed_time += SSSPp(graph, i, output_path);
     } else {
-      elapsed_time += ssspP(graph, source, output_path);
+      elapsed_time += BFSp(graph, i, output_path);
     }
     ++proEntry;
-
-    // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
-    // graph.stream,elapsed_time);
   }
-
-  // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP end "
-  //              "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-  //           << std::endl;
-  // Output elapsed time and free remaining resources
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
-void CPU::runSssp(Graph& graph, std::string& output_path)
+void CPU::runBFS(Graph& graph, std::string& output_path)
 {
   int source = graph.source;
   if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
-  float elapsed_time = 0.0f;
-  if (graph.weighted) {
-    std::cout << "weighted" << std::endl;
-    elapsed_time += ssspPW(graph, source, output_path);
-  } else {
-    elapsed_time += ssspP(graph, source, output_path);
-  }
-  // Output elapsed time
-  // std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
+  float elapsed_time = BFSp(graph, source, output_path);
+
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
-float CPU::ssspP(Graph& graph, int source, std::string& output_path)
+void CPU::runSSSP(Graph& graph, std::string& output_path)
+{
+  int source = graph.source;
+  if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+    std::cout << "Source is isolated node, please check" << std::endl;
+    exit(0);
+  }
+  float elapsed_time = SSSPp(graph, source, output_path);
+  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+  printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
+}
+
+float CPU::BFSp(Graph& graph, int source, std::string& output_path)
 {
   int   step   = 1;
   int   ptr    = false;
@@ -224,7 +196,7 @@ float CPU::ssspP(Graph& graph, int source, std::string& output_path)
   return elapsed;
 }
 
-float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
+float CPU::SSSPp(Graph& graph, int source, std::string& output_path)
 {
   int    step    = 1;
   float* result  = new float[graph.rows];
@@ -290,7 +262,7 @@ float CPU::ssspPW(Graph& graph, int source, std::string& output_path)
   return elapsed;
 }
 
-float CPU::ssspS(Graph& graph, int source, std::string& output_path)
+float CPU::BFSs(Graph& graph, int source, std::string& output_path)
 {
   int  step     = 1;
   int  entry    = 0;
@@ -341,10 +313,10 @@ float CPU::ssspS(Graph& graph, int source, std::string& output_path)
   return elapsed;
 }
 
-float CPU::ssspS(Graph&              graph,
-                 int                 source,
-                 std::string&        output_path,
-                 std::vector<float>& averageLenth)
+float CPU::BFSs(Graph&              graph,
+                int                 source,
+                std::string&        output_path,
+                std::vector<float>& averageLenth)
 {
   int  step     = 1;
   int  entry    = 0;
@@ -398,7 +370,7 @@ float CPU::ssspS(Graph&              graph,
   return elapsed;
 }
 
-float CPU::ssspSW(Graph& graph, int source, std::string& output_path)
+float CPU::SSSPs(Graph& graph, int source, std::string& output_path)
 {
   int step = 1;
 

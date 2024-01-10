@@ -52,9 +52,9 @@ public:
     class CPU {
 public:
   // APSP run
-  void runApspTGCsr(Graph& graph, std::string& output_path);
+  void runAPSPTGCsr(Graph& graph, std::string& output_path);
 
-  void runApspSGCsr(Graph& graph, std::string& output_path);
+  void runAPSPSGCsr(Graph& graph, std::string& output_path);
 
   // SSSP run
   void runMsspCpuCsr(Graph& graph, std::string& output_path);
@@ -62,7 +62,7 @@ public:
   void runSsspCpuCsr(Graph& graph, std::string& output_path);
 
   // SSSP
-  float ssspPCsr(Graph& graph, int source, std::string& output_path);
+  float BFSPCsr(Graph& graph, int source, std::string& output_path);
 
   float ssspSCsr(Graph& graph, int source, std::string& output_path);
 
@@ -86,13 +86,13 @@ public:
 ````c++
 class GPU {
 public:
-  void runApspGpuCsr(Graph& graph, std::string& output_path);
+  void runAPSPGpuCsr(Graph& graph, std::string& output_path);
 
-  void runSsspGpuCsr(Graph& graph, std::string& output_path);
+  void runSSSPGpuCsr(Graph& graph, std::string& output_path);
 
-  void runMsspGpuCsr(Graph& graph, std::string& output_path);
+  void runMBFSGpuCsr(Graph& graph, std::string& output_path);
 
-  float ssspGpuCsr(Graph&       graph,
+  float BFSGpuCsr(Graph&       graph,
                    int          source,
                    cudaStream_t streams,
                    int*         d_A_row_ptr,

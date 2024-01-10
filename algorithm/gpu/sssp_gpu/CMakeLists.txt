@@ -1,11 +1,11 @@
 # Specify source and header files
-file(GLOB SSSP_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/*.cpp")
+file(GLOB SSSP_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cu")
 file(GLOB SSSP_HEADERS "${CMAKE_SOURCE_DIR}/include/*.h" "${CMAKE_SOURCE_DIR}/include/*.cuh" "${CMAKE_SOURCE_DIR}/include/*.hxx")
 
 # Define the CUDA sources
 set(sssp_GPU_SOURCES
     sssp_gpu.cu
-    ${SSSP_SOURCES_CPP}
+    ${SSSP_SOURCES}
 )
 
 # Add the executable
@@ -21,9 +21,9 @@ set_property(TARGET sssp_gpu PROPERTY CUDA_ARCHITECTURES 86)
 
 # Add compile options for CUDA
 target_compile_options(sssp_gpu PUBLIC $<$<COMPILE_LANGUAGE:CUDA>:
-    --generate-code arch=compute_86,code=sm_86
-    -Xcompiler -fopenmp
+    -Xcompiler -fopenmp -O3
 >)
+set_target_properties(sssp_gpu PROPERTIES CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES})
 
 # Find OpenMP package
 find_package(OpenMP REQUIRED)

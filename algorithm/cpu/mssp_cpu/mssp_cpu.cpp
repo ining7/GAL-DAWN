@@ -1,15 +1,16 @@
-#include <dawn/dawn.cuh>
+#include <dawn/dawn.hxx>
 
 int main(int argc, char* argv[])
 {
+  DAWN::Tool  tool;
+  DAWN::CPU   runCpu;
   DAWN::Graph graph;
-  DAWN::GPU   gpurun;
   std::string input_path  = argv[1];
   std::string output_path = argv[2];
-  graph.block_size        = atoi(argv[3]);
-  std::string prinft      = argv[4];
-  std::string sourceList  = argv[5];
-  std::string weighted    = argv[6];
+  std::string prinft      = argv[3];
+  std::string sourceList  = argv[4];
+  std::string weighted    = argv[5];
+  graph.interval          = 100;
   if (prinft == "true") {
     graph.prinft = true;
     std::cout << "Prinft source " << graph.source << std::endl;
@@ -22,20 +23,15 @@ int main(int argc, char* argv[])
   } else {
     graph.weighted = false;
   }
-  graph.thread   = 1;
-  graph.interval = 100;
-  graph.share    = false;
-  graph.stream   = 8;
-
+  graph.stream = omp_get_num_threads();
+  graph.thread = omp_get_num_threads();
   graph.createGraph(input_path, graph);
   graph.readList(sourceList, graph);
-  if (graph.weighted) {
-    gpurun.runMsspGpuW(graph, output_path);
-  } else {
-    gpurun.runMsspGpu(graph, output_path);
-  }
+  runCpu.runMSSPSG(graph, output_path);
+
   return 0;
 }
-
-//./dawn_gpu_mssp $GRAPH_DIR/XXX.mtx ../output.txt 256 false sourceList
+// ./mssp_cpu $GRAPH_DIR/XX.mtx ../output.txt false ./sourceList.txt
 // unweighted
+
+// ./mssp_cpu $GRAPH_DIR/XX.mtx ../output.txt false ./sourceList.txt weighted
