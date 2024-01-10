@@ -37,9 +37,9 @@ def average_shortest_path_length(graph, source_node):
 # 创建解析器对象并定义命令行参数
 parser = argparse.ArgumentParser(description="Calculate shortest path length from source node in mtx graph file")
 parser.add_argument("input_file", metavar="INPUT_FILE", type=str, help="path to input mtx graph file")
-# parser.add_argument("output_file", metavar="OUTPUT_FILE", type=str, help="path to output file")
-# parser.add_argument("source_node", metavar="SOURCE_NODE", type=int, help="source node index (0-based)")
-parser.add_argument("source_node_file", metavar="SOURCE_NODE_FILE", type=str, help="input file containing node IDs")
+parser.add_argument("output_file", metavar="OUTPUT_FILE", type=str, help="path to output file")
+parser.add_argument("source_node", metavar="SOURCE_NODE", type=int, help="source node index (0-based)")
+# parser.add_argument("source_node_file", metavar="SOURCE_NODE_FILE", type=str, help="input file containing node IDs")
 # 解析命令行参数
 args = parser.parse_args()
 
@@ -48,27 +48,31 @@ coo_rows, coo_cols, node, nnz = read_mtx_file(args.input_file)
 graph = nx.Graph()
 for i in range(len(coo_rows)):
     graph.add_edge(coo_rows[i], coo_cols[i])
+shortest_paths = shortest_path_length(graph, args.source_node)
 
-node_ids = []
-with open(args.source_node_file, "r") as file:
-    for line in file:
-        node_id = int(line.strip())
-        node_ids.append(node_id)
 
-length = []
-for index in tqdm(node_ids, desc="Calculating shortest path length"):
-    length.append(average_shortest_path_length(graph, index % node))
+# node_ids = []
+# with open(args.source_node_file, "r") as file:
+#     for line in file:
+#         node_id = int(line.strip())
+#         node_ids.append(node_id)
 
-# 打印结果
-print("Average shortest path length:",  sum(length) / len(length))
+# length = []
+# for index in tqdm(node_ids, desc="Calculating shortest path length"):
+#     length.append(average_shortest_path_length(graph, index % node))
 
-# # 对所有节点按节点编号进行排序
-# sorted_nodes = sorted(shortest_paths.keys())
-# with open(args.output_file, "w") as f:
-#     for node in sorted_nodes:
-#         length = shortest_paths[node]
-#         if args.source_node!=node :
-#             f.write("{} {} {}\n".format(args.source_node, node, length))
+# # 打印结果
+# print("Average shortest path length:",  sum(length) / len(length))
+
+
+
+# 对所有节点按节点编号进行排序
+sorted_nodes = sorted(shortest_paths.keys())
+with open(args.output_file, "w") as f:
+    for node in sorted_nodes:
+        length = shortest_paths[node]
+        if args.source_node!=node :
+            f.write("{} {} {}\n".format(args.source_node, node, length))
 
 
 

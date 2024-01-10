@@ -62,7 +62,7 @@ public:
   void runSsspCpuCsr(Graph& graph, std::string& output_path);
 
   // SSSP
-  float ssspPCsr(Graph& graph, int source, std::string& output_path);
+  float BFSPCsr(Graph& graph, int source, std::string& output_path);
 
   float ssspSCsr(Graph& graph, int source, std::string& output_path);
 

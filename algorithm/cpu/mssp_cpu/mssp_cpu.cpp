@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
   graph.thread = 20;
   graph.createGraph(input_path, graph);
   graph.readList(sourceList, graph);
-  runCpu.runMsspP(graph, output_path);
+  runCpu.runMSSPSG(graph, output_path);
 
   return 0;
 }

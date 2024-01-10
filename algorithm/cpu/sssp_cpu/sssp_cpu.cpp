@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
   graph.stream = 1;
   graph.thread = omp_get_num_threads();
   graph.createGraph(input_path, graph);
-  runCpu.runSssp(graph, output_path);
+  runCpu.runSSSP(graph, output_path);
 
   return 0;
 }
