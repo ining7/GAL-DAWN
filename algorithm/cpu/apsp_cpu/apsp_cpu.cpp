@@ -1,16 +1,15 @@
 #include <dawn/dawn.hxx>
 
-int main(int argc, char* argv[])
-{
-  DAWN::CPU   runCpu;
+int main(int argc, char* argv[]) {
+  DAWN::CPU runCpu;
   DAWN::Graph graph;
   std::string algo = argv[1];
   if ((algo == "TG") || (algo == "SG")) {
-    std::string input_path  = argv[2];
+    std::string input_path = argv[2];
     std::string output_path = argv[3];
-    std::string prinft      = argv[4];
-    graph.source            = atoi(argv[5]);
-    std::string weighted    = argv[6];
+    std::string prinft = argv[4];
+    graph.source = atoi(argv[5]);
+    std::string weighted = argv[6];
 
     graph.interval = 100;
 

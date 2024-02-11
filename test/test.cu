@@ -1,14 +1,13 @@
 #include "dawn.cuh"
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   DAWN::Graph graph;
-  DAWN::GPU   gpurun;
+  DAWN::GPU gpurun;
 
-  std::string input_path  = argv[1];
+  std::string input_path = argv[1];
   std::string output_path = argv[2];
-  std::string prinft      = argv[3];
-  graph.source            = atoi(argv[4]);
-  std::string weighted    = argv[5];
+  std::string prinft = argv[3];
+  graph.source = atoi(argv[4]);
+  std::string weighted = argv[5];
 
   if (prinft == "true") {
     graph.prinft = true;
@@ -21,9 +20,9 @@ int main(int argc, char* argv[])
     std::cerr << "Error opening file " << input_path << std::endl;
     return;
   }
-  graph.stream     = 4;
+  graph.stream = 4;
   graph.block_size = 1024;
-  graph.interval   = 100;
+  graph.interval = 100;
   graph.createGraph(input_path, graph);
   if (weighted == "weighted") {
     graph.weighted = true;

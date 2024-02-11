@@ -1,14 +1,13 @@
 #include <dawn/dawn.hxx>
 
-int main(int argc, char* argv[])
-{
-  DAWN::Tool  tool;
-  DAWN::CPU   runCpu;
+int main(int argc, char* argv[]) {
+  DAWN::Tool tool;
+  DAWN::CPU runCpu;
   DAWN::Graph graph;
-  std::string input_path  = argv[1];
+  std::string input_path = argv[1];
   std::string output_path = argv[2];
-  std::string prinft      = argv[3];
-  graph.source            = atoi(argv[4]);
+  std::string prinft = argv[3];
+  graph.source = atoi(argv[4]);
 
   if (prinft == "true") {
     graph.prinft = true;
@@ -16,8 +15,8 @@ int main(int argc, char* argv[])
   } else {
     graph.prinft = false;
   }
-  graph.stream   = 1;
-  graph.thread   = omp_get_num_threads();
+  graph.stream = 1;
+  graph.thread = omp_get_num_threads();
   graph.weighted = true;
 
   graph.createGraph(input_path, graph);

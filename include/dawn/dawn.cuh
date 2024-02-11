@@ -6,7 +6,7 @@
 
 namespace DAWN {
 class GPU {
-public:
+ public:
   void runAPSPGpu(Graph& graph, std::string& output_path);
 
   void runAPBFSGpu(Graph& graph, std::string& output_path);
@@ -19,19 +19,19 @@ public:
 
   void runBFSGpu(Graph& graph, std::string& output_path);
 
-  float BFSGpu(Graph&                     graph,
-               int                        source,
-               cudaStream_t               streams,
+  float BFSGpu(Graph& graph,
+               int source,
+               cudaStream_t streams,
                thrust::device_vector<int> d_row_ptr,
                thrust::device_vector<int> d_col,
-               std::string&               output_path);
+               std::string& output_path);
 
-  float SSSPGpu(Graph&                       graph,
-                int                          source,
-                cudaStream_t                 streams,
-                thrust::device_vector<int>   d_row_ptr,
-                thrust::device_vector<int>   d_col,
+  float SSSPGpu(Graph& graph,
+                int source,
+                cudaStream_t streams,
+                thrust::device_vector<int> d_row_ptr,
+                thrust::device_vector<int> d_col,
                 thrust::device_vector<float> d_val,
-                std::string&                 output_path);
+                std::string& output_path);
 };
 }  // namespace DAWN
