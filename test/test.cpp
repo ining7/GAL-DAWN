@@ -1,14 +1,13 @@
 #include <dawn/dawn.hxx>
 
-int main(int argc, char* argv[])
-{
-  DAWN::CPU   runCpu;
+int main(int argc, char* argv[]) {
+  DAWN::CPU runCpu;
   DAWN::Graph graph;
-  std::string input_path  = argv[1];
+  std::string input_path = argv[1];
   std::string output_path = argv[2];
-  std::string prinft      = argv[3];
-  graph.source            = atoi(argv[4]);
-  std::string weighted    = argv[5];
+  std::string prinft = argv[3];
+  graph.source = atoi(argv[4]);
+  std::string weighted = argv[5];
 
   if (prinft == "true") {
     graph.prinft = true;
@@ -25,8 +24,8 @@ int main(int argc, char* argv[])
   }
 
   graph.interval = 100;
-  graph.stream   = omp_get_num_threads();
-  graph.thread   = omp_get_num_threads();
+  graph.stream = omp_get_num_threads();
+  graph.thread = omp_get_num_threads();
   graph.createGraph(input_path, graph);
   runCpu.runAPSPSG(graph, output_path);
 

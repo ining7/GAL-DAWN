@@ -1,43 +1,41 @@
 #include <dawn/dawn.hxx>
 namespace DAWN {
-void CPU::runAPSPTG(Graph& graph, std::string& output_path)
-{
+void CPU::runAPSPTG(Graph& graph, std::string& output_path) {
   float elapsed_time = 0.0;
-  Tool  tool;
+  Tool tool;
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
-
-  for (int i = 0; i < graph.rows; i++) {
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
+  auto row = graph.rows;
+  for (int i = 0; i < row; i++) {
     if (graph.csrB.row_ptr[i] == graph.csrB.row_ptr[i + 1]) {
-      tool.infoprint(i, graph.rows, graph.interval, graph.stream, elapsed_time);
+      tool.infoprint(i, row, graph.interval, graph.stream, elapsed_time);
       continue;
     }
     elapsed_time += SSSPp(graph, i, output_path);
-    tool.infoprint(i, graph.rows, graph.interval, graph.stream, elapsed_time);
+    tool.infoprint(i, row, graph.interval, graph.stream, elapsed_time);
   }
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   // Output elapsed time
   std::cout << " Elapsed time: " << elapsed_time / 1000 << std::endl;
 }
 
-void CPU::runAPSPSG(Graph& graph, std::string& output_path)
-{
-  Tool  tool;
+void CPU::runAPSPSG(Graph& graph, std::string& output_path) {
+  Tool tool;
   float elapsed_time = 0.0;
-  int   proEntry     = 0;
-  float time         = 0.0f;
+  int proEntry = 0;
+  float time = 0.0f;
+  auto row = graph.rows;
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
 #pragma omp parallel for
-  for (int i = 0; i < graph.rows; i++) {
+  for (int i = 0; i < row; i++) {
     if (graph.csrB.row_ptr[i] == graph.csrB.row_ptr[i + 1]) {
       ++proEntry;
-      tool.infoprint(proEntry, graph.rows, graph.interval, graph.stream,
-                     elapsed_time);
+      tool.infoprint(proEntry, row, graph.interval, graph.stream, elapsed_time);
       continue;
     }
     if (graph.weighted) {
@@ -50,29 +48,28 @@ void CPU::runAPSPSG(Graph& graph, std::string& output_path)
       elapsed_time += time;
       ++proEntry;
     }
-    tool.infoprint(proEntry, graph.rows, graph.interval, graph.stream,
-                   elapsed_time);
+    tool.infoprint(proEntry, row, graph.interval, graph.stream, elapsed_time);
   }
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   // Output elapsed time and free remaining resources
   std::cout << " Elapsed time: " << elapsed_time / (graph.stream * 1000)
             << std::endl;
 }
 
-void CPU::runMSSPSG(Graph& graph, std::string& output_path)
-{
+void CPU::runMSSPSG(Graph& graph, std::string& output_path) {
   float elapsed_time = 0.0f;
-  float time         = 0.0f;
-  int   proEntry     = 0;
-  Tool  tool;
+  float time = 0.0f;
+  int proEntry = 0;
+  Tool tool;
+  auto row = graph.rows;
 
-  std::vector<float> averageLength(graph.rows, 0.0f);
+  std::vector<float> averageLength(row, 0.0f);
 
 #pragma omp parallel for
   for (int i = 0; i < graph.msource.size(); i++) {
-    int source = graph.msource[i] % graph.rows;
+    int source = graph.msource[i] % row;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
       continue;
@@ -89,20 +86,21 @@ void CPU::runMSSPSG(Graph& graph, std::string& output_path)
       ++proEntry;
     }
   }
-  float length = tool.averageShortestPath(averageLength.data(), graph.rows);
-  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  float length = tool.averageShortestPath(averageLength.data(), row);
+  printf("%-21s%3.5d\n", "Nodes:", row);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / (graph.stream * 1000));
   printf("%-21s%5.5lf\n", "Average shortest paths Length:", length);
 }
 
-void CPU::runMSSPTG(Graph& graph, std::string& output_path)
-{
+void CPU::runMSSPTG(Graph& graph, std::string& output_path) {
   float elapsed_time = 0.0f;
-  int   proEntry     = 0;
-  Tool  tool;
+  int proEntry = 0;
+  auto row = graph.rows;
+
+  Tool tool;
   for (int i = 0; i < graph.msource.size(); i++) {
-    int source = graph.msource[i] % graph.rows;
+    int source = graph.msource[i] % row;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
       ++proEntry;
       continue;
@@ -114,412 +112,351 @@ void CPU::runMSSPTG(Graph& graph, std::string& output_path)
     }
     ++proEntry;
   }
-  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5d\n", "Nodes:", row);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
-void CPU::runBFS(Graph& graph, std::string& output_path)
-{
+void CPU::runBFS(Graph& graph, std::string& output_path) {
   int source = graph.source;
+  auto row = graph.rows;
   if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
   float elapsed_time = BFSp(graph, source, output_path);
 
-  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5d\n", "Nodes:", row);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
-void CPU::runSSSP(Graph& graph, std::string& output_path)
-{
+void CPU::runSSSP(Graph& graph, std::string& output_path) {
   int source = graph.source;
+  auto row = graph.rows;
   if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
   float elapsed_time = SSSPp(graph, source, output_path);
-  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5d\n", "Nodes:", row);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
-float CPU::BFSp(Graph& graph, int source, std::string& output_path)
-{
-  int   step   = 1;
-  int   ptr    = false;
-  bool* output = new bool[graph.rows];
-  bool* input  = new bool[graph.rows];
-  int*  result = new int[graph.rows];
-
-  float elapsed = 0.0f;
-  std::fill_n(input, graph.rows, false);
-  std::fill_n(output, graph.rows, false);
-  std::fill_n(result, graph.rows, 0);
-
-#pragma omp parallel for
-  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
-       i++) {
-    input[graph.csrB.col[i]]  = true;
-    output[graph.csrB.col[i]] = true;
-    result[graph.csrB.col[i]] = 1;
-  }
-  auto start = std::chrono::high_resolution_clock::now();
-  while (step < graph.rows) {
-    step++;
-    SOVMP(graph, input, ptr, output, result, step);
-    if (!ptr) {
-      break;
-    }
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
-
-  // graph.entry += entry_last;
-
-  delete[] output;
-  output = nullptr;
-  delete[] input;
-  input = nullptr;
-  // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
-    Tool tool;
-    tool.outfile(graph.rows, result, source, output_path);
-  }
-  delete[] result;
-  result = nullptr;
-
-  return elapsed;
-}
-
-float CPU::SSSPp(Graph& graph, int source, std::string& output_path)
-{
-  int    step    = 1;
-  float* result  = new float[graph.rows];
-  bool*  alpha   = new bool[graph.rows];
-  bool*  beta    = new bool[graph.rows];
-  float  elapsed = 0.0f;
-  float  INF     = 1.0 * 0xfffffff;
-  bool   ptr;
-  std::fill_n(result, graph.rows, INF);
-  std::fill_n(alpha, graph.rows, false);
-  std::fill_n(beta, graph.rows, false);
-
-#pragma omp parallel for
-  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
-       i++) {
-    result[graph.csrB.col[i]] = graph.csrB.val[i];
-    alpha[graph.csrB.col[i]]  = true;
-  }
-
-  auto start = std::chrono::high_resolution_clock::now();
-  while (step < graph.rows) {
-    step++;
-    ptr = false;
-#pragma omp parallel for
-    for (int j = 0; j < graph.rows; j++) {
-      if (alpha[j]) {
-        for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
-             k++) {
-          int   index = graph.csrB.col[k];
-          float tmp   = result[j] + graph.csrB.val[k];
-          if (result[index] > tmp) {
-            result[index] = std::min(result[index], tmp);
-            beta[index]   = true;
-            if ((!ptr) && (index != source))
-              ptr = true;
-          }
-        }
-      }
-    }
-    std::copy_n(beta, graph.rows, alpha);
-    std::fill_n(beta, graph.rows, false);
-    if (!ptr)
-      break;
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
-
-  // printf("Step is [%d]\n", step);
-
-  // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
-    Tool tool;
-    tool.outfile(graph.rows, result, source, output_path);
-  }
-  delete[] beta;
-  beta = nullptr;
-  delete[] alpha;
-  alpha = nullptr;
-  delete[] result;
-  result = nullptr;
-  return elapsed;
-}
-
-float CPU::BFSs(Graph& graph, int source, std::string& output_path)
-{
-  int  step     = 1;
-  int  entry    = 0;
-  int  alphaPtr = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
-  int* alpha    = new int[graph.rows];
-  int* delta    = new int[graph.rows];
-  int* result   = new int[graph.rows];
-
-  float elapsed = 0.0f;
-  std::fill_n(result, graph.rows, 0);
-  std::fill_n(alpha, graph.rows, 0);
-  std::fill_n(delta, graph.rows, 0);
-
-  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
-       i++) {
-    result[graph.csrB.col[i]]             = 1;
-    alpha[i - graph.csrB.row_ptr[source]] = graph.csrB.col[i];
-  }
-  auto start = std::chrono::high_resolution_clock::now();
-  while (step < graph.rows) {
-    step++;
-    SOVMS(graph, alpha, alphaPtr, delta, result, step);
-    entry += alphaPtr;
-    if (!alphaPtr) {
-      break;
-    }
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
-
-  graph.entry += entry;
-
-  delete[] alpha;
-  alpha = nullptr;
-  delete[] delta;
-  delta = nullptr;
-  // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
-    Tool tool;
-    tool.outfile(graph.rows, result, source, output_path);
-  }
-
-  delete[] result;
-  result = nullptr;
-
-  return elapsed;
-}
-
-float CPU::BFSs(Graph&              graph,
-                int                 source,
-                std::string&        output_path,
-                std::vector<float>& averageLenth)
-{
-  int  step     = 1;
-  int  entry    = 0;
-  int  alphaPtr = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
-  int* alpha    = new int[graph.rows];
-  int* delta    = new int[graph.rows];
-  int* result   = new int[graph.rows];
-
-  float elapsed = 0.0f;
-  std::fill_n(result, graph.rows, 0);
-  std::fill_n(alpha, graph.rows, 0);
-  std::fill_n(delta, graph.rows, 0);
-
-  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
-       i++) {
-    result[graph.csrB.col[i]]             = 1;
-    alpha[i - graph.csrB.row_ptr[source]] = graph.csrB.col[i];
-  }
-  auto start = std::chrono::high_resolution_clock::now();
-  while (step < graph.rows) {
-    step++;
-    SOVMS(graph, alpha, alphaPtr, delta, result, step);
-    entry += alphaPtr;
-    if (!alphaPtr) {
-      break;
-    }
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
-
-  graph.entry += entry;
-
-  Tool tool;
-  averageLenth[source] = tool.averageShortestPath(result, graph.rows);
-
-  delete[] alpha;
-  alpha = nullptr;
-  delete[] delta;
-  delta = nullptr;
-  // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
-    Tool tool;
-    tool.outfile(graph.rows, result, source, output_path);
-  }
-
-  delete[] result;
-  result = nullptr;
-
-  return elapsed;
-}
-
-float CPU::SSSPs(Graph& graph, int source, std::string& output_path)
-{
+float CPU::BFSp(Graph& graph, int source, std::string& output_path) {
   int step = 1;
+  bool is_converged = false;
+  auto row = graph.rows;
+  bool* alpha = new bool[row];
+  bool* beta = new bool[row];
+  int* distance = new int[row];
+  float elapsed = 0.0f;
 
-  float* result  = new float[graph.rows];
-  bool*  alpha   = new bool[graph.rows];
-  bool*  beta    = new bool[graph.rows];
-  float  elapsed = 0.0f;
-  float  INF     = 1.0 * 0xfffffff;
-  bool   ptr;
-  std::fill_n(result, graph.rows, INF);
-  std::fill_n(alpha, graph.rows, false);
-  std::fill_n(beta, graph.rows, false);
+  std::fill_n(alpha, row, false);
+  std::fill_n(beta, row, false);
+  std::fill_n(distance, row, 0);
 
+#pragma omp parallel for
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
-    result[graph.csrB.col[i]] = graph.csrB.val[i];
-    alpha[graph.csrB.col[i]]  = true;
+    alpha[graph.csrB.col[i]] = true;
+    distance[graph.csrB.col[i]] = 1;
   }
 
-  while (step < graph.rows) {
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < row) {
     step++;
-    ptr        = false;
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int j = 0; j < graph.rows; j++) {
-      if (alpha[j]) {
-        for (int k = graph.csrB.row_ptr[j]; k < graph.csrB.row_ptr[j + 1];
-             k++) {
-          int   index = graph.csrB.col[k];
-          float tmp   = result[j] + graph.csrB.val[k];
-          if (result[index] > tmp) {
-            result[index] = tmp;
-            beta[index]   = true;
-            if ((!ptr) && (index != source))
-              ptr = true;
-          }
-        }
-      }
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-    elapsed += elapsed_tmp.count();
-    std::memmove(alpha, beta, graph.rows);
-    std::fill_n(beta, graph.rows, false);
-    if (!ptr)
+    if (!(step % 2))
+      is_converged = SOVMP(graph, alpha, beta, distance, step);
+    else
+      is_converged = SOVMP(graph, beta, alpha, distance, step);
+    if (is_converged) {
       break;
+    }
   }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
 
-  // printf("Step is [%d]\n", step);
+  distance[source] = 0;
 
   // Output
   if ((graph.prinft) && (source == graph.source)) {
     printf("Start prinft\n");
     Tool tool;
-    tool.outfile(graph.rows, result, source, output_path);
+    tool.outfile(row, distance, source, output_path);
   }
+
   delete[] beta;
   beta = nullptr;
   delete[] alpha;
   alpha = nullptr;
-  delete[] result;
-  result = nullptr;
+  delete[] distance;
+  distance = nullptr;
+
   return elapsed;
 }
 
-void CPU::BOVM(Graph& graph,
-               bool*& input,
-               bool*& output,
-               int*&  result,
-               bool&  ptr,
-               int    step)
-{
-  std::memmove(input, output, graph.rows * sizeof(bool));
-  for (int j = 0; j < graph.rows; j++) {
-    if (!result[j]) {
-      int start = graph.csrA.row_ptr[j];
-      int end   = graph.csrA.row_ptr[j + 1];
-      if (start != end) {
-        for (int k = start; k < end; k++) {
-          if (input[graph.csrA.col[k]]) {
-            output[j] = true;
-            result[j] = step;
-            if (!ptr)
-              ptr = true;
-            break;
-          }
-        }
-      }
+float CPU::BFSs(Graph& graph, int source, std::string& output_path) {
+  int step = 1;
+  int entry = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
+  auto row = graph.rows;
+  int* alpha = new int[row];
+  int* beta = new int[row];
+  int* distance = new int[row];
+  float elapsed = 0.0f;
+
+  std::fill_n(distance, row, 0);
+  std::fill_n(alpha, row, 0);
+  std::fill_n(beta, row, 0);
+
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    distance[graph.csrB.col[i]] = 1;
+    alpha[i - graph.csrB.row_ptr[source]] = graph.csrB.col[i];
+  }
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < row) {
+    step++;
+    if (!(step % 2))
+      entry = SOVM(graph, alpha, beta, distance, step, entry);
+    else
+      entry = SOVM(graph, beta, alpha, distance, step, entry);
+    if (!entry) {
+      break;
     }
   }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  distance[source] = 0;
+
+  // Output
+  if ((graph.prinft) && (source == graph.source)) {
+    printf("Start prinft\n");
+    Tool tool;
+    tool.outfile(row, distance, source, output_path);
+  }
+
+  delete[] alpha;
+  alpha = nullptr;
+  delete[] beta;
+  beta = nullptr;
+  delete[] distance;
+  distance = nullptr;
+
+  return elapsed;
 }
 
-void CPU::SOVMS(Graph& graph,
-                int*&  alpha,
-                int&   ptr,
-                int*&  delta,
-                int*&  result,
-                int    step)
-{
-  int tmpPtr = 0;
-  for (int j = 0; j < ptr; j++) {
+float CPU::SSSPp(Graph& graph, int source, std::string& output_path) {
+  int step = 1;
+  bool is_converged = false;
+  auto row = graph.rows;
+  bool* alpha = new bool[row];
+  bool* beta = new bool[row];
+  float* distance = new float[row];
+  float elapsed = 0.0f;
+  float INF = 1.0 * 0xfffffff;
+
+  std::fill_n(alpha, row, false);
+  std::fill_n(beta, row, false);
+  std::fill_n(distance, row, INF);
+
+#pragma omp parallel for
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    distance[graph.csrB.col[i]] = graph.csrB.val[i];
+    alpha[graph.csrB.col[i]] = true;
+  }
+  distance[source] = 0.0f;
+
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < row) {
+    step++;
+    if (!(step % 2))
+      is_converged = GOVMP(graph, alpha, beta, distance);
+    else
+      is_converged = GOVMP(graph, beta, alpha, distance);
+    if (is_converged) {
+      break;
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  // Output
+  if ((graph.prinft) && (source == graph.source)) {
+    printf("Start prinft\n");
+    Tool tool;
+    tool.outfile(row, distance, source, output_path);
+  }
+
+  delete[] beta;
+  beta = nullptr;
+  delete[] alpha;
+  alpha = nullptr;
+  delete[] distance;
+  distance = nullptr;
+
+  return elapsed;
+}
+
+float CPU::SSSPs(Graph& graph, int source, std::string& output_path) {
+  int step = 1;
+  int entry = graph.csrB.row_ptr[source + 1] - graph.csrB.row_ptr[source];
+  auto row = graph.rows;
+  int* alpha = new int[row];
+  int* beta = new int[row];
+  float* distance = new float[row];
+  float elapsed = 0.0f;
+  float INF = 1.0 * 0xfffffff;
+
+  std::fill_n(alpha, row, false);
+  std::fill_n(beta, row, false);
+  std::fill_n(distance, row, INF);
+
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    distance[graph.csrB.col[i]] = graph.csrB.val[i];
+    alpha[i - graph.csrB.row_ptr[source]] = graph.csrB.col[i];
+  }
+
+  distance[source] = 0.0f;
+
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < row) {
+    step++;
+    if (!(step % 2))
+      entry = GOVM(graph, alpha, beta, distance, entry);
+    else
+      entry = GOVM(graph, beta, alpha, distance, entry);
+    if (!entry) {
+      break;
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  // Output
+  if ((graph.prinft) && (source == graph.source)) {
+    printf("Start prinft\n");
+    Tool tool;
+    tool.outfile(row, distance, source, output_path);
+  }
+
+  delete[] alpha;
+  alpha = nullptr;
+  delete[] beta;
+  beta = nullptr;
+  delete[] distance;
+  distance = nullptr;
+
+  return elapsed;
+}
+
+int CPU::SOVM(Graph& graph,
+              int*& alpha,
+              int*& beta,
+              int*& distance,
+              int step,
+              int entry) {
+  int tmpEntry = 0;
+  for (int j = 0; j < entry; j++) {
     int start = graph.csrB.row_ptr[alpha[j]];
-    int end   = graph.csrB.row_ptr[alpha[j] + 1];
+    int end = graph.csrB.row_ptr[alpha[j] + 1];
     if (start != end) {
       for (int k = start; k < end; k++) {
-        if (!result[graph.csrB.col[k]]) {
-          delta[tmpPtr] = graph.csrB.col[k];
-          ++tmpPtr;
-          result[graph.csrB.col[k]] = step;
+        if (!distance[graph.csrB.col[k]]) {
+          distance[graph.csrB.col[k]] = step;
+          beta[tmpEntry] = graph.csrB.col[k];
+          ++tmpEntry;
         }
       }
     }
   }
-  std::memcpy(alpha, delta, tmpPtr * sizeof(int));
-  ptr = tmpPtr;
+  return tmpEntry;
 }
 
-void CPU::SOVMP(Graph& graph,
+int CPU::GOVM(Graph& graph,
+              int*& alpha,
+              int*& beta,
+              float*& distance,
+              int entry) {
+  int tmpEntry = 0;
+  for (int j = 0; j < entry; j++) {
+    int start = graph.csrB.row_ptr[alpha[j]];
+    int end = graph.csrB.row_ptr[alpha[j] + 1];
+    if (start != end) {
+      for (int k = start; k < end; k++) {
+        int index = graph.csrB.col[k];
+        float tmp = distance[j] + graph.csrB.val[k];
+        if (distance[index] > tmp) {
+          distance[index] = std::min(distance[index], tmp);
+          beta[tmpEntry] = index;
+          ++tmpEntry;
+        }
+      }
+    }
+  }
+  return tmpEntry;
+}
+
+bool CPU::SOVMP(Graph& graph,
                 bool*& alpha,
-                int&   ptr,
-                bool*& delta,
-                int*&  result,
-                int    step)
-{
-  ptr = false;
+                bool*& beta,
+                int*& distance,
+                int step) {
+  bool converged = true;
+  auto row = graph.rows;
 #pragma omp parallel for
-  for (int j = 0; j < graph.rows; j++) {
+  for (int j = 0; j < row; j++) {
     if (alpha[j]) {
       int start = graph.csrB.row_ptr[j];
-      int end   = graph.csrB.row_ptr[j + 1];
+      int end = graph.csrB.row_ptr[j + 1];
       if (start != end) {
         for (int k = start; k < end; k++) {
-          if (!result[graph.csrB.col[k]]) {
-            result[graph.csrB.col[k]] = step;
-            if (!ptr)
-              ptr = true;
+          if (!distance[graph.csrB.col[k]]) {
+            distance[graph.csrB.col[k]] = step;
+            beta[j] = true;
+            if (converged)
+              converged = false;
           }
         }
       }
-    }
-  }
-#pragma omp parallel for
-  for (int j = 0; j < graph.rows; j++) {
-    if (result[j] && (!delta[j])) {
-      alpha[j] = true;
-      delta[j] = true;
-    } else {
       alpha[j] = false;
     }
   }
+  return converged;
+}
+
+bool CPU::GOVMP(Graph& graph, bool*& alpha, bool*& beta, float*& distance) {
+  bool converged = true;
+  auto row = graph.rows;
+#pragma omp parallel for
+  for (int j = 0; j < row; j++) {
+    if (alpha[j]) {
+      int start = graph.csrB.row_ptr[j];
+      int end = graph.csrB.row_ptr[j + 1];
+      if (start != end) {
+        for (int k = start; k < end; k++) {
+          int index = graph.csrB.col[k];
+          float tmp = distance[j] + graph.csrB.val[k];
+          if (distance[index] > tmp) {
+            distance[index] = std::min(distance[index], tmp);
+            beta[index] = true;
+            if (converged)
+              converged = false;
+          }
+        }
+      }
+      alpha[j] = false;
+    }
+  }
+  return converged;
 }
 
 }  // namespace DAWN

@@ -2,22 +2,22 @@
 
 __global__ void SOVM(const int* row_ptr,
                      const int* col,
-                     bool*      alpha,
-                     bool*      beta,
-                     int*       result,
-                     int        rows,
-                     int        step,
-                     bool*      ptr);
+                     bool* alpha,
+                     bool* beta,
+                     int* distance,
+                     int rows,
+                     int step,
+                     bool* ptr);
 
-__global__ void GOVM(const int*   row_ptr,
-                     const int*   col,
+__global__ void GOVM(const int* row_ptr,
+                     const int* col,
                      const float* val,
-                     bool*        alpha,
-                     bool*        beta,
-                     float*       result,
-                     int          rows,
-                     int          source,
-                     bool*        ptr);
+                     bool* alpha,
+                     bool* beta,
+                     float* distance,
+                     int rows,
+                     int source,
+                     bool* ptr);
 
 __device__ static float atomicMin(float* address, float value);
 
@@ -30,39 +30,37 @@ __device__ static float atomicMin(float* address, float value);
  * @param value
  * @return float
  */
-__device__ static float atomicMin(float* address, float value)
-{
+__device__ static float atomicMin(float* address, float value) {
   int* addr_as_int = reinterpret_cast<int*>(address);
-  int  old         = *addr_as_int;
-  int  expected;
+  int old = *addr_as_int;
+  int expected;
   do {
     expected = old;
-    old      = ::atomicCAS(addr_as_int, expected,
-                           __float_as_int(::fminf(value, __int_as_float(expected))));
+    old = ::atomicCAS(addr_as_int, expected,
+                      __float_as_int(::fminf(value, __int_as_float(expected))));
   } while (expected != old);
   return __int_as_float(old);
 }
 
 __global__ void SOVM(const int* row_ptr,
                      const int* col,
-                     bool*      alpha,
-                     bool*      beta,
-                     int*       result,
-                     int        rows,
-                     int        step,
-                     bool*      ptr)
-{
+                     bool* alpha,
+                     bool* beta,
+                     int* distance,
+                     int rows,
+                     int step,
+                     bool* ptr) {
   ptr[0] = false;
-  int j  = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = blockIdx.x * blockDim.x + threadIdx.x;
   if ((j < rows) && (alpha[j])) {
     int start = row_ptr[j];
-    int end   = row_ptr[j + 1];
+    int end = row_ptr[j + 1];
     if (start != end) {
       for (int k = start; k < end; k++) {
         int index = col[k];
-        if (!result[index]) {
-          result[index] = step;
-          beta[index]   = true;
+        if (!distance[index]) {
+          distance[index] = step;
+          beta[index] = true;
           if (!ptr[0])
             ptr[0] = true;
         }
@@ -72,27 +70,26 @@ __global__ void SOVM(const int* row_ptr,
   }
 }
 
-__global__ void GOVM(const int*   row_ptr,
-                     const int*   col,
+__global__ void GOVM(const int* row_ptr,
+                     const int* col,
                      const float* val,
-                     bool*        alpha,
-                     bool*        beta,
-                     float*       result,
-                     int          rows,
-                     int          source,
-                     bool*        ptr)
-{
+                     bool* alpha,
+                     bool* beta,
+                     float* distance,
+                     int rows,
+                     int source,
+                     bool* ptr) {
   ptr[0] = false;
-  int j  = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = blockIdx.x * blockDim.x + threadIdx.x;
   if ((j < rows) && (alpha[j])) {
     int start = row_ptr[j];
-    int end   = row_ptr[j + 1];
+    int end = row_ptr[j + 1];
     if (start != end) {
       for (int k = start; k < end; k++) {
-        int   index = col[k];
-        float tmp   = result[j] + val[k];
-        if (result[index] > tmp) {
-          atomicMin(&result[index], tmp);
+        int index = col[k];
+        float tmp = distance[j] + val[k];
+        if (distance[index] > tmp) {
+          atomicMin(&distance[index], tmp);
           beta[index] = true;
           if ((!ptr[0]) && (index != source))
             ptr[0] = true;
@@ -102,37 +99,36 @@ __global__ void GOVM(const int*   row_ptr,
   }
 }
 
-float DAWN::GPU::SSSPGpu(DAWN::Graph&                 graph,
-                         int                          source,
-                         cudaStream_t                 streams,
-                         thrust::device_vector<int>   d_row_ptr,
-                         thrust::device_vector<int>   d_col,
+float DAWN::GPU::SSSPGpu(DAWN::Graph& graph,
+                         int source,
+                         cudaStream_t streams,
+                         thrust::device_vector<int> d_row_ptr,
+                         thrust::device_vector<int> d_col,
                          thrust::device_vector<float> d_val,
-                         std::string&                 output_path)
-{
-  int   step = 1;
-  float INF  = 1.0 * 0xfffffff;
+                         std::string& output_path) {
+  int step = 1;
+  float INF = 1.0 * 0xfffffff;
 
-  thrust::host_vector<bool>  h_alpha(graph.rows, 0);
-  thrust::host_vector<bool>  h_beta(graph.rows, 0);
-  thrust::host_vector<float> h_result(graph.rows, INF);
-  thrust::host_vector<bool>  h_ptr(1, false);
+  thrust::host_vector<bool> h_alpha(graph.rows, 0);
+  thrust::host_vector<bool> h_beta(graph.rows, 0);
+  thrust::host_vector<float> h_distance(graph.rows, INF);
+  thrust::host_vector<bool> h_ptr(1, false);
 
   float elapsed_time = 0.0f;
   omp_set_dynamic(1);
 #pragma omp parallel for
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
-    h_alpha[graph.csrB.col[i]]  = true;
-    h_result[graph.csrB.col[i]] = graph.csrB.val[i];
+    h_alpha[graph.csrB.col[i]] = true;
+    h_distance[graph.csrB.col[i]] = graph.csrB.val[i];
   }
-  thrust::device_vector<bool>  d_alpha(graph.rows, 0);
-  thrust::device_vector<bool>  d_beta(graph.rows, 0);
-  thrust::device_vector<float> d_result(graph.rows, INF);
-  thrust::device_vector<bool>  d_ptr(1, false);
+  thrust::device_vector<bool> d_alpha(graph.rows, 0);
+  thrust::device_vector<bool> d_beta(graph.rows, 0);
+  thrust::device_vector<float> d_distance(graph.rows, INF);
+  thrust::device_vector<bool> d_ptr(1, false);
 
   thrust::copy(h_alpha.begin(), h_alpha.end(), d_alpha.begin());
-  thrust::copy(h_result.begin(), h_result.end(), d_result.begin());
+  thrust::copy(h_distance.begin(), h_distance.end(), d_distance.begin());
 
   // Launch kernel
   int block_size = graph.block_size;
@@ -148,15 +144,15 @@ float DAWN::GPU::SSSPGpu(DAWN::Graph&                 graph,
     step++;
     if (!(step % 2)) {
       GOVM<<<num_blocks, block_size, 0, streams>>>(
-        d_row_ptr.data().get(), d_col.data().get(), d_val.data().get(),
-        d_alpha.data().get(), d_beta.data().get(), d_result.data().get(),
-        graph.rows, source, d_ptr.data().get());
+          d_row_ptr.data().get(), d_col.data().get(), d_val.data().get(),
+          d_alpha.data().get(), d_beta.data().get(), d_distance.data().get(),
+          graph.rows, source, d_ptr.data().get());
       thrust::fill_n(d_alpha.begin(), graph.rows, false);
     } else {
       GOVM<<<num_blocks, block_size, 0, streams>>>(
-        d_row_ptr.data().get(), d_col.data().get(), d_val.data().get(),
-        d_beta.data().get(), d_alpha.data().get(), d_result.data().get(),
-        graph.rows, source, d_ptr.data().get());
+          d_row_ptr.data().get(), d_col.data().get(), d_val.data().get(),
+          d_beta.data().get(), d_alpha.data().get(), d_distance.data().get(),
+          graph.rows, source, d_ptr.data().get());
       thrust::fill_n(d_beta.begin(), graph.rows, false);
     }
     // thrust::copy_n(d_beta.begin(), graph.rows, d_alpha.begin());
@@ -178,25 +174,24 @@ float DAWN::GPU::SSSPGpu(DAWN::Graph&                 graph,
 
   // Output
   if ((graph.prinft) && (source == graph.source)) {
-    thrust::copy(d_result.begin(), d_result.end(), h_result.begin());
+    thrust::copy(d_distance.begin(), d_distance.end(), h_distance.begin());
     printf("Start prinft\n");
     Tool tool;
-    tool.outfile(graph.rows, h_result.data(), source, output_path);
+    tool.outfile(graph.rows, h_distance.data(), source, output_path);
   }
   return elapsed_time;
 }
 
-float DAWN::GPU::BFSGpu(DAWN::Graph&               graph,
-                        int                        source,
-                        cudaStream_t               streams,
+float DAWN::GPU::BFSGpu(DAWN::Graph& graph,
+                        int source,
+                        cudaStream_t streams,
                         thrust::device_vector<int> d_row_ptr,
                         thrust::device_vector<int> d_col,
-                        std::string&               output_path)
-{
+                        std::string& output_path) {
   int step = 1;
 
   thrust::host_vector<bool> h_input(graph.rows, false);
-  thrust::host_vector<int>  h_result(graph.rows, 0);
+  thrust::host_vector<int> h_distance(graph.rows, 0);
   thrust::host_vector<bool> h_ptr(1, false);
 
   float elapsed_time = 0.0f;
@@ -204,17 +199,17 @@ float DAWN::GPU::BFSGpu(DAWN::Graph&               graph,
 #pragma omp parallel for
   for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
        i++) {
-    h_input[graph.csrB.col[i]]  = true;
-    h_result[graph.csrB.col[i]] = 1;
+    h_input[graph.csrB.col[i]] = true;
+    h_distance[graph.csrB.col[i]] = 1;
   }
   thrust::device_vector<bool> d_alpha(graph.rows, false);
   thrust::device_vector<bool> d_beta(graph.rows, false);
-  thrust::device_vector<int>  d_result(graph.rows, 0);
+  thrust::device_vector<int> d_distance(graph.rows, 0);
   thrust::device_vector<bool> d_ptr(1, false);
 
   thrust::copy(h_input.begin(), h_input.end(), d_alpha.begin());
   thrust::copy(h_input.begin(), h_input.end(), d_beta.begin());
-  thrust::copy(h_result.begin(), h_result.end(), d_result.begin());
+  thrust::copy(h_distance.begin(), h_distance.end(), d_distance.begin());
 
   // Launch kernel
   int block_size = graph.block_size;
@@ -232,14 +227,14 @@ float DAWN::GPU::BFSGpu(DAWN::Graph&               graph,
 
     if (!(step % 2)) {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
-        d_row_ptr.data().get(), d_col.data().get(), d_alpha.data().get(),
-        d_beta.data().get(), d_result.data().get(), graph.rows, step,
-        d_ptr.data().get());
+          d_row_ptr.data().get(), d_col.data().get(), d_alpha.data().get(),
+          d_beta.data().get(), d_distance.data().get(), graph.rows, step,
+          d_ptr.data().get());
     } else {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
-        d_row_ptr.data().get(), d_col.data().get(), d_beta.data().get(),
-        d_alpha.data().get(), d_result.data().get(), graph.rows, step,
-        d_ptr.data().get());
+          d_row_ptr.data().get(), d_col.data().get(), d_beta.data().get(),
+          d_alpha.data().get(), d_distance.data().get(), graph.rows, step,
+          d_ptr.data().get());
     }
 
     // auto end = std::chrono::high_resolution_clock::now();
@@ -260,22 +255,21 @@ float DAWN::GPU::BFSGpu(DAWN::Graph&               graph,
   // printf("Step is [%d]\n", step);
 
   if ((graph.prinft) && (source == graph.source)) {
-    thrust::copy(d_result.begin(), d_result.end(), h_result.begin());
+    thrust::copy(d_distance.begin(), d_distance.end(), h_distance.begin());
     printf("Start prinft\n");
     Tool tool;
-    tool.outfile(graph.rows, h_result.data(), source, output_path);
+    tool.outfile(graph.rows, h_distance.data(), source, output_path);
   }
 
   return elapsed_time;
 }
 
-void DAWN::GPU::runAPSPGpu(DAWN::Graph& graph, std::string& output_path)
-{
+void DAWN::GPU::runAPSPGpu(DAWN::Graph& graph, std::string& output_path) {
   float elapsed_time = 0.0;
-  int   proEntry     = 0;
+  int proEntry = 0;
 
-  thrust::device_vector<int>   d_row_ptr(graph.rows + 1, 0);
-  thrust::device_vector<int>   d_col(graph.nnz, 0);
+  thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
+  thrust::device_vector<int> d_col(graph.nnz, 0);
   thrust::device_vector<float> d_val(graph.nnz, 0);
   thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
   thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
@@ -289,8 +283,8 @@ void DAWN::GPU::runAPSPGpu(DAWN::Graph& graph, std::string& output_path)
 
   Tool tool;
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   for (int i = 0; i < graph.rows; i++) {
     int source = i;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
@@ -310,8 +304,8 @@ void DAWN::GPU::runAPSPGpu(DAWN::Graph& graph, std::string& output_path)
                    elapsed_time);
   }
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   // Output elapsed time and free remaining resources
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
@@ -324,10 +318,9 @@ void DAWN::GPU::runAPSPGpu(DAWN::Graph& graph, std::string& output_path)
   }
 }
 
-void DAWN::GPU::runAPBFSGpu(DAWN::Graph& graph, std::string& output_path)
-{
+void DAWN::GPU::runAPBFSGpu(DAWN::Graph& graph, std::string& output_path) {
   float elapsed_time = 0.0;
-  int   proEntry     = 0;
+  int proEntry = 0;
 
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
@@ -342,8 +335,8 @@ void DAWN::GPU::runAPBFSGpu(DAWN::Graph& graph, std::string& output_path)
 
   Tool tool;
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   for (int i = 0; i < graph.rows; i++) {
     int source = i;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
@@ -363,8 +356,8 @@ void DAWN::GPU::runAPBFSGpu(DAWN::Graph& graph, std::string& output_path)
                    elapsed_time);
   }
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   // Output elapsed time and free remaining resources
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
@@ -377,10 +370,9 @@ void DAWN::GPU::runAPBFSGpu(DAWN::Graph& graph, std::string& output_path)
   }
 }
 
-void DAWN::GPU::runMBFSGpu(DAWN::Graph& graph, std::string& output_path)
-{
+void DAWN::GPU::runMBFSGpu(DAWN::Graph& graph, std::string& output_path) {
   float elapsed_time = 0.0;
-  int   proEntry     = 0;
+  int proEntry = 0;
 
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
@@ -429,13 +421,12 @@ void DAWN::GPU::runMBFSGpu(DAWN::Graph& graph, std::string& output_path)
   }
 }
 
-void DAWN::GPU::runMSSPGpu(DAWN::Graph& graph, std::string& output_path)
-{
+void DAWN::GPU::runMSSPGpu(DAWN::Graph& graph, std::string& output_path) {
   float elapsed_time = 0.0;
-  int   proEntry     = 0;
+  int proEntry = 0;
 
-  thrust::device_vector<int>   d_row_ptr(graph.rows + 1, 0);
-  thrust::device_vector<int>   d_col(graph.nnz, 0);
+  thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
+  thrust::device_vector<int> d_col(graph.nnz, 0);
   thrust::device_vector<float> d_val(graph.nnz, 0);
   thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
   thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
@@ -481,16 +472,15 @@ void DAWN::GPU::runMSSPGpu(DAWN::Graph& graph, std::string& output_path)
   }
 }
 
-void DAWN::GPU::runSSSPGpu(DAWN::Graph& graph, std::string& output_path)
-{
+void DAWN::GPU::runSSSPGpu(DAWN::Graph& graph, std::string& output_path) {
   int source = graph.source;
   if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
     printf("Source [%d] is isolated node\n", source);
     exit(0);
   }
 
-  thrust::device_vector<int>   d_row_ptr(graph.rows + 1, 0);
-  thrust::device_vector<int>   d_col(graph.nnz, 0);
+  thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
+  thrust::device_vector<int> d_col(graph.nnz, 0);
   thrust::device_vector<float> d_val(graph.nnz, 0);
   thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
   thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
@@ -502,10 +492,10 @@ void DAWN::GPU::runSSSPGpu(DAWN::Graph& graph, std::string& output_path)
   float elapsed_time = 0.0f;
   if (graph.weighted) {
     elapsed_time +=
-      SSSPGpu(graph, source, stream, d_row_ptr, d_col, d_val, output_path);
+        SSSPGpu(graph, source, stream, d_row_ptr, d_col, d_val, output_path);
   } else {
     elapsed_time +=
-      BFSGpu(graph, source, stream, d_row_ptr, d_col, output_path);
+        BFSGpu(graph, source, stream, d_row_ptr, d_col, output_path);
   }
 
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
@@ -515,8 +505,7 @@ void DAWN::GPU::runSSSPGpu(DAWN::Graph& graph, std::string& output_path)
   cudaStreamDestroy(stream);
 }
 
-void DAWN::GPU::runBFSGpu(DAWN::Graph& graph, std::string& output_path)
-{
+void DAWN::GPU::runBFSGpu(DAWN::Graph& graph, std::string& output_path) {
   int source = graph.source;
   if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
     printf("Source [%d] is isolated node\n", source);

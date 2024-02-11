@@ -12,8 +12,7 @@
 using namespace gunrock;
 using namespace memory;
 
-void test_sssp(int num_arguments, char** argument_array)
-{
+void test_sssp(int num_arguments, char** argument_array) {
   if (num_arguments != 3) {
     std::cerr << "usage: ./bin/<program-name> filename.mtx sourceList.txt"
               << std::endl;
@@ -24,17 +23,17 @@ void test_sssp(int num_arguments, char** argument_array)
   // Define types
 
   using vertex_t = int;
-  using edge_t   = int;
+  using edge_t = int;
   using weight_t = float;
 
   using csr_t =
-    format::csr_t<memory_space_t::device, vertex_t, edge_t, weight_t>;
+      format::csr_t<memory_space_t::device, vertex_t, edge_t, weight_t>;
 
   // --
   // IO
 
-  csr_t       csr;
-  std::string filename   = argument_array[1];
+  csr_t csr;
+  std::string filename = argument_array[1];
   std::string sourceList = argument_array[2];
 
   if (util::is_market(filename)) {
@@ -47,15 +46,15 @@ void test_sssp(int num_arguments, char** argument_array)
     exit(1);
   }
 
-  std::ifstream    file(sourceList);
+  std::ifstream file(sourceList);
   std::vector<int> sourcelist;
   if (!file.is_open()) {
     std::cerr << "Error opening file " << sourceList << std::endl;
     return;
   } else {
     std::string line;
-    int         source;
-    int         i = 0;
+    int source;
+    int i = 0;
     while (std::getline(file, line)) {
       if (line[0] == '%')
         continue;
@@ -77,19 +76,19 @@ void test_sssp(int num_arguments, char** argument_array)
   // Build graph
 
   auto G = graph::build::from_csr<memory_space_t::device, graph::view_t::csr>(
-    csr.number_of_rows,               // rows
-    csr.number_of_columns,            // columns
-    csr.number_of_nonzeros,           // nonzeros
-    csr.row_offsets.data().get(),     // row_offsets
-    csr.column_indices.data().get(),  // column_indices
-    csr.nonzero_values.data().get()   // values
+      csr.number_of_rows,               // rows
+      csr.number_of_columns,            // columns
+      csr.number_of_nonzeros,           // nonzeros
+      csr.row_offsets.data().get(),     // row_offsets
+      csr.column_indices.data().get(),  // column_indices
+      csr.nonzero_values.data().get()   // values
   );  // supports row_indices and column_offsets (default = nullptr)
 
   // --
   // Params and memory allocation
   srand(time(NULL));
 
-  vertex_t n_vertices    = G.get_number_of_vertices();
+  vertex_t n_vertices = G.get_number_of_vertices();
   vertex_t single_source = 0;  // rand() % n_vertices;
   std::cout << "Single Source = " << single_source << std::endl;
 
@@ -111,14 +110,14 @@ void test_sssp(int num_arguments, char** argument_array)
 
   // --
   // Run problem
-  float gpu_elapsed    = 0.0f;
+  float gpu_elapsed = 0.0f;
   float time_operation = 0.0f;
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   for (auto i = 0; i < sourcelist.size(); i++) {
     single_source = sourcelist[i] % n_vertices;
-    auto start    = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
     gpu_elapsed += gunrock::sssp::run(G, single_source, distances.data().get(),
                                       predecessors.data().get());
@@ -128,22 +127,21 @@ void test_sssp(int num_arguments, char** argument_array)
     time_operation += elapsed_seconds.count();
 
     if (i % (sourcelist.size() / 100) == 0) {
-      float completion_percentage =
-        static_cast<float>(i * 100.0f) / static_cast<float>(sourcelist.size());
+      float completion_percentage = static_cast<float>(i * 100.0f) /
+                                    static_cast<float>(sourcelist.size());
       std::cout << "Progress: " << completion_percentage << "%" << std::endl;
       std::cout << "Elapsed Time :" << time_operation << " s" << std::endl;
     }
   }
   // Log
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   std::cout << "Operation Time :" << time_operation << std::endl;
   std::cout << "Elapsed Time :" << gpu_elapsed / 1000 << std::endl;
 }
 
-void test_bfs(int num_arguments, char** argument_array)
-{
+void test_bfs(int num_arguments, char** argument_array) {
   if (num_arguments != 3) {
     std::cerr << "usage: ./bin/<program-name> filename.mtx sourceList.txt"
               << std::endl;
@@ -154,17 +152,17 @@ void test_bfs(int num_arguments, char** argument_array)
   // Define types
 
   using vertex_t = int;
-  using edge_t   = int;
+  using edge_t = int;
   using weight_t = float;
 
   using csr_t =
-    format::csr_t<memory_space_t::device, vertex_t, edge_t, weight_t>;
+      format::csr_t<memory_space_t::device, vertex_t, edge_t, weight_t>;
 
   // --
   // IO
 
-  csr_t       csr;
-  std::string filename   = argument_array[1];
+  csr_t csr;
+  std::string filename = argument_array[1];
   std::string sourceList = argument_array[2];
 
   if (util::is_market(filename)) {
@@ -177,15 +175,15 @@ void test_bfs(int num_arguments, char** argument_array)
     exit(1);
   }
 
-  std::ifstream    file(sourceList);
+  std::ifstream file(sourceList);
   std::vector<int> sourcelist;
   if (!file.is_open()) {
     std::cerr << "Error opening file " << sourceList << std::endl;
     return;
   } else {
     std::string line;
-    int         source;
-    int         i = 0;
+    int source;
+    int i = 0;
     while (std::getline(file, line)) {
       if (line[0] == '%')
         continue;
@@ -199,42 +197,42 @@ void test_bfs(int num_arguments, char** argument_array)
 
   thrust::device_vector<vertex_t> row_indices(csr.number_of_nonzeros);
   thrust::device_vector<vertex_t> column_indices(csr.number_of_nonzeros);
-  thrust::device_vector<edge_t>   column_offsets(csr.number_of_columns + 1);
+  thrust::device_vector<edge_t> column_offsets(csr.number_of_columns + 1);
 
   // --
   // Build graph + metadata
 
   auto G =
-    graph::build::from_csr<memory_space_t::device,
-                           graph::view_t::csr /* | graph::view_t::csc */>(
-      csr.number_of_rows,               // rows
-      csr.number_of_columns,            // columns
-      csr.number_of_nonzeros,           // nonzeros
-      csr.row_offsets.data().get(),     // row_offsets
-      csr.column_indices.data().get(),  // column_indices
-      csr.nonzero_values.data().get(),  // values
-      row_indices.data().get(),         // row_indices
-      column_offsets.data().get()       // column_offsets
-    );
+      graph::build::from_csr<memory_space_t::device,
+                             graph::view_t::csr /* | graph::view_t::csc */>(
+          csr.number_of_rows,               // rows
+          csr.number_of_columns,            // columns
+          csr.number_of_nonzeros,           // nonzeros
+          csr.row_offsets.data().get(),     // row_offsets
+          csr.column_indices.data().get(),  // column_indices
+          csr.nonzero_values.data().get(),  // values
+          row_indices.data().get(),         // row_indices
+          column_offsets.data().get()       // column_offsets
+      );
 
   // --
   // Params and memory allocation
   vertex_t single_source = 0;  // rand() % n_vertices;
 
-  vertex_t                        n_vertices = G.get_number_of_vertices();
+  vertex_t n_vertices = G.get_number_of_vertices();
   thrust::device_vector<vertex_t> distances(n_vertices);
   thrust::device_vector<vertex_t> predecessors(n_vertices);
 
   // --
   // Run problem
-  float gpu_elapsed    = 0.0f;
+  float gpu_elapsed = 0.0f;
   float time_operation = 0.0f;
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   for (auto i = 0; i < sourcelist.size(); i++) {
     single_source = sourcelist[i] % n_vertices;
-    auto start    = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
     gpu_elapsed += gunrock::bfs::run(G, single_source, distances.data().get(),
                                      predecessors.data().get());
@@ -244,8 +242,8 @@ void test_bfs(int num_arguments, char** argument_array)
     time_operation += elapsed_seconds.count();
 
     if (i % (sourcelist.size() / 100) == 0) {
-      float completion_percentage =
-        static_cast<float>(i * 100.0f) / static_cast<float>(sourcelist.size());
+      float completion_percentage = static_cast<float>(i * 100.0f) /
+                                    static_cast<float>(sourcelist.size());
       std::cout << "Progress: " << completion_percentage << "%" << std::endl;
       std::cout << "Elapsed Time :" << time_operation << " s" << std::endl;
     }
@@ -253,14 +251,13 @@ void test_bfs(int num_arguments, char** argument_array)
   // --
   // Log
   std::cout
-    << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    << std::endl;
+      << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      << std::endl;
   std::cout << "Operation Time :" << time_operation << std::endl;
   std::cout << "Elapsed Time :" << gpu_elapsed / 1000 << std::endl;
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   test_sssp(argc, argv);
   test_bfs(argc, argv);
 }

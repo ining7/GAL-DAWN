@@ -2,37 +2,34 @@
 
 namespace DAWN {
 class Graph {
-public:
-  struct Csr
-  {
-    int*   row_ptr;
-    int*   col;
+ public:
+  struct Csr {
+    int* row_ptr;
+    int* col;
     float* val;
   };
-  struct Coo
-  {
-    int*   row;
-    int*   col;
+  struct Coo {
+    int* row;
+    int* col;
     float* val;
   };
-  int              rows;
-  int              cols;
-  uint64_t         nnz;
-  Csr              csrA;
-  Csr              csrB;
-  Coo              coo;
-  uint64_t         entry;
-  int              thread;
-  int              interval;
-  int              stream;
-  int              block_size;
-  bool             prinft;  // prinft the result
-  int              source;
-  bool             share;
-  bool             weighted;
-  bool             directed;
+  int rows;
+  int cols;
+  uint64_t nnz;
+  Csr csrA;
+  Csr csrB;
+  Coo coo;
+  uint64_t entry;
+  int thread;
+  int interval;
+  int stream;
+  int block_size;
+  bool prinft;  // prinft the result
+  int source;
+  bool share;
+  bool weighted;
+  bool directed;
   std::vector<int> msource;
-  float            MAX = (float)pow(2, 30);
 
   void createGraph(std::string& input_path, Graph& graph);
 
@@ -48,7 +45,7 @@ public:
 };
 
 class CPU {
-public:
+ public:
   // APSP run
   void runAPSPTG(Graph& graph, std::string& output_path);
 
@@ -69,41 +66,32 @@ public:
 
   float BFSs(Graph& graph, int source, std::string& output_path);
 
-  float BFSs(Graph&              graph,
-             int                 source,
-             std::string&        output_path,
+  float BFSs(Graph& graph,
+             int source,
+             std::string& output_path,
              std::vector<float>& averageLenth);  // example
 
   float SSSPs(Graph& graph, int source, std::string& output_path);
 
   float SSSPp(Graph& graph, int source, std::string& output_path);
 
-  // BOVM
-  void BOVM(Graph& graph,
-            bool*& input,
-            bool*& output,
-            int*&  result,
-            bool&  ptr,
-            int    step);
-
   // SOVM
-  void SOVMS(Graph& graph,
-             int*&  alpha,
-             int&   ptr,
-             int*&  delta,
-             int*&  result,
-             int    step);
+  int SOVM(Graph& graph,
+           int*& alpha,
+           int*& beta,
+           int*& distance,
+           int step,
+           int entry);
 
-  void SOVMP(Graph& graph,
-             bool*& alpha,
-             int&   ptr,
-             bool*& delta,
-             int*&  result,
-             int    step);
+  int GOVM(Graph& graph, int*& alpha, int*& beta, float*& distance, int entry);
+
+  bool SOVMP(Graph& graph, bool*& alpha, bool*& beta, int*& distance, int step);
+
+  bool GOVMP(Graph& graph, bool*& alpha, bool*& beta, float*& distance);
 };
 
 class Tool {
-public:
+ public:
   void coo2Csr(int n, int nnz, Graph::Csr& csr, Graph::Coo& coo);
 
   void coo2CsrW(int n, int nnz, DAWN::Graph::Csr& csr, DAWN::Graph::Coo& coo);
@@ -116,8 +104,11 @@ public:
 
   float averageShortestPath(float* result, int n);
 
-  void
-  infoprint(int entry, int total, int interval, int thread, float elapsed_time);
+  void infoprint(int entry,
+                 int total,
+                 int interval,
+                 int thread,
+                 float elapsed_time);
 
   void outfile(int n, int* result, int source, std::string& output_path);
 

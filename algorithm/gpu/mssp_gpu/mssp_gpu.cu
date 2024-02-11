@@ -1,16 +1,15 @@
 #include <dawn/dawn.cuh>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   DAWN::Graph graph;
-  DAWN::GPU   gpurun;
-  std::string input_path  = argv[1];
+  DAWN::GPU gpurun;
+  std::string input_path = argv[1];
   std::string output_path = argv[2];
-  graph.stream            = atoi(argv[3]);
-  graph.block_size        = atoi(argv[4]);
-  std::string prinft      = argv[5];
-  std::string sourceList  = argv[6];
-  std::string weighted    = argv[7];
+  graph.stream = atoi(argv[3]);
+  graph.block_size = atoi(argv[4]);
+  std::string prinft = argv[5];
+  std::string sourceList = argv[6];
+  std::string weighted = argv[7];
 
   graph.interval = 100;
 
