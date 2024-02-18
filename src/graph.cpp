@@ -45,14 +45,14 @@ void Graph::createGraph(std::string& input_path, DAWN::Graph& graph) {
 
   if (graph.directed) {
     if (graph.weighted) {
-      graph.readGraphDW(input_path, graph);
+      graph.readGraph_Directed_Weighted(input_path, graph);
 
     } else {
-      graph.readGraphD(input_path, graph);
+      graph.readGraph_Directed(input_path, graph);
     }
   } else {
     if (graph.weighted) {
-      graph.readGraphW(input_path, graph);
+      graph.readGraph_Weighted(input_path, graph);
     } else {
       graph.readGraph(input_path, graph);
     }
@@ -97,7 +97,7 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph) {
     s.pop();
   }
   DAWN::Tool tool;
-  tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
+  tool.coo2Csr(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -105,7 +105,7 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph) {
   graph.coo.row = NULL;
 }
 
-void Graph::readGraphD(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readGraph_Directed(std::string& input_path, DAWN::Graph& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -141,7 +141,7 @@ void Graph::readGraphD(std::string& input_path, DAWN::Graph& graph) {
 
   DAWN::Tool tool;
   tool.transpose(graph.nnz, graph.coo);
-  tool.coo2Csr(graph.rows, graph.nnz, graph.csrB, graph.coo);
+  tool.coo2Csr(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -149,7 +149,7 @@ void Graph::readGraphD(std::string& input_path, DAWN::Graph& graph) {
   graph.coo.row = NULL;
 }
 
-void Graph::readGraphW(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readGraph_Weighted(std::string& input_path, DAWN::Graph& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -193,7 +193,7 @@ void Graph::readGraphW(std::string& input_path, DAWN::Graph& graph) {
   }
 
   DAWN::Tool tool;
-  tool.coo2CsrW(graph.rows, graph.nnz, graph.csrB, graph.coo);
+  tool.coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -203,7 +203,7 @@ void Graph::readGraphW(std::string& input_path, DAWN::Graph& graph) {
   graph.coo.val = NULL;
 }
 
-void Graph::readGraphDW(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readGraph_Directed_Weighted(std::string& input_path, DAWN::Graph& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -242,8 +242,8 @@ void Graph::readGraphDW(std::string& input_path, DAWN::Graph& graph) {
   std::cout << "nnz: " << graph.nnz << std::endl;
 
   DAWN::Tool tool;
-  tool.transposeW(graph.nnz, graph.coo);
-  tool.coo2CsrW(graph.rows, graph.nnz, graph.csrB, graph.coo);
+  tool.transpose_Weighted(graph.nnz, graph.coo);
+  tool.coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;

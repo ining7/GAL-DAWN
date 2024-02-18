@@ -117,10 +117,10 @@ float DAWN::GPU::SSSPGpu(DAWN::Graph& graph,
   float elapsed_time = 0.0f;
   omp_set_dynamic(1);
 #pragma omp parallel for
-  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+  for (int i = graph.csr.row_ptr[source]; i < graph.csr.row_ptr[source + 1];
        i++) {
-    h_alpha[graph.csrB.col[i]] = true;
-    h_distance[graph.csrB.col[i]] = graph.csrB.val[i];
+    h_alpha[graph.csr.col[i]] = true;
+    h_distance[graph.csr.col[i]] = graph.csr.val[i];
   }
   thrust::device_vector<bool> d_alpha(graph.rows, 0);
   thrust::device_vector<bool> d_beta(graph.rows, 0);
@@ -133,12 +133,7 @@ float DAWN::GPU::SSSPGpu(DAWN::Graph& graph,
   // Launch kernel
   int block_size = graph.block_size;
   int num_blocks = (graph.cols + block_size - 1) / block_size;
-  // int shared_mem_size = 0;
-  // if (graph.share) {
-  //   shared_mem_size = sizeof(int) * (4);
-  // } else {
-  //   shared_mem_size = sizeof(int) * (8);
-  // }
+
   auto start = std::chrono::high_resolution_clock::now();
   while (step < graph.rows) {
     step++;
@@ -155,9 +150,6 @@ float DAWN::GPU::SSSPGpu(DAWN::Graph& graph,
           graph.rows, source, d_ptr.data().get());
       thrust::fill_n(d_beta.begin(), graph.rows, false);
     }
-    // thrust::copy_n(d_beta.begin(), graph.rows, d_alpha.begin());
-    // thrust::fill_n(d_beta.begin(), graph.rows, false);
-    // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
     if (!(step % 5)) {
       // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
       bool ptr = d_ptr[0];
@@ -197,10 +189,10 @@ float DAWN::GPU::BFSGpu(DAWN::Graph& graph,
   float elapsed_time = 0.0f;
   omp_set_dynamic(1);
 #pragma omp parallel for
-  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+  for (int i = graph.csr.row_ptr[source]; i < graph.csr.row_ptr[source + 1];
        i++) {
-    h_input[graph.csrB.col[i]] = true;
-    h_distance[graph.csrB.col[i]] = 1;
+    h_input[graph.csr.col[i]] = true;
+    h_distance[graph.csr.col[i]] = 1;
   }
   thrust::device_vector<bool> d_alpha(graph.rows, false);
   thrust::device_vector<bool> d_beta(graph.rows, false);
@@ -214,16 +206,10 @@ float DAWN::GPU::BFSGpu(DAWN::Graph& graph,
   // Launch kernel
   int block_size = graph.block_size;
   int num_blocks = (graph.cols + block_size - 1) / block_size;
-  // int shared_mem_size = 0;
-  // if (graph.share) {
-  //   shared_mem_size = sizeof(int) * (4);
-  // } else {
-  //   shared_mem_size = sizeof(int) * (8);
-  // }
+
   auto start = std::chrono::high_resolution_clock::now();
   while (step < graph.rows) {
     step++;
-    // auto start = std::chrono::high_resolution_clock::now();
 
     if (!(step % 2)) {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
@@ -236,10 +222,6 @@ float DAWN::GPU::BFSGpu(DAWN::Graph& graph,
           d_alpha.data().get(), d_distance.data().get(), graph.rows, step,
           d_ptr.data().get());
     }
-
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double, std::milli> elapsed = end - start;
-    // elapsed_time += elapsed.count();
 
     if (!(step % 3)) {
       // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
@@ -271,9 +253,9 @@ void DAWN::GPU::runAPSPGpu(DAWN::Graph& graph, std::string& output_path) {
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
   thrust::device_vector<float> d_val(graph.nnz, 0);
-  thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
-  thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
-  thrust::copy_n(graph.csrB.val, graph.nnz, d_val.begin());
+  thrust::copy_n(graph.csr.row_ptr, graph.rows + 1, d_row_ptr.begin());
+  thrust::copy_n(graph.csr.col, graph.nnz, d_col.begin());
+  thrust::copy_n(graph.csr.val, graph.nnz, d_val.begin());
 
   // Create streams
   cudaStream_t streams[graph.stream];
@@ -287,7 +269,7 @@ void DAWN::GPU::runAPSPGpu(DAWN::Graph& graph, std::string& output_path) {
       << std::endl;
   for (int i = 0; i < graph.rows; i++) {
     int source = i;
-    if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+    if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
       ++proEntry;
       // printf("Source [%d] is isolated node\n", source);
       tool.infoprint(proEntry, graph.rows, graph.interval, graph.thread,
@@ -324,8 +306,8 @@ void DAWN::GPU::runAPBFSGpu(DAWN::Graph& graph, std::string& output_path) {
 
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
-  thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
-  thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
+  thrust::copy_n(graph.csr.row_ptr, graph.rows + 1, d_row_ptr.begin());
+  thrust::copy_n(graph.csr.col, graph.nnz, d_col.begin());
 
   // Create streams
   cudaStream_t streams[graph.stream];
@@ -339,7 +321,7 @@ void DAWN::GPU::runAPBFSGpu(DAWN::Graph& graph, std::string& output_path) {
       << std::endl;
   for (int i = 0; i < graph.rows; i++) {
     int source = i;
-    if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+    if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
       ++proEntry;
       // printf("Source [%d] is isolated node\n", source);
       tool.infoprint(proEntry, graph.rows, graph.interval, graph.thread,
@@ -376,8 +358,8 @@ void DAWN::GPU::runMBFSGpu(DAWN::Graph& graph, std::string& output_path) {
 
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
-  thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
-  thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
+  thrust::copy_n(graph.csr.row_ptr, graph.rows + 1, d_row_ptr.begin());
+  thrust::copy_n(graph.csr.col, graph.nnz, d_col.begin());
 
   // Create streams
   cudaStream_t streams[graph.stream];
@@ -386,13 +368,9 @@ void DAWN::GPU::runMBFSGpu(DAWN::Graph& graph, std::string& output_path) {
   }
 
   // Tool tool;
-  // std::cout
-  //   << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-  //   << std::endl;
-
   for (int i = 0; i < graph.msource.size(); i++) {
     int source = graph.msource[i] % graph.rows;
-    if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+    if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
       ++proEntry;
       printf("Source [%d] is isolated node\n", source);
       // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
@@ -428,9 +406,9 @@ void DAWN::GPU::runMSSPGpu(DAWN::Graph& graph, std::string& output_path) {
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
   thrust::device_vector<float> d_val(graph.nnz, 0);
-  thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
-  thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
-  thrust::copy_n(graph.csrB.val, graph.nnz, d_val.begin());
+  thrust::copy_n(graph.csr.row_ptr, graph.rows + 1, d_row_ptr.begin());
+  thrust::copy_n(graph.csr.col, graph.nnz, d_col.begin());
+  thrust::copy_n(graph.csr.val, graph.nnz, d_val.begin());
 
   std::cout << "Initialize Input Matrices" << std::endl;
 
@@ -444,7 +422,7 @@ void DAWN::GPU::runMSSPGpu(DAWN::Graph& graph, std::string& output_path) {
 
   for (int i = 0; i < graph.msource.size(); i++) {
     int source = graph.msource[i] % graph.rows;
-    if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+    if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
       ++proEntry;
       printf("Source [%d] is isolated node\n", source);
       // tool.infoprint(proEntry, graph.msource.size(), graph.interval,
@@ -474,7 +452,7 @@ void DAWN::GPU::runMSSPGpu(DAWN::Graph& graph, std::string& output_path) {
 
 void DAWN::GPU::runSSSPGpu(DAWN::Graph& graph, std::string& output_path) {
   int source = graph.source;
-  if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+  if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
     printf("Source [%d] is isolated node\n", source);
     exit(0);
   }
@@ -482,9 +460,9 @@ void DAWN::GPU::runSSSPGpu(DAWN::Graph& graph, std::string& output_path) {
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
   thrust::device_vector<float> d_val(graph.nnz, 0);
-  thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
-  thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
-  thrust::copy_n(graph.csrB.val, graph.nnz, d_val.begin());
+  thrust::copy_n(graph.csr.row_ptr, graph.rows + 1, d_row_ptr.begin());
+  thrust::copy_n(graph.csr.col, graph.nnz, d_col.begin());
+  thrust::copy_n(graph.csr.val, graph.nnz, d_val.begin());
 
   cudaStream_t stream;
   cudaStreamCreate(&stream);
@@ -507,15 +485,15 @@ void DAWN::GPU::runSSSPGpu(DAWN::Graph& graph, std::string& output_path) {
 
 void DAWN::GPU::runBFSGpu(DAWN::Graph& graph, std::string& output_path) {
   int source = graph.source;
-  if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
+  if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
     printf("Source [%d] is isolated node\n", source);
     exit(0);
   }
 
   thrust::device_vector<int> d_row_ptr(graph.rows + 1, 0);
   thrust::device_vector<int> d_col(graph.nnz, 0);
-  thrust::copy_n(graph.csrB.row_ptr, graph.rows + 1, d_row_ptr.begin());
-  thrust::copy_n(graph.csrB.col, graph.nnz, d_col.begin());
+  thrust::copy_n(graph.csr.row_ptr, graph.rows + 1, d_row_ptr.begin());
+  thrust::copy_n(graph.csr.col, graph.nnz, d_col.begin());
 
   cudaStream_t stream;
   cudaStreamCreate(&stream);
