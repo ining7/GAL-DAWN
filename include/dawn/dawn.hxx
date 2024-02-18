@@ -46,41 +46,36 @@ class Graph {
 
 class CPU {
  public:
-  // Shortest Path Algorithm
+  // APSP run
   void runAPSPTG(Graph& graph, std::string& output_path);
 
   void runAPSPSG(Graph& graph, std::string& output_path);
 
+  // MSSP run
   void runMSSPTG(Graph& graph, std::string& output_path);
 
   void runMSSPSG(Graph& graph, std::string& output_path);
 
+  // SSSP run
   void runSSSP(Graph& graph, std::string& output_path);
 
   void runBFS(Graph& graph, std::string& output_path);
-
-  // Centrality Algorithm
-  float Closeness_Centrality(Graph& graph, int source);
-
-  float Closeness_Centrality_Weighted(Graph& graph, int source);
-
-  float Betweenness_Centrality(Graph& graph,
-                               int source,
-                               std::string& output_path);
-
-  float Betweenness_Centrality_Weighted(Graph& graph,
-                                        int source,
-                                        std::string& output_path);
 
   // kernel
   float BFSp(Graph& graph, int source, std::string& output_path);
 
   float BFSs(Graph& graph, int source, std::string& output_path);
 
+  float BFSs(Graph& graph,
+             int source,
+             std::string& output_path,
+             std::vector<float>& averageLenth);  // example
+
   float SSSPs(Graph& graph, int source, std::string& output_path);
 
   float SSSPp(Graph& graph, int source, std::string& output_path);
 
+  // SOVM
   int SOVM(Graph& graph,
            int*& alpha,
            int*& beta,

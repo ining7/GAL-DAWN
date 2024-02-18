@@ -1,6 +1,6 @@
 # Specify source and header files
 file(GLOB MSSP_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/include/*.h" "${CMAKE_SOURCE_DIR}/include/*.hxx")
+file(GLOB MSSP_HEADERS "${CMAKE_SOURCE_DIR}/include/*.h" "${CMAKE_SOURCE_DIR}/include/*.hxx")
 
 # Define the CUDA sources
 set(mssp_CPU_SOURCES

@@ -3,4 +3,4 @@ add_subdirectory(apsp_cpu)
 add_subdirectory(mssp_cpu)
 add_subdirectory(sssp_cpu)
 add_subdirectory(bfs_cpu)
-add_subdirectory(cc_cpu)
+
