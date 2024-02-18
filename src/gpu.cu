@@ -133,12 +133,7 @@ float DAWN::GPU::SSSPGpu(DAWN::Graph& graph,
   // Launch kernel
   int block_size = graph.block_size;
   int num_blocks = (graph.cols + block_size - 1) / block_size;
-  // int shared_mem_size = 0;
-  // if (graph.share) {
-  //   shared_mem_size = sizeof(int) * (4);
-  // } else {
-  //   shared_mem_size = sizeof(int) * (8);
-  // }
+
   auto start = std::chrono::high_resolution_clock::now();
   while (step < graph.rows) {
     step++;
@@ -155,9 +150,6 @@ float DAWN::GPU::SSSPGpu(DAWN::Graph& graph,
           graph.rows, source, d_ptr.data().get());
       thrust::fill_n(d_beta.begin(), graph.rows, false);
     }
-    // thrust::copy_n(d_beta.begin(), graph.rows, d_alpha.begin());
-    // thrust::fill_n(d_beta.begin(), graph.rows, false);
-    // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
     if (!(step % 5)) {
       // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
       bool ptr = d_ptr[0];
@@ -214,16 +206,10 @@ float DAWN::GPU::BFSGpu(DAWN::Graph& graph,
   // Launch kernel
   int block_size = graph.block_size;
   int num_blocks = (graph.cols + block_size - 1) / block_size;
-  // int shared_mem_size = 0;
-  // if (graph.share) {
-  //   shared_mem_size = sizeof(int) * (4);
-  // } else {
-  //   shared_mem_size = sizeof(int) * (8);
-  // }
+
   auto start = std::chrono::high_resolution_clock::now();
   while (step < graph.rows) {
     step++;
-    // auto start = std::chrono::high_resolution_clock::now();
 
     if (!(step % 2)) {
       SOVM<<<num_blocks, block_size, 0, streams>>>(
@@ -236,10 +222,6 @@ float DAWN::GPU::BFSGpu(DAWN::Graph& graph,
           d_alpha.data().get(), d_distance.data().get(), graph.rows, step,
           d_ptr.data().get());
     }
-
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double, std::milli> elapsed = end - start;
-    // elapsed_time += elapsed.count();
 
     if (!(step % 3)) {
       // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
@@ -386,10 +368,6 @@ void DAWN::GPU::runMBFSGpu(DAWN::Graph& graph, std::string& output_path) {
   }
 
   // Tool tool;
-  // std::cout
-  //   << ">>>>>>>>>>>>>>>>>>>>>>>>>>> MSSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
-  //   << std::endl;
-
   for (int i = 0; i < graph.msource.size(); i++) {
     int source = graph.msource[i] % graph.rows;
     if (graph.csrB.row_ptr[source] == graph.csrB.row_ptr[source + 1]) {
