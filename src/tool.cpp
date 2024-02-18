@@ -1,7 +1,7 @@
 #include <dawn/dawn.hxx>
 namespace DAWN {
 
-void Tool::transposeW(int nnz, DAWN::Graph::Coo& coo) {
+void Tool::transpose_Weighted(int nnz, DAWN::Graph::Coo& coo) {
   std::vector<std::pair<int, std::pair<int, float>>> tmp;
   for (int i = 0; i < nnz; i++) {
     tmp.push_back({coo.row[i], {coo.col[i], coo.val[i]}});
@@ -26,7 +26,7 @@ void Tool::transpose(int nnz, DAWN::Graph::Coo& coo) {
   }
 }
 
-void Tool::coo2CsrW(int n,
+void Tool::coo2Csr_Weighted(int n,
                     int nnz,
                     DAWN::Graph::Csr& csr,
                     DAWN::Graph::Coo& coo) {
@@ -78,7 +78,7 @@ void Tool::coo2Csr(int n,
   delete[] row_count;
 }
 
-float Tool::averageShortestPath(int* result, int n) {
+float Tool::average(int* result, int n) {
   int64_t sum = 0;
   int i = 0;
   for (int j = 0; j < n; j++) {
@@ -90,7 +90,7 @@ float Tool::averageShortestPath(int* result, int n) {
   return 1.0f * sum / i;
 }
 
-float Tool::averageShortestPath(float* result, int n) {
+float Tool::average(float* result, int n) {
   int i = 0;
   float sum = 0.0f;
   float INF = 1.0 * 0xfffffff;
