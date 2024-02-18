@@ -1,6 +1,6 @@
 # Specify source and header files
 file(GLOB APSP_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/include/*.h" "${CMAKE_SOURCE_DIR}/include/*.hxx")
+file(GLOB APSP_HEADERS "${CMAKE_SOURCE_DIR}/include/*.h" "${CMAKE_SOURCE_DIR}/include/*.hxx")
 
 # Define the CUDA sources
 set(APSP_CPU_SOURCES

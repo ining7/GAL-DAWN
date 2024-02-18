@@ -1,6 +1,7 @@
 #include <dawn/dawn.hxx>
 
 int main(int argc, char* argv[]) {
+  DAWN::Tool tool;
   DAWN::CPU runCpu;
   DAWN::Graph graph;
   std::string input_path = argv[1];
