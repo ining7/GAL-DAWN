@@ -7,6 +7,7 @@ int main(int argc, char* argv[]) {
   std::string output_path = argv[2];
   std::string prinft = argv[3];
   graph.source = atoi(argv[4]);
+  std::string weighted = argv[5];
 
   if (prinft == "true") {
     graph.prinft = true;
@@ -14,13 +15,20 @@ int main(int argc, char* argv[]) {
   } else {
     graph.prinft = false;
   }
+
   graph.stream = 1;
   graph.thread = omp_get_num_threads();
-  graph.weighted = false;
 
-  graph.createGraph(input_path, graph);
-  runCpu.runBFS(graph, output_path);
+  if (weighted == "true") {
+    graph.weighted = true;
+    graph.createGraph(input_path, graph);
+    runCpu.Betweenness_Centrality_Weighted(graph, graph.source, output_path);
+  } else {
+    graph.weighted = false;
+    graph.createGraph(input_path, graph);
+    runCpu.Betweenness_Centrality(graph, graph.source, output_path);
+  }
 
   return 0;
 }
-// ./bfs_cpu $GRAPH_DIR/XX.mtx ../output.txt false 0
+// ./bc_cpu $GRAPH_DIR/XX.mtx ./outpur.txt 0 weighted

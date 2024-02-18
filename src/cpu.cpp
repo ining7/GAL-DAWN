@@ -144,6 +144,135 @@ void CPU::runSSSP(Graph& graph, std::string& output_path) {
   printf("%-21s%3.5lf\n", "Time:", elapsed_time / 1000);
 }
 
+float CPU::Closeness_Centrality(Graph& graph, int source) {
+  int step = 1;
+  bool is_converged = false;
+  auto row = graph.rows;
+  bool* alpha = new bool[row];
+  bool* beta = new bool[row];
+  int* distance = new int[row];
+  float elapsed = 0.0f;
+  float closeness_centrality = 0.0f;
+
+  std::fill_n(alpha, row, false);
+  std::fill_n(beta, row, false);
+  std::fill_n(distance, row, 0);
+
+#pragma omp parallel for
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    alpha[graph.csrB.col[i]] = true;
+    distance[graph.csrB.col[i]] = 1;
+  }
+
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < row) {
+    step++;
+
+    if (!(step % 2))
+      if (graph.weighted)
+        is_converged = SOVMP(graph, alpha, beta, distance, step);
+      else
+        is_converged = SOVMP(graph, beta, alpha, distance, step);
+    if (is_converged) {
+      break;
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  distance[source] = 0;
+  Tool tool;
+  closeness_centrality =
+      (row - 1) / (tool.averageShortestPath(distance, row) * row);
+
+  delete[] beta;
+  beta = nullptr;
+  delete[] alpha;
+  alpha = nullptr;
+  delete[] distance;
+  distance = nullptr;
+
+  printf("%-21s%3.5ld\n", "Source:", source);
+  printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
+
+  printf("%-21s%3.5d\n", "Node:", graph.rows);
+  printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+  printf("%-21s%3.5lf\n", "Time:", elapsed / (graph.thread * 1000));
+
+  return closeness_centrality;
+}
+
+float CPU::Closeness_Centrality_Weighted(Graph& graph, int source) {
+  int step = 1;
+  bool is_converged = false;
+  auto row = graph.rows;
+  bool* alpha = new bool[row];
+  bool* beta = new bool[row];
+  float* distance = new float[row];
+  float elapsed = 0.0f;
+  float INF = 1.0 * 0xfffffff;
+  float closeness_centrality = 0.0f;
+
+  std::fill_n(alpha, row, false);
+  std::fill_n(beta, row, false);
+  std::fill_n(distance, row, INF);
+
+#pragma omp parallel for
+  for (int i = graph.csrB.row_ptr[source]; i < graph.csrB.row_ptr[source + 1];
+       i++) {
+    distance[graph.csrB.col[i]] = graph.csrB.val[i];
+    alpha[graph.csrB.col[i]] = true;
+  }
+  distance[source] = 0.0f;
+
+  auto start = std::chrono::high_resolution_clock::now();
+  while (step < row) {
+    step++;
+    if (!(step % 2))
+      is_converged = GOVMP(graph, alpha, beta, distance);
+    else
+      is_converged = GOVMP(graph, beta, alpha, distance);
+    if (is_converged) {
+      break;
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
+  elapsed += elapsed_tmp.count();
+
+  distance[source] = 0;
+  Tool tool;
+  closeness_centrality =
+      (row - 1) / (tool.averageShortestPath(distance, row) * row);
+
+  delete[] beta;
+  beta = nullptr;
+  delete[] alpha;
+  alpha = nullptr;
+  delete[] distance;
+  distance = nullptr;
+
+  printf("%-21s%3.5ld\n", "Source:", source);
+  printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
+
+  printf("%-21s%3.5d\n", "Node:", graph.rows);
+  printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+  printf("%-21s%3.5lf\n", "Time:", elapsed / (graph.thread * 1000));
+
+  return closeness_centrality;
+}
+
+float Betweenness_Centrality(Graph& graph,
+                             int source,
+                             std::string& output_path) {}
+
+float Betweenness_Centrality_Weighted(Graph& graph,
+                                      int source,
+                                      std::string& output_path) {}
+
+// kernel
 float CPU::BFSp(Graph& graph, int source, std::string& output_path) {
   int step = 1;
   bool is_converged = false;

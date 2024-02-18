@@ -4,6 +4,8 @@ DAWN is a novel shortest paths algorithm, which is suitable for weighted and unw
 
 DAWN is capable of solving the APSP and SSSP problems on graphs with negative weights, and can automatically exclude the influence of negative weight cycles.  
 
+The rapid closeness centrality algorithm based on DAWN has been implemented, while work on the betweenness centrality algorithm is still ongoing. We are very interested in developing a new BC algorithm based on DAWN, and we will not simply replicate the Brandes algorithm, which means that the BC algorithm will not appear in this library in the short term. We encourage colleagues to complete the implementation of the Brandes algorithm before the new algorithm is implemented.
+
 ## Quick Start Guide
 
 ### 0. Before getting started
@@ -152,8 +154,8 @@ The version of DWAN on the weighted graph has been included in DAWN V2.1. Curren
 | MSSP |  V2.1 |
 | SSSP |  V2.1 |
 | BFS  |  V2.1 |
-| BC   |Future |
-| CC   |Future |
+| BC   |  Doing|
+| CC   |  V2.3 |
 | Cluster Analysis |Future |
 | Community Detection |Future |
 
