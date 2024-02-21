@@ -1,6 +1,84 @@
 #include <dawn/dawn.hxx>
 namespace DAWN {
-void Graph::createGraph(std::string& input_path, DAWN::Graph& graph) {
+
+void Graph::transpose_Weighted(int nnz, DAWN::Graph::Coo_t& coo) {
+  std::vector<std::pair<int, std::pair<int, float>>> tmp;
+  for (int i = 0; i < nnz; i++) {
+    tmp.push_back({coo.row[i], {coo.col[i], coo.val[i]}});
+  }
+  std::sort(tmp.begin(), tmp.end());
+  for (int i = 0; i < nnz; i++) {
+    coo.row[i] = tmp[i].second.first;
+    coo.col[i] = tmp[i].first;
+    coo.val[i] = tmp[i].second.second;
+  }
+}
+
+void Graph::transpose(int nnz, DAWN::Graph::Coo_t& coo) {
+  std::vector<std::pair<int, int>> tmp;
+  for (int i = 0; i < nnz; i++) {
+    tmp.push_back({coo.row[i], coo.col[i]});
+  }
+  std::sort(tmp.begin(), tmp.end());
+  for (int i = 0; i < nnz; i++) {
+    coo.row[i] = tmp[i].first;
+    coo.col[i] = tmp[i].second;
+  }
+}
+
+void Graph::coo2Csr_Weighted(int n,
+                             int nnz,
+                             DAWN::Graph::Csr_t& csr,
+                             DAWN::Graph::Coo_t& coo) {
+  csr.val = new float[nnz];
+  csr.row_ptr = new int[n + 1];
+  csr.col = new int[nnz];
+  // Count the number of non-zero elements in each column
+  int* row_count = new int[n]();
+  for (int i = 0; i < nnz; i++) {
+    row_count[coo.row[i]]++;
+  }
+  csr.row_ptr[0] = 0;
+  for (int i = 1; i <= n; i++) {
+    csr.row_ptr[i] = csr.row_ptr[i - 1] + row_count[i - 1];
+  }
+// Fill each non-zero element into val and col
+#pragma omp parallel for
+  for (int i = 0; i < n; i++) {
+    for (int j = csr.row_ptr[i]; j < csr.row_ptr[i + 1]; j++) {
+      csr.col[j] = coo.col[j];
+      csr.val[j] = coo.val[j];
+    }
+  }
+  delete[] row_count;
+}
+
+void Graph::coo2Csr(int n,
+                    int nnz,
+                    DAWN::Graph::Csr_t& csr,
+                    DAWN::Graph::Coo_t& coo) {
+  csr.row_ptr = new int[n + 1];
+  csr.col = new int[nnz];
+  // Count the number of non-zero elements in each column
+  int* row_count = new int[n]();
+  for (int i = 0; i < nnz; i++) {
+    row_count[coo.row[i]]++;
+  }
+  csr.row_ptr[0] = 0;
+  for (int i = 1; i <= n; i++) {
+    csr.row_ptr[i] = csr.row_ptr[i - 1] + row_count[i - 1];
+  }
+// Fill each non-zero element into val and col
+#pragma omp parallel for
+  for (int i = 0; i < n; i++) {
+    for (int j = csr.row_ptr[i]; j < csr.row_ptr[i + 1]; j++) {
+      csr.col[j] = coo.col[j];
+    }
+  }
+  delete[] row_count;
+}
+
+void Graph::createGraph(std::string& input_path, Graph::Graph_t& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -45,21 +123,21 @@ void Graph::createGraph(std::string& input_path, DAWN::Graph& graph) {
 
   if (graph.directed) {
     if (graph.weighted) {
-      graph.readGraph_Directed_Weighted(input_path, graph);
+      readGraph_Directed_Weighted(input_path, graph);
 
     } else {
-      graph.readGraph_Directed(input_path, graph);
+      readGraph_Directed(input_path, graph);
     }
   } else {
     if (graph.weighted) {
-      graph.readGraph_Weighted(input_path, graph);
+      readGraph_Weighted(input_path, graph);
     } else {
-      graph.readGraph(input_path, graph);
+      readGraph(input_path, graph);
     }
   }
 }
 
-void Graph::readGraph(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readGraph(std::string& input_path, Graph::Graph_t& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -96,8 +174,7 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph) {
     --i;
     s.pop();
   }
-  DAWN::Tool tool;
-  tool.coo2Csr(graph.rows, graph.nnz, graph.csr, graph.coo);
+  coo2Csr(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -105,7 +182,7 @@ void Graph::readGraph(std::string& input_path, DAWN::Graph& graph) {
   graph.coo.row = NULL;
 }
 
-void Graph::readGraph_Directed(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readGraph_Directed(std::string& input_path, Graph::Graph_t& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -139,9 +216,8 @@ void Graph::readGraph_Directed(std::string& input_path, DAWN::Graph& graph) {
   graph.nnz = i;
   std::cout << "nnz: " << graph.nnz << std::endl;
 
-  DAWN::Tool tool;
-  tool.transpose(graph.nnz, graph.coo);
-  tool.coo2Csr(graph.rows, graph.nnz, graph.csr, graph.coo);
+  transpose(graph.nnz, graph.coo);
+  coo2Csr(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -149,7 +225,7 @@ void Graph::readGraph_Directed(std::string& input_path, DAWN::Graph& graph) {
   graph.coo.row = NULL;
 }
 
-void Graph::readGraph_Weighted(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readGraph_Weighted(std::string& input_path, Graph::Graph_t& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -192,8 +268,7 @@ void Graph::readGraph_Weighted(std::string& input_path, DAWN::Graph& graph) {
     s.pop();
   }
 
-  DAWN::Tool tool;
-  tool.coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);
+  coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -203,7 +278,8 @@ void Graph::readGraph_Weighted(std::string& input_path, DAWN::Graph& graph) {
   graph.coo.val = NULL;
 }
 
-void Graph::readGraph_Directed_Weighted(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readGraph_Directed_Weighted(std::string& input_path,
+                                        Graph::Graph_t& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;
@@ -241,9 +317,8 @@ void Graph::readGraph_Directed_Weighted(std::string& input_path, DAWN::Graph& gr
   graph.nnz = i;
   std::cout << "nnz: " << graph.nnz << std::endl;
 
-  DAWN::Tool tool;
-  tool.transpose_Weighted(graph.nnz, graph.coo);
-  tool.coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);
+  transpose_Weighted(graph.nnz, graph.coo);
+  coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);
 
   delete[] graph.coo.col;
   graph.coo.col = NULL;
@@ -253,7 +328,7 @@ void Graph::readGraph_Directed_Weighted(std::string& input_path, DAWN::Graph& gr
   graph.coo.val = NULL;
 }
 
-void Graph::readList(std::string& input_path, DAWN::Graph& graph) {
+void Graph::readList(std::string& input_path, Graph::Graph_t& graph) {
   std::ifstream file(input_path);
   if (!file.is_open()) {
     std::cerr << "Error opening file " << input_path << std::endl;

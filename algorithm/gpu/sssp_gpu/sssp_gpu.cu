@@ -1,8 +1,7 @@
-#include <dawn/dawn.cuh>
+#include <dawn/algorithm/gpu/sssp.cuh>
 
 int main(int argc, char* argv[]) {
-  DAWN::Graph graph;
-  DAWN::GPU gpurun;
+  DAWN::Graph::Graph_t graph;
 
   std::string input_path = argv[1];
   std::string output_path = argv[2];
@@ -21,8 +20,11 @@ int main(int argc, char* argv[]) {
     graph.prinft = false;
   }
 
-  graph.createGraph(input_path, graph);
-  gpurun.runSSSPGpu(graph, output_path);
+  DAWN::Graph::createGraph(input_path, graph);
+  float elapsed_time = DAWN::SSSP_GPU::run(graph, output_path);
+  printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+  printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+  printf("%-21s%3.5lf\n", "Time:", elapsed_time);
 
   return 0;
 }

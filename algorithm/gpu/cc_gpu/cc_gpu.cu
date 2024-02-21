@@ -1,29 +1,31 @@
-#include <dawn/algorithm/cpu/cc.hxx>
+#include <dawn/algorithm/gpu/cc.cuh>
 
 int main(int argc, char* argv[]) {
   DAWN::Graph::Graph_t graph;
-  std::string input_path = argv[1];
-  graph.source = atoi(argv[2]);
-  std::string weighted = argv[3];
 
+  std::string input_path = argv[1];
+  graph.block_size = atoi(argv[2]);
+  graph.source = atoi(argv[3]);
+  std::string weighted = argv[4];
+
+  graph.thread = 1;
   graph.stream = 1;
-  graph.thread = omp_get_num_threads();
+
   DAWN::Graph::createGraph(input_path, graph);
 
   if (weighted == "true") {
     graph.weighted = true;
     float closeness_centrality =
-        DAWN::CC_CPU::Closeness_Centrality_Weighted(graph, graph.source);
+        DAWN::CC_GPU::run_Weighted(graph, graph.source);
     printf("%-21s%3.5d\n", "Source:", graph.source);
     printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
   } else {
     graph.weighted = false;
-    float closeness_centrality =
-        DAWN::CC_CPU::Closeness_Centrality(graph, graph.source);
+    float closeness_centrality = DAWN::CC_GPU::run(graph, graph.source);
     printf("%-21s%3.5d\n", "Source:", graph.source);
     printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
   }
 
   return 0;
 }
-// ./cc_cpu $GRAPH_DIR/XX.mtx 0 weighted
+//./sssp_gpu $GRAPH_DIR/XXX.mtx 1024 0 false

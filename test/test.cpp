@@ -1,8 +1,8 @@
 #include <dawn/dawn.hxx>
 
 int main(int argc, char* argv[]) {
-  DAWN::CPU runCpu;
-  DAWN::Graph graph;
+
+  DAWN::Graph::Graph_t graph;
   std::string input_path = argv[1];
   std::string output_path = argv[2];
   std::string prinft = argv[3];
@@ -26,8 +26,8 @@ int main(int argc, char* argv[]) {
   graph.interval = 100;
   graph.stream = omp_get_num_threads();
   graph.thread = omp_get_num_threads();
-  graph.createGraph(input_path, graph);
-  runCpu.runAPSPSG(graph, output_path);
+   DAWN::Graph::createGraph(input_path, graph);
+  float elapsed_time = DAWN::_CPU::runAPSPSG(graph, output_path);
 
   return 0;
 }

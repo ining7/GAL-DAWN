@@ -1,7 +1,7 @@
 #include "dawn.cuh"
 int main(int argc, char* argv[]) {
-  DAWN::Graph graph;
-  DAWN::GPU gpurun;
+  DAWN::Graph::Graph_t graph;
+  
 
   std::string input_path = argv[1];
   std::string output_path = argv[2];
@@ -23,14 +23,14 @@ int main(int argc, char* argv[]) {
   graph.stream = 4;
   graph.block_size = 1024;
   graph.interval = 100;
-  graph.createGraph(input_path, graph);
+   DAWN::Graph::createGraph(input_path, graph);
   if (weighted == "weighted") {
     graph.weighted = true;
-    gpurun.runAPSPGpu(graph, output_path);
+    DAWN::_GPU::runAPSPGpu(graph, output_path);
     // std::cout << "Weighted Graph" << std::endl;
   } else {
     graph.weighted = false;
-    gpurun.runAPBFSGpu(graph, output_path);
+    DAWN::_GPU::runAPBFSGpu(graph, output_path);
   }
 
   return 0;
