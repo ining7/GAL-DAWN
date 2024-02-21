@@ -1,8 +1,7 @@
-#include <dawn/dawn.hxx>
+#include <dawn/algorithm/cpu/apsp.hxx>
 
 int main(int argc, char* argv[]) {
-  DAWN::CPU runCpu;
-  DAWN::Graph graph;
+  DAWN::Graph::Graph_t graph;
   std::string algo = argv[1];
   if ((algo == "TG") || (algo == "SG")) {
     std::string input_path = argv[2];
@@ -30,8 +29,11 @@ int main(int argc, char* argv[]) {
       graph.source = atoi(argv[6]);
       graph.stream = omp_get_num_threads();
       graph.thread = omp_get_num_threads();
-      graph.createGraph(input_path, graph);
-      runCpu.runAPSPSG(graph, output_path);
+      DAWN::Graph::createGraph(input_path, graph);
+      float elapsed_time = DAWN::APSP_CPU::runAPSPSG(graph, output_path);
+      printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+      printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+      printf("%-21s%3.5lf\n", "Time:", elapsed_time);
 
       return 0;
     }
@@ -39,8 +41,12 @@ int main(int argc, char* argv[]) {
       graph.source = atoi(argv[6]);
       graph.stream = 1;
       graph.thread = omp_get_num_threads();
-      graph.createGraph(input_path, graph);
-      runCpu.runAPSPTG(graph, output_path);
+      DAWN::Graph::createGraph(input_path, graph);
+      float elapsed_time = DAWN::APSP_CPU::runAPSPTG(graph, output_path);
+      printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+      printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+      printf("%-21s%3.5lf\n", "Time:", elapsed_time);
+
       return 0;
     }
   }

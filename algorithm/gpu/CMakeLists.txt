@@ -1,5 +1,5 @@
 
-set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
+set(CMAKE_CUDA_COMPILER "/usr/local/cuda-12.3/bin/nvcc")
 
 set(CUDA_ARCHITECTURES "86")
 if(NOT DEFINED CUDA_ARCHITECTURES)
@@ -10,5 +10,6 @@ endif()
 project(dawn LANGUAGES CXX CUDA)
 add_subdirectory(apsp_gpu)
 add_subdirectory(bfs_gpu)
+add_subdirectory(cc_gpu)
 add_subdirectory(mssp_gpu)
 add_subdirectory(sssp_gpu)

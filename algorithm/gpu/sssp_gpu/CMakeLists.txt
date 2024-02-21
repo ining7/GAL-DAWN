@@ -1,15 +1,15 @@
 # Specify source and header files
-file(GLOB SSSP_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cu")
-file(GLOB SSSP_HEADERS "${CMAKE_SOURCE_DIR}/include/*.h" "${CMAKE_SOURCE_DIR}/include/*.cuh" "${CMAKE_SOURCE_DIR}/include/*.hxx")
+file(GLOB SSSP_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/algorithm/gpu/*.cu" "${CMAKE_SOURCE_DIR}/src/*.cu")
+file(GLOB SSSP_HEADERS "${CMAKE_SOURCE_DIR}/include/algorithm/gpu/*.cuh" "${CMAKE_SOURCE_DIR}/include/*.hxx" "${CMAKE_SOURCE_DIR}/include/dawn.cuh")
 
 # Define the CUDA sources
-set(sssp_GPU_SOURCES
+set(SSSP_GPU_SOURCES
     sssp_gpu.cu
     ${SSSP_SOURCES}
 )
 
 # Add the executable
-add_executable(sssp_gpu ${sssp_GPU_SOURCES})
+add_executable(sssp_gpu ${SSSP_GPU_SOURCES})
 target_include_directories(sssp_gpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
 # Require CUDA

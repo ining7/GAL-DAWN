@@ -1,7 +1,7 @@
-#include <dawn/dawn.cuh>
+#include <dawn/algorithm/gpu/apsp.cuh>
 int main(int argc, char* argv[]) {
-  DAWN::Graph graph;
-  DAWN::GPU gpurun;
+  DAWN::Graph::Graph_t graph;
+
   std::string input_path = argv[1];
   std::string output_path = argv[2];
   graph.stream = atoi(argv[3]);
@@ -19,15 +19,20 @@ int main(int argc, char* argv[]) {
     graph.prinft = false;
   }
 
-  graph.createGraph(input_path, graph);
+  DAWN::Graph::createGraph(input_path, graph);
 
   if (weighted == "weighted") {
     graph.weighted = true;
-    gpurun.runAPSPGpu(graph, output_path);
-    // std::cout << "Weighted Graph" << std::endl;
+    float elapsed_time = DAWN::APSP_GPU::run_Weighted(graph, output_path);
+    printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+    printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+    printf("%-21s%3.5lf\n", "Time:", elapsed_time);
   } else {
     graph.weighted = false;
-    gpurun.runAPBFSGpu(graph, output_path);
+    float elapsed_time = DAWN::APSP_GPU::run(graph, output_path);
+    printf("%-21s%3.5d\n", "Nodes:", graph.rows);
+    printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
+    printf("%-21s%3.5lf\n", "Time:", elapsed_time);
   }
 
   return 0;
