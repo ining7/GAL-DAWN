@@ -1,7 +1,12 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/cpu/mssp.hxx>
 
-float DAWN::MSSP_CPU::runMSSPSG(Graph::Graph_t& graph,
-                                std::string& output_path) {
+float DAWN::MSSP_CPU::runSG(Graph::Graph_t& graph, std::string& output_path) {
   float elapsed_time = 0.0f;
   float time = 0.0f;
   int proEntry = 0;
@@ -25,13 +30,11 @@ float DAWN::MSSP_CPU::runMSSPSG(Graph::Graph_t& graph,
       ++proEntry;
     }
   }
-
   elapsed_time = elapsed_time / (graph.stream * 1000);
   return elapsed_time;
 }
 
-float DAWN::MSSP_CPU::runMSSPTG(Graph::Graph_t& graph,
-                                std::string& output_path) {
+float DAWN::MSSP_CPU::runTG(Graph::Graph_t& graph, std::string& output_path) {
   float elapsed_time = 0.0f;
   int proEntry = 0;
   auto row = graph.rows;

@@ -6,6 +6,8 @@ DAWN is capable of solving the APSP and SSSP problems on graphs with negative we
 
 The rapid closeness centrality algorithm based on DAWN has been implemented, while work on the betweenness centrality algorithm is still ongoing. We are very interested in developing a new BC algorithm based on DAWN, and we will not simply replicate the Brandes algorithm, which means that the BC algorithm will not appear in this library in the short term. We encourage colleagues to complete the implementation of the Brandes algorithm before the new algorithm is implemented.
 
+To add NEW functions within DAWN, please refer to the  [document/Code_Guide](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/blob/dev/document/Code_Guide.md).
+
 ## Quick Start Guide
 
 ### 0. Before getting started
@@ -16,7 +18,7 @@ Depending on your GPU, you may also want to edit the CUDA_ARCHITECTURES variable
 export PROJECT_ROOT="to_your_project_path"
 ```
 
-### 1. Modify $PROJECT_ROOT/CMakeLists.txt
+### 1. Modify $PROJECT_ROOT/algorithm/gpu/CMakeLists.txt
 
 According to your GPU, we use RTX 3080ti for computing, so CUDA_ARCHITECTURES is set to 86
 
@@ -142,7 +144,7 @@ We also provide the test code for Gunrock and GAPBS in the **test** directory. D
 
 ### 7.Documentation
 
-Please refer to [document/Documentation_v1](https://github.com/lxrzlyr/SC2023/blob/eb9080f76c2950981a4dac72141d4991eff8b9db/document/Decumentation_v1.md) for commands.
+Please refer to [document/Documentation](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/blob/dev/document/Decumentation.md) for commands.
 
 ## New version
 

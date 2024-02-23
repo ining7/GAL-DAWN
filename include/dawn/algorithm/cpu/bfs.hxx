@@ -1,9 +1,15 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/dawn.hxx>
 
 namespace DAWN {
 namespace BFS_CPU {
 
-float runBFS(Graph::Graph_t& graph, std::string& output_path);
+float run(Graph::Graph_t& graph, std::string& output_path);
 
 // kernel
 float BFSp(Graph::Graph_t& graph, int source, std::string& output_path);

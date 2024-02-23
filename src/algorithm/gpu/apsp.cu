@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/gpu/apsp.cuh>
 
 float DAWN::APSP_GPU::run_Weighted(DAWN::Graph::Graph_t& graph,
@@ -45,7 +51,6 @@ float DAWN::APSP_GPU::run_Weighted(DAWN::Graph::Graph_t& graph,
       << std::endl;
 
   elapsed_time = elapsed_time / (graph.thread * 1000);
-
   // Synchronize streams
   for (int i = 0; i < graph.stream; i++) {
     cudaStreamSynchronize(streams[i]);
@@ -96,10 +101,6 @@ float DAWN::APSP_GPU::run(DAWN::Graph::Graph_t& graph,
       << std::endl;
 
   elapsed_time = elapsed_time / (graph.thread * 1000);
-  // Output elapsed time and free remaining resources
-  // printf("%-21s%3.5d\n", "Nodes:", graph.rows);
-  // printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
-  // printf("%-21s%3.5lf\n", "Time:", elapsed_time);
 
   // Synchronize streams
   for (int i = 0; i < graph.stream; i++) {

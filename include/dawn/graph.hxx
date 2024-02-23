@@ -1,8 +1,13 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #pragma once
 #include <dawn/include.hxx>
 
 namespace DAWN {
-
 namespace Graph {
 
 struct Csr_t {
@@ -11,6 +16,7 @@ struct Csr_t {
   int* col;
   float* val;
 };
+
 struct Coo_t {
  public:
   int* row;
@@ -70,5 +76,4 @@ void readList(std::string& input_path,
               Graph_t& graph);  // read list from file
 
 }  // namespace Graph
-
 }  // namespace DAWN

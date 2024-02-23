@@ -1,15 +1,15 @@
 # Specify source and header files
-file(GLOB bfs_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
+file(GLOB BFS_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
 file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/include/algorithm/cpu/*.hxx" "${CMAKE_SOURCE_DIR}/include/*.hxx")
 
 # Define the CUDA sources
-set(bfs_CPU_SOURCES
+set(BFS_CPU_SOURCES
     bfs_cpu.cpp
-    ${bfs_SOURCES_CPP}
+    ${BFS_SOURCES_CPP}
 )
 
 # Add the executable
-add_executable(bfs_cpu ${bfs_CPU_SOURCES})
+add_executable(bfs_cpu ${BFS_CPU_SOURCES})
 target_include_directories(bfs_cpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
 # Add compile options
