@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/dawn.hxx>
 
 int main(int argc, char* argv[]) {
@@ -27,7 +33,7 @@ int main(int argc, char* argv[]) {
   graph.stream = omp_get_num_threads();
   graph.thread = omp_get_num_threads();
    DAWN::Graph::createGraph(input_path, graph);
-  float elapsed_time = DAWN::_CPU::runAPSPSG(graph, output_path);
+  float elapsed_time = DAWN::_CPU::runSG(graph, output_path);
 
   return 0;
 }

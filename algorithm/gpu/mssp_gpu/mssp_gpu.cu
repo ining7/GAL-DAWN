@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/gpu/mssp.cuh>
 
 int main(int argc, char* argv[]) {
@@ -25,14 +31,18 @@ int main(int argc, char* argv[]) {
 
   if (weighted == "weighted") {
     graph.weighted = true;
+
     float elapsed_time = DAWN::MSSP_GPU::run_Weighted(graph, output_path);
+
     printf("%-21s%3.5d\n", "Nodes:", graph.rows);
     printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
     printf("%-21s%3.5lf\n", "Time:", elapsed_time);
 
   } else {
     graph.weighted = false;
+
     float elapsed_time = DAWN::MSSP_GPU::run(graph, output_path);
+
     printf("%-21s%3.5d\n", "Nodes:", graph.rows);
     printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
     printf("%-21s%3.5lf\n", "Time:", elapsed_time);

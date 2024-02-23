@@ -1,5 +1,5 @@
 
-set(CMAKE_CUDA_COMPILER "/usr/local/cuda-12.3/bin/nvcc")
+set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 
 set(CUDA_ARCHITECTURES "86")
 if(NOT DEFINED CUDA_ARCHITECTURES)

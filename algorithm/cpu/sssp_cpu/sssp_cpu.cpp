@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/cpu/sssp.hxx>
 
 int main(int argc, char* argv[]) {
@@ -18,7 +24,9 @@ int main(int argc, char* argv[]) {
   graph.weighted = true;
 
   DAWN::Graph::createGraph(input_path, graph);
-  float elapsed_time = DAWN::SSSP_CPU::runSSSP(graph, output_path);
+
+  float elapsed_time = DAWN::SSSP_CPU::run(graph, output_path);
+
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time);

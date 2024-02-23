@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/cpu/cc.hxx>
 float DAWN::CC_CPU::Closeness_Centrality(Graph::Graph_t& graph, int source) {
   int step = 1;
@@ -46,9 +52,6 @@ float DAWN::CC_CPU::Closeness_Centrality(Graph::Graph_t& graph, int source) {
   alpha = nullptr;
   delete[] distance;
   distance = nullptr;
-
-  // printf("%-21s%3.5ld\n", "Source:", source);
-  // printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
 
   printf("%-21s%3.5d\n", "Node:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
@@ -105,9 +108,6 @@ float DAWN::CC_CPU::Closeness_Centrality_Weighted(Graph::Graph_t& graph,
   alpha = nullptr;
   delete[] distance;
   distance = nullptr;
-
-  // printf("%-21s%3.5ld\n", "Source:", source);
-  // printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
 
   printf("%-21s%3.5d\n", "Node:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);

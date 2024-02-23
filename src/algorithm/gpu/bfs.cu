@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/gpu/bfs.cuh>
 
 __global__ void SOVM(const int* row_ptr,
@@ -78,7 +84,6 @@ float DAWN::BFS_GPU::kernel(DAWN::Graph::Graph_t& graph,
     }
 
     if (!(step % 3)) {
-      // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
       bool ptr = d_ptr[0];
       if (!ptr) {
         break;
@@ -88,7 +93,6 @@ float DAWN::BFS_GPU::kernel(DAWN::Graph::Graph_t& graph,
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> elapsed = end - start;
   elapsed_time += elapsed.count();
-  // printf("Step is [%d]\n", step);
 
   if ((graph.prinft) && (source == graph.source)) {
     thrust::copy(d_distance.begin(), d_distance.end(), h_distance.begin());
@@ -119,10 +123,6 @@ float DAWN::BFS_GPU::run(DAWN::Graph::Graph_t& graph,
   float elapsed_time = 0.0f;
   elapsed_time +=
       kernel(graph, source, stream, d_row_ptr, d_col, output_path) / 1000;
-
-  // printf("%-21s%3.5d\n", "Nodes:", graph.rows);
-  // printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
-  // printf("%-21s%3.5lf\n", "Time:", elapsed_time);
 
   cudaStreamDestroy(stream);
   return elapsed_time;

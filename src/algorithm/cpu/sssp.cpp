@@ -1,13 +1,19 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/cpu/sssp.hxx>
 
-float DAWN::SSSP_CPU::runSSSP(Graph::Graph_t& graph, std::string& output_path) {
+float DAWN::SSSP_CPU::run(Graph::Graph_t& graph, std::string& output_path) {
   int source = graph.source;
   auto row = graph.rows;
   if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
-  float elapsed_time = SSSPp(graph, source, output_path) / 1000;
+  float elapsed_time = DAWN::SSSP_CPU::SSSPp(graph, source, output_path) / 1000;
   return elapsed_time;
 }
 
@@ -39,9 +45,9 @@ float DAWN::SSSP_CPU::SSSPp(Graph::Graph_t& graph,
   while (step < row) {
     step++;
     if (!(step % 2))
-      is_converged = GOVMP(graph, alpha, beta, distance);
+      is_converged = DAWN::SSSP_CPU::GOVMP(graph, alpha, beta, distance);
     else
-      is_converged = GOVMP(graph, beta, alpha, distance);
+      is_converged = DAWN::SSSP_CPU::GOVMP(graph, beta, alpha, distance);
     if (is_converged) {
       break;
     }
@@ -94,9 +100,9 @@ float DAWN::SSSP_CPU::SSSPs(Graph::Graph_t& graph,
   while (step < row) {
     step++;
     if (!(step % 2))
-      entry = GOVM(graph, alpha, beta, distance, entry);
+      entry = DAWN::SSSP_CPU::GOVM(graph, alpha, beta, distance, entry);
     else
-      entry = GOVM(graph, beta, alpha, distance, entry);
+      entry = DAWN::SSSP_CPU::GOVM(graph, beta, alpha, distance, entry);
     if (!entry) {
       break;
     }

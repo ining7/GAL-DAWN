@@ -1,14 +1,19 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/cpu/bfs.hxx>
 
-float DAWN::BFS_CPU::runBFS(Graph::Graph_t& graph, std::string& output_path) {
+float DAWN::BFS_CPU::run(Graph::Graph_t& graph, std::string& output_path) {
   int source = graph.source;
   auto row = graph.rows;
   if (graph.csr.row_ptr[source] == graph.csr.row_ptr[source + 1]) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
-  float elapsed_time = BFSp(graph, source, output_path) / 1000;
-
+  float elapsed_time = DAWN::BFS_CPU::BFSp(graph, source, output_path) / 1000;
   return elapsed_time;
 }
 
@@ -39,9 +44,9 @@ float DAWN::BFS_CPU::BFSp(Graph::Graph_t& graph,
   while (step < row) {
     step++;
     if (!(step % 2))
-      is_converged = SOVMP(graph, alpha, beta, distance, step);
+      is_converged = DAWN::BFS_CPU::SOVMP(graph, alpha, beta, distance, step);
     else
-      is_converged = SOVMP(graph, beta, alpha, distance, step);
+      is_converged = DAWN::BFS_CPU::SOVMP(graph, beta, alpha, distance, step);
     if (is_converged) {
       break;
     }
@@ -64,7 +69,6 @@ float DAWN::BFS_CPU::BFSp(Graph::Graph_t& graph,
   alpha = nullptr;
   delete[] distance;
   distance = nullptr;
-
   return elapsed;
 }
 
@@ -92,9 +96,9 @@ float DAWN::BFS_CPU::BFSs(Graph::Graph_t& graph,
   while (step < row) {
     step++;
     if (!(step % 2))
-      entry = SOVM(graph, alpha, beta, distance, step, entry);
+      entry = DAWN::BFS_CPU::SOVM(graph, alpha, beta, distance, step, entry);
     else
-      entry = SOVM(graph, beta, alpha, distance, step, entry);
+      entry = DAWN::BFS_CPU::SOVM(graph, beta, alpha, distance, step, entry);
     if (!entry) {
       break;
     }
@@ -117,7 +121,6 @@ float DAWN::BFS_CPU::BFSs(Graph::Graph_t& graph,
   beta = nullptr;
   delete[] distance;
   distance = nullptr;
-
   return elapsed;
 }
 

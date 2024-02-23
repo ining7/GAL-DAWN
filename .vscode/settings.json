@@ -71,23 +71,7 @@
         "thread": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "valarray": "cpp",
-        "codecvt": "cpp",
-        "__nullptr": "cpp",
-        "__locale": "cpp",
-        "cassert": "cpp",
-        "__config": "cpp",
-        "compare": "cpp",
-        "concepts": "cpp",
-        "numbers": "cpp",
-        "semaphore": "cpp",
-        "stop_token": "cpp",
-        "queue": "cpp",
-        "stack": "cpp",
-        "__hash_table": "cpp",
-        "__split_buffer": "cpp",
-        "__tree": "cpp",
-        "ciso646": "cpp"
+        "valarray": "cpp"
     },
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8"

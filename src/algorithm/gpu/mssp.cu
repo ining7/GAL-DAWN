@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/gpu/mssp.cuh>
 
 float DAWN::MSSP_GPU::run(DAWN::Graph::Graph_t& graph,
@@ -36,10 +42,6 @@ float DAWN::MSSP_GPU::run(DAWN::Graph::Graph_t& graph,
     // graph.thread, elapsed_time);
   }
   elapsed_time = elapsed_time / (graph.thread * 1000);
-  // printf("%-21s%3.5d\n", "Nodes:", graph.rows);
-  // printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
-  // printf("%-21s%3.5lf\n", "Time:", elapsed_time / (graph.thread * 1000));
-
   // Synchronize streams
   for (int i = 0; i < graph.stream; i++) {
     cudaStreamSynchronize(streams[i]);
@@ -86,14 +88,10 @@ float DAWN::MSSP_GPU::run_Weighted(DAWN::Graph::Graph_t& graph,
 
     ++proEntry;
     // DAWN::Tool::infoprint(proEntry, graph.msource.size(), graph.interval,
-    // graph.thread,
-    //                elapsed_time);
+    // graph.thread, elapsed_time);
   }
 
   elapsed_time = elapsed_time / (graph.thread * 1000);
-  // printf("%-21s%3.5d\n", "Nodes:", graph.rows);
-  // printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
-  // printf("%-21s%3.5lf\n", "Time:", elapsed_time / (graph.thread * 1000));
 
   // Synchronize streams
   for (int i = 0; i < graph.stream; i++) {

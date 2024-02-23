@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/dawn.hxx>
 namespace DAWN {
 
@@ -33,6 +39,7 @@ void Graph::coo2Csr_Weighted(int n,
   csr.val = new float[nnz];
   csr.row_ptr = new int[n + 1];
   csr.col = new int[nnz];
+
   // Count the number of non-zero elements in each column
   int* row_count = new int[n]();
   for (int i = 0; i < nnz; i++) {
@@ -42,6 +49,7 @@ void Graph::coo2Csr_Weighted(int n,
   for (int i = 1; i <= n; i++) {
     csr.row_ptr[i] = csr.row_ptr[i - 1] + row_count[i - 1];
   }
+
 // Fill each non-zero element into val and col
 #pragma omp parallel for
   for (int i = 0; i < n; i++) {
@@ -59,6 +67,7 @@ void Graph::coo2Csr(int n,
                     DAWN::Graph::Coo_t& coo) {
   csr.row_ptr = new int[n + 1];
   csr.col = new int[nnz];
+
   // Count the number of non-zero elements in each column
   int* row_count = new int[n]();
   for (int i = 0; i < nnz; i++) {
@@ -68,6 +77,7 @@ void Graph::coo2Csr(int n,
   for (int i = 1; i <= n; i++) {
     csr.row_ptr[i] = csr.row_ptr[i - 1] + row_count[i - 1];
   }
+
 // Fill each non-zero element into val and col
 #pragma omp parallel for
   for (int i = 0; i < n; i++) {

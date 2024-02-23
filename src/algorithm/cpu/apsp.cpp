@@ -1,11 +1,19 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/cpu/apsp.hxx>
 
-float DAWN::APSP_CPU::runAPSPTG(DAWN::Graph::Graph_t& graph,
-                                std::string& output_path) {
+float DAWN::APSP_CPU::runTG(DAWN::Graph::Graph_t& graph,
+                            std::string& output_path) {
   float elapsed_time = 0.0;
+
   std::cout
       << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
       << std::endl;
+
   auto row = graph.rows;
   for (int i = 0; i < row; i++) {
     if (graph.csr.row_ptr[i] == graph.csr.row_ptr[i + 1]) {
@@ -19,6 +27,7 @@ float DAWN::APSP_CPU::runAPSPTG(DAWN::Graph::Graph_t& graph,
     }
     DAWN::Tool::infoprint(i, row, graph.interval, graph.stream, elapsed_time);
   }
+
   std::cout
       << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
       << std::endl;
@@ -27,15 +36,16 @@ float DAWN::APSP_CPU::runAPSPTG(DAWN::Graph::Graph_t& graph,
   return elapsed_time;
 }  // namespace
 
-float DAWN::APSP_CPU::runAPSPSG(Graph::Graph_t& graph,
-                                std::string& output_path) {
+float DAWN::APSP_CPU::runSG(Graph::Graph_t& graph, std::string& output_path) {
   float elapsed_time = 0.0;
   int proEntry = 0;
   float time = 0.0f;
   auto row = graph.rows;
+
   std::cout
       << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP start <<<<<<<<<<<<<<<<<<<<<<<<<<<"
       << std::endl;
+
 #pragma omp parallel for
   for (int i = 0; i < row; i++) {
     if (graph.csr.row_ptr[i] == graph.csr.row_ptr[i + 1]) {
@@ -57,9 +67,11 @@ float DAWN::APSP_CPU::runAPSPSG(Graph::Graph_t& graph,
     DAWN::Tool::infoprint(proEntry, row, graph.interval, graph.stream,
                           elapsed_time);
   }
+
   std::cout
       << ">>>>>>>>>>>>>>>>>>>>>>>>>>> APSP end <<<<<<<<<<<<<<<<<<<<<<<<<<<"
       << std::endl;
+
   elapsed_time = elapsed_time / (graph.stream * 1000);
   return elapsed_time;
 }

@@ -1,3 +1,9 @@
+/**
+ * @author lxrzlyr (1289539524@qq.com)
+ * @date 2024-02-23
+ *
+ * @copyright Copyright (c) 2024
+ */
 #include <dawn/algorithm/gpu/cc.cuh>
 
 float DAWN::CC_GPU::run(DAWN::Graph::Graph_t& graph, int source) {
@@ -72,7 +78,6 @@ float DAWN::CC_GPU::kernel(DAWN::Graph::Graph_t& graph,
     }
 
     if (!(step % 3)) {
-      // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
       bool ptr = d_ptr[0];
       if (!ptr) {
         break;
@@ -172,7 +177,6 @@ float DAWN::CC_GPU::kernel_Weighted(DAWN::Graph::Graph_t& graph,
       thrust::fill_n(d_beta.begin(), row, false);
     }
     if (!(step % 5)) {
-      // thrust::copy_n(d_ptr.begin(), 1, h_ptr.begin());
       bool ptr = d_ptr[0];
       if (!ptr) {
         break;
@@ -190,7 +194,6 @@ float DAWN::CC_GPU::kernel_Weighted(DAWN::Graph::Graph_t& graph,
                                           0.0f, thrust::plus<float>());
 
   elapsed_time = elapsed_time / (graph.thread * 1000);
-
   printf("%-21s%3.5d\n", "Node:", row);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time);
