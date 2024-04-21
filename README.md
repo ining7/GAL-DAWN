@@ -116,13 +116,13 @@ OS:  Ubuntu 20.04 and above
 ### 5.Release version
 
 | Algorithm | Implementation | Weigthed |
-| ------ | ------ | ------ |
-| APSP |  GOVM| True  |
-| APSP |  SOVM| False |
-| MSSP |  GOVM| True  |
-| MSSP |  SOVM| False |
-| SSSP |  GOVM| True  |
-| BFS  |  SOVM| False |
+| --------- | -------------- | -------- |
+| APSP      | GOVM           | True     |
+| APSP      | SOVM           | False    |
+| MSSP      | GOVM           | True     |
+| MSSP      | SOVM           | False    |
+| SSSP      | GOVM           | True     |
+| BFS       | SOVM           | False    |
 
 For the GPU version, please make sure that there is enough GPU memory for the graph. The size of the thread block and the scale of the graph is set reasonably according to the device parameters.
 
@@ -150,16 +150,19 @@ Please refer to [document/Documentation](https://github.com/lxrzlyr/DAWN-An-Nova
 
 The version of DWAN on the weighted graph has been included in DAWN V2.1. Currently, DAWN includes the version that runs on unweighted graphs of int type index values, and the version that runs on negative weighted graphs of float type. (SOVM and GOVM have been the default implementation, if you want to use BOVM, please change the kernel function.)
 
-| Algorithm | Release |
-| -------- | -------- |
-| APSP |  V2.1 |
-| MSSP |  V2.1 |
-| SSSP |  V2.1 |
-| BFS  |  V2.1 |
-| BC   |  Doing|
-| CC   |  V2.3 |
-| Cluster Analysis |Future |
-| Community Detection |Future |
+| Algorithm           | Release |
+| ------------------- | ------- |
+| APSP                | V2.1    |
+| MSSP                | V2.1    |
+| SSSP                | V2.1    |
+| BFS                 | V2.1    |
+| BC                  | Doing   |
+| CC                  | V2.3    |
+| SPGEMM              | Doing   |
+| SPGEMV              | Doing   |
+| SPMV                | Doing   |
+| Cluster Analysis    | Future  |
+| Community Detection | Future  |
 
 In the future, we plan to develop more algorithms based on DAWN, including but not limited to Between Centrality, Closeness Centrality, etc. Further applications of these algorithms, such as community detection, clustering, and path planning, are also on our agenda.
 
