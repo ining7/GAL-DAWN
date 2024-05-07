@@ -1,6 +1,6 @@
 /**
  * @author lxrzlyr (1289539524@qq.com)
- * @date 2024-02-23
+ * @date 2024-04-21
  *
  * @copyright Copyright (c) 2024
  */
@@ -146,13 +146,15 @@ float DAWN::BC_CPU::kernel_Weighted(DAWN::Graph::Graph_t& graph,
   return elapsed;
 }
 
-int DAWN::BC_CPU::SOVM(Graph::Graph_t& graph,
-                       int*& alpha,
-                       int*& beta,
-                       int*& distance,
-                       int step,
-                       int entry) {
+int DAWN::BC_CPU::SOVM_kernel(Graph::Graph_t& graph,
+                              int*& alpha,
+                              int*& beta,
+                              int*& distance,
+                              int*& amount,
+                              int step,
+                              int entry) {
   int tmpEntry = 0;
+  std::map<std::pair<int, int>, int> tmp;
   for (int j = 0; j < entry; j++) {
     int start = graph.csr.row_ptr[alpha[j]];
     int end = graph.csr.row_ptr[alpha[j] + 1];
@@ -161,6 +163,7 @@ int DAWN::BC_CPU::SOVM(Graph::Graph_t& graph,
         if (!distance[graph.csr.col[k]]) {
           distance[graph.csr.col[k]] = step;
           beta[tmpEntry] = graph.csr.col[k];
+          tmp[{k, graph.csr.col[k]}] = amount[k];
           ++tmpEntry;
         }
       }
@@ -169,11 +172,11 @@ int DAWN::BC_CPU::SOVM(Graph::Graph_t& graph,
   return tmpEntry;
 }
 
-int DAWN::BC_CPU::GOVM(DAWN::Graph::Graph_t& graph,
-                       int*& alpha,
-                       int*& beta,
-                       float*& distance,
-                       int entry) {
+int DAWN::BC_CPU::GOVM_kernel(DAWN::Graph::Graph_t& graph,
+                              int*& alpha,
+                              int*& beta,
+                              float*& distance,
+                              int entry) {
   int tmpEntry = 0;
   for (int j = 0; j < entry; j++) {
     int start = graph.csr.row_ptr[alpha[j]];

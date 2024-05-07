@@ -1,9 +1,4 @@
-*.c filter=copyright
-*.cc filter=copyright
-*.h filter=copyright
 *.cpp filter=copyright
 *.hxx filter=copyright
 *.cu filter=copyright
 *.cuh filter=copyright
-*.md filter=copyrightW
-*.sh filter=copyright
