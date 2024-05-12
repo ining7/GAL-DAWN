@@ -1,0 +1,4 @@
+*.cpp filter=copyright
+*.hxx filter=copyright
+*.cu filter=copyright
+*.cuh filter=copyright
