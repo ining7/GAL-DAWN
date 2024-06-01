@@ -12,9 +12,6 @@ set(SSSP_GPU_SOURCES
 add_executable(sssp_gpu ${SSSP_GPU_SOURCES})
 target_include_directories(sssp_gpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
-# Require CUDA
-find_package(CUDAToolkit REQUIRED)
-
 # Set properties for CUDA
 set_property(TARGET sssp_gpu PROPERTY CUDA_STANDARD 14)
 set_property(TARGET sssp_gpu PROPERTY CUDA_ARCHITECTURES 86)

@@ -56,6 +56,11 @@ float DAWN::BFS_CPU::BFSp(Graph::Graph_t& graph,
   elapsed += elapsed_tmp.count();
 
   distance[source] = 0;
+  if (source == 0) {
+    for (int i = 0; i < row; i++) {
+      std::cout << graph.csr.row_ptr[i] << std::endl;
+    }
+  }
 
   // Output
   if ((graph.prinft) && (source == graph.source)) {
@@ -163,9 +168,8 @@ bool DAWN::BFS_CPU::SOVMP(Graph::Graph_t& graph,
         for (int k = start; k < end; k++) {
           if (!distance[graph.csr.col[k]]) {
             distance[graph.csr.col[k]] = step;
-            beta[j] = true;
-            if (converged)
-              converged = false;
+            beta[graph.csr.col[k]] = true;
+            converged = false;
           }
         }
       }
