@@ -33,7 +33,7 @@ self_loops = list(nx.nodes_with_selfloops(G))
 G.remove_edges_from([(node, node) for node in self_loops])
 
 # 打印图的边来验证
-print(G.edges())
+# print(G.edges())
 
 # print(nx.number_of_edges(graph) )
 # print(nx.is_directed(graph))
@@ -59,9 +59,23 @@ with open(args.output_file, "w") as f:
 #         length = shortest_paths[node]
 #         if source_node != node:
 #             f.write("{} {} {}\n".format(source_node, node, length))
-# 使用布局算法来生成规则的平面图
-pos = nx.circular_layout(G)
-plt.figure(figsize=(8, 8))  # 设置图形尺寸为 640*640
-nx.draw(G, pos, with_labels=True, node_color='lightblue',
-        edge_color='grey', arrowsize=20)
-plt.savefig('../graph.png')  # 保存图形为文件
+# # 使用布局算法来生成规则的平面图
+# pos = nx.circular_layout(G)
+# plt.figure(figsize=(8, 8))  # 设置图形尺寸为 640*640
+# nx.draw(G, pos, with_labels=True, node_color='lightblue',
+#         edge_color='grey', arrowsize=20, arrows=False)
+# plt.savefig('/home/lxr/code/test/graph.png')  # 保存图形为文件
+
+# # 获取图中所有节点
+# nodes = list(G.nodes)
+
+# # 打印所有节点对之间的所有最短路径
+# for source in nodes:
+#     for target in nodes:
+#         if source != target:
+#             try:
+#                 paths = list(nx.all_shortest_paths(G, source, target))
+#                 for path in paths:
+#                     print(f"{source} to {target}: {path}")
+#             except nx.NetworkXNoPath:
+#                 print(f"No path between {source} and {target}")

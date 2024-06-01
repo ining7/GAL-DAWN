@@ -103,13 +103,17 @@ void Graph::createGraph(std::string& input_path, Graph::Graph_t& graph) {
   std::string format;
   ss >> format;
   if (format == "%%MatrixMarket") {
-    std::string object, format, field, symmetry;
-    ss >> object >> format >> field >> symmetry;
-    if (symmetry != "symmetric") {
-      graph.directed = true;
-      std::cout << "Genral" << std::endl;
+    std::string object, format, datatype, symmetry;
+    ss >> object >> format >> datatype >> symmetry;
+    if (datatype == "pattern") {
+      graph.weighted = false;
     } else {
+      graph.weighted = true;
+    }
+    if (symmetry == "symmetric") {
       graph.directed = false;
+    } else {
+      graph.directed = true;
     }
   } else {
     std::cout << "invalid file" << std::endl;
@@ -222,7 +226,7 @@ void Graph::readGraph_Directed(std::string& input_path, Graph::Graph_t& graph) {
   file.close();
 
   graph.nnz = i;
-  std::cout << "nnz: " << graph.nnz << std::endl;
+  // std::cout << "nnz: " << graph.nnz << std::endl;
 
   transpose(graph.nnz, graph.coo);
   coo2Csr(graph.rows, graph.nnz, graph.csr, graph.coo);
@@ -305,7 +309,7 @@ void Graph::readGraph_Directed_Weighted(std::string& input_path,
   int rows, cols;
   float vals;
   int i = 0;
-  std::cout << "nnz: " << graph.nnz << std::endl;
+  // std::cout << "nnz: " << graph.nnz << std::endl;
   while (std::getline(file, line)) {
     if (line[0] == '%')
       continue;
@@ -323,7 +327,7 @@ void Graph::readGraph_Directed_Weighted(std::string& input_path,
   file.close();
 
   graph.nnz = i;
-  std::cout << "nnz: " << graph.nnz << std::endl;
+  // std::cout << "nnz: " << graph.nnz << std::endl;
 
   transpose_Weighted(graph.nnz, graph.coo);
   coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);

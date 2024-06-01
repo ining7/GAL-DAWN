@@ -27,9 +27,11 @@ bool kernel(int* row_ptr,
             std::deque<int>& path_length,
             float*& bc_temp,
             int step,
-            bool is_converged);
-void accelerate(std::vector<std::queue<int>>& path,
+            bool is_converged,
+            int source);
+void accumulate(std::vector<std::queue<int>>& path,
                 std::deque<int>& path_length,
-                float*& bc_temp);
+                float*& bc_temp,
+                int source);
 }  // namespace BC_CPU
 }  // namespace DAWN
