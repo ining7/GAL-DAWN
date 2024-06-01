@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
   DAWN::Graph::createGraph(input_path, graph);
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
-  float elapsed_time = DAWN::BC_CPU::test(graph, output_path);
+  float elapsed_time = DAWN::BC_CPU::Betweenness_Centrality(graph, output_path);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time);
   // }
 
