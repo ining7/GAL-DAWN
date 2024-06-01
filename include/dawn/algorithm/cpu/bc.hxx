@@ -10,30 +10,26 @@
 namespace DAWN {
 namespace BC_CPU {
 
-float kernel(Graph::Graph_t& graph, int source, std::string& output_path);
-
-float kernel_Weighted(Graph::Graph_t& graph,
-                      int source,
-                      std::string& output_path);
-
 float Betweenness_Centrality(Graph::Graph_t& graph, std::string& output_path);
 
-float Betweenness_Centrality_Weighted(Graph::Graph_t& graph,
-                                      std::string& output_path);
+float test(DAWN::Graph::Graph_t& graph, std::string& output_path);
 
-int SOVM_kernel(Graph::Graph_t& graph,
-                int*& alpha,
-                int*& beta,
-                int*& distance,
-                int*& amount,
-                int step,
-                int entry);
+float SOVM(int* row_ptr, int* col, int row, int source, float*& bc_temp);
 
-int GOVM_kernel(Graph::Graph_t& graph,
-                int*& alpha,
-                int*& beta,
-                float*& distance,
-                int entry);
-
+bool kernel(int* row_ptr,
+            int* col,
+            int row,
+            bool*& alpha,
+            bool*& beta,
+            bool*& gamma,
+            int*& amount,
+            std::vector<std::queue<int>>& path,
+            std::deque<int>& path_length,
+            float*& bc_temp,
+            int step,
+            bool is_converged);
+void accelerate(std::vector<std::queue<int>>& path,
+                std::deque<int>& path_length,
+                float*& bc_temp);
 }  // namespace BC_CPU
 }  // namespace DAWN

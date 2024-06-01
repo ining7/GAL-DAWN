@@ -12,9 +12,6 @@ set(APSP_GPU_SOURCES
 add_executable(apsp_gpu ${APSP_GPU_SOURCES})
 target_include_directories(apsp_gpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
-# Require CUDA
-find_package(CUDAToolkit REQUIRED)
-
 # Set properties for CUDA
 set_property(TARGET apsp_gpu PROPERTY CUDA_STANDARD 14)
 set_property(TARGET apsp_gpu PROPERTY CUDA_ARCHITECTURES 86)

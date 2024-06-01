@@ -1,6 +1,3 @@
-
-set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
-
 set(CUDA_ARCHITECTURES "86")
 if(NOT DEFINED CUDA_ARCHITECTURES)
 set(CUDA_ARCHITECTURES "35;50;60;61;70;75;80;86" CACHE STRING "List of target NVIDIA GPU architectures")

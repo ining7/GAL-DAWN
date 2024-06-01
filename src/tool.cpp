@@ -63,6 +63,37 @@ void DAWN::Tool::outfile(int n,
   outfile.close();
 }
 
+void DAWN::Tool::outfile(int n, int* result, std::string& output_path) {
+  std::ofstream outfile(output_path);
+  if (!outfile.is_open()) {
+    std::cerr << "Error opening file " << output_path << std::endl;
+    return;
+  }
+  std::cout << "Start outfile" << std::endl;
+  for (int j = 0; j < n; j++) {
+    if (result[j] > 0)
+      outfile << j << " " << result[j] << std::endl;
+  }
+  std::cout << "End outfile" << std::endl;
+  outfile.close();
+}
+
+void DAWN::Tool::outfile(int n, float* result, std::string& output_path) {
+  std::ofstream outfile(output_path);
+  if (!outfile.is_open()) {
+    std::cerr << "Error opening file " << output_path << std::endl;
+    return;
+  }
+  std::cout << "Start outfile" << std::endl;
+  for (int j = 0; j < n; j++) {
+    if (result[j] > 0)
+      outfile << j << " " << std::fixed << std::setprecision(6) << result[j]
+              << std::endl;
+  }
+  std::cout << "End outfile" << std::endl;
+  outfile.close();
+}
+
 void DAWN::Tool::infoprint(int entry,
                            int total,
                            int interval,

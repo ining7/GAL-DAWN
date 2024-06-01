@@ -36,4 +36,4 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-//./sssp_gpu $GRAPH_DIR/XXX.mtx ../output.txt 1024 false 0
+//./bfs_gpu $GRAPH_DIR/XXX.mtx ../output.txt 1024 false 0

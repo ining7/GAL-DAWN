@@ -107,6 +107,7 @@ void Graph::createGraph(std::string& input_path, Graph::Graph_t& graph) {
     ss >> object >> format >> field >> symmetry;
     if (symmetry != "symmetric") {
       graph.directed = true;
+      std::cout << "Genral" << std::endl;
     } else {
       graph.directed = false;
     }
@@ -132,18 +133,15 @@ void Graph::createGraph(std::string& input_path, Graph::Graph_t& graph) {
   std::cout << "Read Input Graph" << std::endl;
 
   if (graph.directed) {
-    if (graph.weighted) {
+    if (graph.weighted)
       readGraph_Directed_Weighted(input_path, graph);
-
-    } else {
+    else
       readGraph_Directed(input_path, graph);
-    }
   } else {
-    if (graph.weighted) {
+    if (graph.weighted)
       readGraph_Weighted(input_path, graph);
-    } else {
+    else
       readGraph(input_path, graph);
-    }
   }
 }
 

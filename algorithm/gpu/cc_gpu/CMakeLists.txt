@@ -12,9 +12,6 @@ set(CC_GPU_SOURCES
 add_executable(cc_gpu ${CC_GPU_SOURCES})
 target_include_directories(cc_gpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
-# Require CUDA
-find_package(CUDAToolkit REQUIRED)
-
 # Set properties for CUDA
 set_property(TARGET cc_gpu PROPERTY CUDA_STANDARD 14)
 set_property(TARGET cc_gpu PROPERTY CUDA_ARCHITECTURES 86)
