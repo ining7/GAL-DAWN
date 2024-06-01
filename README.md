@@ -13,7 +13,11 @@ DAWN requires $O(m)$ space and $O(S_{wcc} \cdot E_{wcc})$ times on the unweighte
 
 ## Development Status
 
-Currently, the rapid closeness centrality algorithm based on DAWN has been implemented, while work on the betweenness centrality algorithm is still ongoing. We are very interested in developing a new BC algorithm based on DAWN, which means that the BC algorithm will not appear in this library in the short term. We encourage colleagues to complete the implementation of the Brandes algorithm before the new algorithm is implemented.
+The betweenness centrality implementation based on DAWN is currently under development, and CPU version has appeared in the dev branch. We have utilized an accumulation technique and graph traversal approach of DAWN that differs from the Brandes algorithm, which is a novel algorithm with lower time and space complexity, tentatively named BCDAWN. Moving forward, our focus will be on parallelizing the current CPU version and developing a GPU version. We plan to release a paper describing the technical details of the weighted version of DAWN and the BCDAWN algorithm at an appropriate time, and these implementations will be made available for early access. We still encourage colleagues to complete the implementation of the Brandes algorithm.
+
+We welcome any interest and ideas related to DAWN and its applications. If you are interested in DAWN algorithms and their applications, please feel free to share your thoughts via [email](<1289539524@qq.com>), and we will do our best to assist you in your research based on DAWN.
+
+The repository contributors and paper authors hold all rights to the code currently in the repository and the corresponding publications. If you are interested in work related to the DAWN algorithm and are developing new algorithms, please be mindful of not replicating the technical implementations currently in our repository. If you are working on engineering optimizations for algorithms like DAWN, please promptly create a fork and raise issues in this repository to avoid instances of plagiarism and preemptive paper publication.
 
 | Algorithm           | Release |
 | ------------------- | ------- |
@@ -26,9 +30,7 @@ Currently, the rapid closeness centrality algorithm based on DAWN has been imple
 | Cluster Analysis    | Future  |
 | Community Detection | Future  |
 
-In the future, we plan to develop more algorithms based on DAWN, including but not limited to Between Centrality, Closeness Centrality, etc. Further applications of these algorithms, such as community detection, clustering, and path planning, are also on our agenda.
-
-We welcome any interest and ideas related to DAWN and its applications. If you are interested in DAWN algorithms and their applications, please feel free to share your thoughts via [email](<1289539524@qq.com>), and we will do our best to assist you in your research based on DAWN.
+Further applications of these algorithms, such as community detection, clustering, and path planning, are also on our agenda.
 
 The DAWN component based on Gunrock may be released to the main/develop branch in the near future, so please stay tuned to the [Gunrock](https://github.com/gunrock/gunrock). We will release new features of DAWN and the application algorithms based on DAWN on this repository. If the algorithms are also needed by Gunrock, we will contribute them to the Gunrock repository later.
 
