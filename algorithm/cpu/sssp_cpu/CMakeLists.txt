@@ -1,23 +1,19 @@
-# Specify source and header files
-file(GLOB sssp_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/include/algorithm/cpu/*.hxx" "${CMAKE_SOURCE_DIR}/include/*.hxx")
-
-# Define the CUDA sources
-set(sssp_CPU_SOURCES
-    sssp_cpu.cpp
-    ${sssp_SOURCES_CPP}
-)
+# Specify source
+file(GLOB SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 # Add the executable
-add_executable(sssp_cpu ${sssp_CPU_SOURCES})
+add_executable(sssp_cpu sssp_cpu.cpp ${SOURCES_CPP})
+
+# Include directories
 target_include_directories(sssp_cpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
-# Add compile options
-target_compile_options(sssp_cpu PUBLIC -O3 -fopenmp)
+# Compile options
+target_compile_options(sssp_cpu PUBLIC -O3)
 
-# Find OpenMP package
-find_package(OpenMP REQUIRED)
+# Find and link OpenMP
+find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
+    target_compile_options(sssp_cpu PUBLIC -fopenmp)
     target_link_libraries(sssp_cpu PUBLIC OpenMP::OpenMP_CXX)
 endif()
 

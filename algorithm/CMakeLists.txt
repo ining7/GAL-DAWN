@@ -1,9 +1,8 @@
 # Add subdirectories conditionally
-find_program(NVCC_EXECUTABLE nvcc)
 add_subdirectory(cpu)
+find_program(NVCC_EXECUTABLE nvcc)
 if(NVCC_EXECUTABLE)
-    message(STATUS "NVCC found: ${NVCC_EXECUTABLE}")
-    # add_subdirectory(gpu)
+    add_subdirectory(gpu)
 else()
-    message(STATUS "NVCC not found, only building CPU version")
+    message(STATUS "NVIDIA CUDA Compiler (NVCC) not found. Building CPU version only.")
 endif()

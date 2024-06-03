@@ -1,15 +1,8 @@
 # Specify source and header files
-file(GLOB MSSP_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/algorithm/gpu/*.cu" "${CMAKE_SOURCE_DIR}/src/*.cu")
-file(GLOB MSSP_HEADERS "${CMAKE_SOURCE_DIR}/include/algorithm/gpu/*.cuh" "${CMAKE_SOURCE_DIR}/include/*.hxx" "${CMAKE_SOURCE_DIR}/include/dawn.cuh")
-
-# Define the CUDA sources
-set(MSSP_GPU_SOURCES
-    mssp_gpu.cu
-    ${MSSP_SOURCES}
-)
+file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/algorithm/gpu/*.cu" "${CMAKE_SOURCE_DIR}/src/*.cu")
 
 # Add the executable
-add_executable(mssp_gpu ${MSSP_GPU_SOURCES})
+add_executable(mssp_gpu mssp_gpu.cu ${SOURCES})
 target_include_directories(mssp_gpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
 # Set properties for CUDA
@@ -27,4 +20,5 @@ find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(mssp_gpu PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
 

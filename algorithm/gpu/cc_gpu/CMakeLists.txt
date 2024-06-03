@@ -1,15 +1,8 @@
 # Specify source and header files
-file(GLOB CC_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/algorithm/gpu/*.cu" "${CMAKE_SOURCE_DIR}/src/*.cu")
-file(GLOB CC_HEADERS "${CMAKE_SOURCE_DIR}/include/algorithm/gpu/*.cuh" "${CMAKE_SOURCE_DIR}/include/*.hxx" "${CMAKE_SOURCE_DIR}/include/dawn.cuh")
-
-# Define the CUDA sources
-set(CC_GPU_SOURCES
-    cc_gpu.cu
-    ${CC_SOURCES}
-)
+file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/algorithm/gpu/*.cu" "${CMAKE_SOURCE_DIR}/src/*.cu")
 
 # Add the executable
-add_executable(cc_gpu ${CC_GPU_SOURCES})
+add_executable(cc_gpu cc_gpu.cu ${SOURCES})
 target_include_directories(cc_gpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
 # Set properties for CUDA

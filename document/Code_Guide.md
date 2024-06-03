@@ -79,26 +79,22 @@ The project is structured with a four-tier hierarchy of `CMakeLists.txt` files, 
 Copy the `CMakeLists.txt` file from the `algorithm/cpu/XXX/` directory to the `algorithm/cpu/example/` directory. You will get a `CMakeLists.txt` file that looks like this:
 
 ```cmake
-# Specify source and header files
-file(GLOB XXX_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/include/algorithm/cpu/*.hxx" "${CMAKE_SOURCE_DIR}/include/*.hxx")
-
-# Define the CUDA sources
-set(XXX_CPU_SOURCES
-    XXX_cpu.cpp
-    ${XXX_SOURCES_CPP}
-)
+# Specify source
+file(GLOB SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 # Add the executable
-add_executable(xxx_cpu ${XXX_CPU_SOURCES})
+add_executable(xxx_cpu xxx_cpu.cpp ${SOURCES_CPP})
+
+# Include directories
 target_include_directories(xxx_cpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
-# Add compile options
-target_compile_options(xxx_cpu PUBLIC -O3 -fopenmp)
+# Compile options
+target_compile_options(xxx_cpu PUBLIC -O3)
 
-# Find OpenMP package
-find_package(OpenMP REQUIRED)
+# Find and link OpenMP
+find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
+    target_compile_options(xxx_cpu PUBLIC -fopenmp)
     target_link_libraries(xxx_cpu PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
@@ -110,11 +106,8 @@ endif()
 
 ```cmake
 # Add subdirectories conditionally
-add_subdirectory(apsp_cpu)
-add_subdirectory(mssp_cpu)
-add_subdirectory(sssp_cpu)
 add_subdirectory(bfs_cpu)
-add_subdirectory(cc_cpu)
+# ...other component
 # Add new algorithm here, like this
 add_subdirectory(example_cpu)
 ```
