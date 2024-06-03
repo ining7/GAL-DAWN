@@ -1,23 +1,19 @@
-# Specify source and header files
-file(GLOB BFS_SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
-file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/include/algorithm/cpu/*.hxx" "${CMAKE_SOURCE_DIR}/include/*.hxx")
-
-# Define the CUDA sources
-set(BFS_CPU_SOURCES
-    bfs_cpu.cpp
-    ${BFS_SOURCES_CPP}
-)
+# Specify source
+file(GLOB SOURCES_CPP "${CMAKE_SOURCE_DIR}/src/algorithm/cpu/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 # Add the executable
-add_executable(bfs_cpu ${BFS_CPU_SOURCES})
+add_executable(bfs_cpu bfs_cpu.cpp ${SOURCES_CPP})
+
+# Include directories
 target_include_directories(bfs_cpu PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
-# Add compile options
-target_compile_options(bfs_cpu PUBLIC -O3 -fopenmp)
+# Compile options
+target_compile_options(bfs_cpu PUBLIC -O3)
 
-# Find OpenMP package
-find_package(OpenMP REQUIRED)
+# Find and link OpenMP
+find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
+    target_compile_options(bfs_cpu PUBLIC -fopenmp)
     target_link_libraries(bfs_cpu PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
