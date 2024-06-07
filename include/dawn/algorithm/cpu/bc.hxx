@@ -12,8 +12,6 @@ namespace BC_CPU {
 
 float Betweenness_Centrality(Graph::Graph_t& graph, std::string& output_path);
 
-float test(DAWN::Graph::Graph_t& graph, std::string& output_path);
-
 float SOVM(int* row_ptr, int* col, int row, int source, float*& bc_temp);
 
 bool kernel(int* row_ptr,

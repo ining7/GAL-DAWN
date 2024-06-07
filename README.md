@@ -1,13 +1,19 @@
-# DAWN: An Noval SSSP/APSP Algorithm, CUDA/C++
+# GAL-DAWN: An Novel Graph Algorithm Library based on DAWN, CUDA/C++
 
-DAWN is a novel shortest paths algorithm, which is suitable for weighted and unweighted graphs. In contrast to the prevalent optimization of state-of-the-art BFS implementation, which commonly rely on priority queues, our approach leverages matrix operations to endow DAWN with enhanced parallelism. DAWN is capable of solving the shortest path problems on graphs with negative weights, and can automatically exclude the influence of negative weight cycles.
+GAL-DAWN is a novel Graph Algorithm Library, with all algorithms developed on the DAWN, utilizing CUDA and C++ for enhanced performance and efficiency.
 
-DAWN requires $O(m)$ space and $O(S_{wcc} \cdot E_{wcc})$ times on the unweighted graphs, which can also process SSSP tasks and requires $O(E_{wcc}(i))$ time. $S_{wcc}$ and $E_{wcc}$ denote the number of nodes and edges included in the largest WCC (Weakly Connected Component) in the graphs.
+DAWN is a novel shortest path algorithm that enhances parallelism through the use of matrix operations, thus eliminating the need for priority queues. Prior to this, mainstream research on optimizing shortest path algorithms primarily concentrated on improving the parallel performance of priority queues. For a more in-depth understanding of DAWN, please refer to the papers listed below.
+
+DAWN and [Gunrock](https://github.com/gunrock/gunrock) have a well-established collaborative relationship. DAWN is fully compatible with Gunrock, and dedicated files are included in the main branch of Gunrock. When using the BFS API in Gunrock, the default implementation employs DAWN for unweighted graphs. If you prefer to use the original BFS in Gunrock, please follow the provided instructions to modify the source files accordingly.
+
+If you intend to use DAWN as a baseline algorithm and aim to surpass its performance on the GPU, we recommend utilizing the DAWN API available in the Gunrock repository rather than the GPU functions in this repository. The GPU functions here are subject to modifications for testing optimization feasibilities, which may occasionally lead to suboptimal performance and potential misinterpretations of results. Gunrock is a specialized library for graph computing within CUDA-X, and its components are consistently reliable. 
+
+For CPU-based work, the above recommendation does not apply; you can directly use the code from this repository.
 
 | [**Examples**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/algorithm) | [**Documentation**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/document) | [**Test**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/test) |
 | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-- Examples: Demonstrate the usage of algorithms in DAWN.
-- Document: Provides the detailed description of DAWN, include the **Quick_Start** and **Code_Guide**. **Quick_Start** provides the guide for quickly working with DAWN. **Code_Guide** provides the detailed description for how to implement own algorithm in DAWN.
+- Examples: Demonstrate the usage of algorithms in GAL-DAWN.
+- Document: Provides the detailed description of GAL-DAWN, include the **Quick_Start** and **Code_Guide**. **Quick_Start** provides the guide for quickly working with GAL-DAWN. **Code_Guide** provides the detailed description for how to implement own algorithm in GAL-DAWN.
 - Test: Provides the detailed information of Testing.
 
 
@@ -30,20 +36,24 @@ The repository contributors and paper authors hold all rights to the code curren
 | Cluster Analysis    | Future  |
 | Community Detection | Future  |
 
-Further applications of these algorithms, such as community detection, clustering, and path planning, are also on our agenda.
-
-The DAWN component based on Gunrock may be released to the main/develop branch in the near future, so please stay tuned to the [Gunrock](https://github.com/gunrock/gunrock). We will release new features of DAWN and the application algorithms based on DAWN on this repository. If the algorithms are also needed by Gunrock, we will contribute them to the Gunrock repository later.
+Further applications of these algorithms, such as community detection, clustering, and path planning, are also on our agenda. We will release new features of DAWN and the application algorithms based on DAWN on this repository. If the algorithms are also needed by Gunrock, we will contribute them to the Gunrock repository later.
 
 ## How to Cite DAWN
 Thank you for citing our work. 
 
 ```bibtex
-@InProceedings{Feng:2024:DAWN,
-  author =	 {Yelai Feng and Huaixi Wang and Yining Zhu and Xiandong Liu and Hongyi Lu and Qing Liu},
-  title =	 {DAWN: Matrix Operation-Optimized Algorithm for Shortest Paths Problem on Unweighted Graphs},
-  booktitle =	 {Proceedings of the 38th ACM International Conference on Supercomputing},
-  year =	 {2024},
-  doi =		 {10.1145/3650200.3656600}
+@inproceedings{dawn,
+author = {Feng, Yelai and Wang, Huaixi and Zhu, Yining and Liu, Xiandong and Lu, Hongyi and Liu, Qing},
+title = {DAWN: Matrix Operation-Optimized Algorithm for Shortest Paths Problem on Unweighted Graphs},
+year = {2024},
+isbn = {9798400706103},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+doi = {10.1145/3650200.3656600}, 
+url = {https://doi.org/10.1145/3650200.3656600},
+booktitle = {Proceedings of the 38th {ACM} International Conference on Supercomputing,  {ICS} 2024, Kyoto, Japan, June 4-7, 2024},
+pages = {1–13},
+series = {ICS '24}
 }
 ```
 

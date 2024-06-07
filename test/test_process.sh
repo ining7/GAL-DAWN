@@ -12,7 +12,7 @@ GRAPH_DIR=""
 SourceList=""
 OUTPUT="output.txt"
 Interval="100"
-Prinft="false"
+Print="false"
 Stream="4"
 Block_size="1024"
 Weighted="unweighted"
@@ -42,9 +42,9 @@ for file in ${GRAPH_DIR}/*.mtx; do
     echo "Proccessing ${file}! Please check the log file for details."
     # Use the command you need.
     # test cpu
-    "${MAIN}/mssp_cpu" "${file}" "${OUTPUT}" "${Prinft}" "${SourceList}" "${Weighted}"| tee "${LOG_DIR}/${filename}_log.txt" 
+    "${MAIN}/mssp_cpu" "${file}" "${OUTPUT}" "${Print}" "${SourceList}" "${Weighted}"| tee "${LOG_DIR}/${filename}_log.txt" 
     # test gpu
-    "${MAIN}/mssp_gpu" "${file}" "${OUTPUT}" "${Stream}" "${Block_size}" "${Prinft}" "${SourceList}" "${Weighted}" | tee "${LOG_DIR}/${filename}_log.txt" 
+    "${MAIN}/mssp_gpu" "${file}" "${OUTPUT}" "${Stream}" "${Block_size}" "${Print}" "${SourceList}" "${Weighted}" | tee "${LOG_DIR}/${filename}_log.txt" 
 done
 
 echo "All done!"

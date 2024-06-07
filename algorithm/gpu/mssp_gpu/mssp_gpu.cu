@@ -13,17 +13,17 @@ int main(int argc, char* argv[]) {
   std::string output_path = argv[2];
   graph.stream = atoi(argv[3]);
   graph.block_size = atoi(argv[4]);
-  std::string prinft = argv[5];
+  std::string print = argv[5];
   std::string sourceList = argv[6];
   std::string weighted = argv[7];
 
   graph.interval = 100;
 
-  if (prinft == "true") {
-    graph.prinft = true;
-    std::cout << "Prinft source " << graph.source << std::endl;
+  if (print == "true") {
+    graph.print = true;
+    std::cout << "Print source " << graph.source << std::endl;
   } else {
-    graph.prinft = false;
+    graph.print = false;
   }
 
   DAWN::Graph::createGraph(input_path, graph);

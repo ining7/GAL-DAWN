@@ -13,58 +13,57 @@ float DAWN::BFS_CPU::run(Graph::Graph_t& graph, std::string& output_path) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
-  float elapsed_time = DAWN::BFS_CPU::BFSp(graph, source, output_path) / 1000;
+  float elapsed_time = DAWN::BFS_CPU::BFS(graph.csr.row_ptr, graph.csr.col, row,
+                                          source, graph.print, output_path) /
+                       1000;
   return elapsed_time;
 }
 
 // kernel
-float DAWN::BFS_CPU::BFSp(Graph::Graph_t& graph,
-                          int source,
-                          std::string& output_path) {
+float DAWN::BFS_CPU::BFS(int* row_ptr,
+                         int* col,
+                         int row,
+                         int source,
+                         bool print,
+                         std::string& output_path) {
   int step = 1;
   bool is_converged = false;
-  auto row = graph.rows;
   bool* alpha = new bool[row];
   bool* beta = new bool[row];
   int* distance = new int[row];
-  float elapsed = 0.0f;
+  float elapsed_time = 0.0f;
 
   std::fill_n(alpha, row, false);
   std::fill_n(beta, row, false);
   std::fill_n(distance, row, 0);
 
 #pragma omp parallel for
-  for (int i = graph.csr.row_ptr[source]; i < graph.csr.row_ptr[source + 1];
-       i++) {
-    alpha[graph.csr.col[i]] = true;
-    distance[graph.csr.col[i]] = 1;
+  for (int i = row_ptr[source]; i < row_ptr[source + 1]; i++) {
+    alpha[col[i]] = true;
+    distance[col[i]] = 1;
   }
 
   auto start = std::chrono::high_resolution_clock::now();
   while (step < row) {
     step++;
     if (!(step % 2))
-      is_converged = DAWN::BFS_CPU::SOVMP(graph, alpha, beta, distance, step);
+      is_converged =
+          DAWN::BFS_CPU::SOVMP(row_ptr, col, row, alpha, beta, distance, step);
     else
-      is_converged = DAWN::BFS_CPU::SOVMP(graph, beta, alpha, distance, step);
+      is_converged =
+          DAWN::BFS_CPU::SOVMP(row_ptr, col, row, beta, alpha, distance, step);
     if (is_converged) {
       break;
     }
   }
   auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
-
+  std::chrono::duration<double, std::milli> elapsed_time_tmp = end - start;
+  elapsed_time += elapsed_time_tmp.count();
   distance[source] = 0;
-  if (source == 0) {
-    for (int i = 0; i < row; i++) {
-      std::cout << graph.csr.row_ptr[i] << std::endl;
-    }
-  }
 
   // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
+  if (print) {
+    printf("Start print\n");
     DAWN::Tool::outfile(row, distance, source, output_path);
   }
 
@@ -74,49 +73,52 @@ float DAWN::BFS_CPU::BFSp(Graph::Graph_t& graph,
   alpha = nullptr;
   delete[] distance;
   distance = nullptr;
-  return elapsed;
+  return elapsed_time;
 }
 
-float DAWN::BFS_CPU::BFSs(Graph::Graph_t& graph,
-                          int source,
-                          std::string& output_path) {
+float DAWN::BFS_CPU::BFS_kernel(int* row_ptr,
+                                int* col,
+                                int row,
+                                int source,
+                                bool print,
+                                std::string& output_path) {
   int step = 1;
-  int entry = graph.csr.row_ptr[source + 1] - graph.csr.row_ptr[source];
-  auto row = graph.rows;
+  int entry = row_ptr[source + 1] - row_ptr[source];
   int* alpha = new int[row];
   int* beta = new int[row];
   int* distance = new int[row];
-  float elapsed = 0.0f;
+  float elapsed_time = 0.0f;
 
   std::fill_n(distance, row, 0);
   std::fill_n(alpha, row, 0);
   std::fill_n(beta, row, 0);
 
-  for (int i = graph.csr.row_ptr[source]; i < graph.csr.row_ptr[source + 1];
-       i++) {
-    distance[graph.csr.col[i]] = 1;
-    alpha[i - graph.csr.row_ptr[source]] = graph.csr.col[i];
+  for (int i = row_ptr[source]; i < row_ptr[source + 1]; i++) {
+    distance[col[i]] = 1;
+    alpha[i - row_ptr[source]] = col[i];
   }
   auto start = std::chrono::high_resolution_clock::now();
   while (step < row) {
     step++;
     if (!(step % 2))
-      entry = DAWN::BFS_CPU::SOVM(graph, alpha, beta, distance, step, entry);
+      entry = DAWN::BFS_CPU::SOVM(row_ptr, col, row, alpha, beta, distance,
+                                  step, entry);
     else
-      entry = DAWN::BFS_CPU::SOVM(graph, beta, alpha, distance, step, entry);
+      entry = DAWN::BFS_CPU::SOVM(row_ptr, col, row, beta, alpha, distance,
+                                  step, entry);
     if (!entry) {
       break;
     }
   }
   auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
+  std::chrono::duration<double, std::milli> elapsed_time_tmp = end - start;
+  elapsed_time += elapsed_time_tmp.count();
 
   distance[source] = 0;
 
   // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
+  if (print) {
+    printf("Start print\n");
     DAWN::Tool::outfile(row, distance, source, output_path);
   }
 
@@ -126,10 +128,12 @@ float DAWN::BFS_CPU::BFSs(Graph::Graph_t& graph,
   beta = nullptr;
   delete[] distance;
   distance = nullptr;
-  return elapsed;
+  return elapsed_time;
 }
 
-int DAWN::BFS_CPU::SOVM(Graph::Graph_t& graph,
+int DAWN::BFS_CPU::SOVM(int* row_ptr,
+                        int* col,
+                        int row,
                         int*& alpha,
                         int*& beta,
                         int*& distance,
@@ -137,13 +141,13 @@ int DAWN::BFS_CPU::SOVM(Graph::Graph_t& graph,
                         int entry) {
   int tmpEntry = 0;
   for (int j = 0; j < entry; j++) {
-    int start = graph.csr.row_ptr[alpha[j]];
-    int end = graph.csr.row_ptr[alpha[j] + 1];
+    int start = row_ptr[alpha[j]];
+    int end = row_ptr[alpha[j] + 1];
     if (start != end) {
       for (int k = start; k < end; k++) {
-        if (!distance[graph.csr.col[k]]) {
-          distance[graph.csr.col[k]] = step;
-          beta[tmpEntry] = graph.csr.col[k];
+        if (!distance[col[k]]) {
+          distance[col[k]] = step;
+          beta[tmpEntry] = col[k];
           ++tmpEntry;
         }
       }
@@ -152,23 +156,24 @@ int DAWN::BFS_CPU::SOVM(Graph::Graph_t& graph,
   return tmpEntry;
 }
 
-bool DAWN::BFS_CPU::SOVMP(Graph::Graph_t& graph,
+bool DAWN::BFS_CPU::SOVMP(int* row_ptr,
+                          int* col,
+                          int row,
                           bool*& alpha,
                           bool*& beta,
                           int*& distance,
                           int step) {
   bool converged = true;
-  auto row = graph.rows;
 #pragma omp parallel for
   for (int j = 0; j < row; j++) {
     if (alpha[j]) {
-      int start = graph.csr.row_ptr[j];
-      int end = graph.csr.row_ptr[j + 1];
+      int start = row_ptr[j];
+      int end = row_ptr[j + 1];
       if (start != end) {
         for (int k = start; k < end; k++) {
-          if (!distance[graph.csr.col[k]]) {
-            distance[graph.csr.col[k]] = step;
-            beta[graph.csr.col[k]] = true;
+          if (!distance[col[k]]) {
+            distance[col[k]] = step;
+            beta[col[k]] = true;
             converged = false;
           }
         }

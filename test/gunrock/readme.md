@@ -10,29 +10,29 @@ export PROJECT_ROOT=/home/lxr/sc2023/gunrock
 
 1. Modify $PROJECT_ROOT/examples/CMakeLists.txt
 
-# To tell the build system about apsp, add the following line to $PROJECT_ROOT/examples/CMakeLists.txt:
+# To tell the build system about mssp, add the following line to $PROJECT_ROOT/examples/CMakeLists.txt:
 
-add_subdirectory(apsp)
+add_subdirectory(mssp)
 
-2. Create examples/apsp/CMakeLists.txt
+2. Create examples/mssp/CMakeLists.txt
 
 cd $PROJECT_ROOT
 
 # create directory
 
-mkdir $PROJECT_ROOT/examples/apsp
+mkdir $PROJECT_ROOT/examples/mssp
 
-# copy boilerplate CMakeLists.txt to `examples/apsp`
+# copy boilerplate CMakeLists.txt to `examples/mssp`
 
-cp $PROJECT_ROOT/examples/algorithms/bfs/CMakeLists.txt $PROJECT_ROOT/examples/apsp/CMakeLists.txt
+cp $PROJECT_ROOT/examples/algorithms/bfs/CMakeLists.txt $PROJECT_ROOT/examples/mssp/CMakeLists.txt
 
-# change APPLICATION_NAME from `bfs` to `apsp`
+# change APPLICATION_NAME from `bfs` to `mssp`
 
-sed -i "s/set(APPLICATION_NAME bfs)/set(APPLICATION_NAME apsp)/" $PROJECT_ROOT/examples/apsp/CMakeLists.txt
+sed -i "s/set(APPLICATION_NAME bfs)/set(APPLICATION_NAME mssp)/" $PROJECT_ROOT/examples/mssp/CMakeLists.txt
 
-3. Create $PROJECT_ROOT/examples/apsp/apsp.cu
+3. Create $PROJECT_ROOT/examples/mssp/mssp.cu
 
-4. Create $PROJECT_ROOT/include/gunrock/algorithms/apsp.hxx
+4. Create $PROJECT_ROOT/include/gunrock/algorithms/mssp.hxx
 
 # We use sssp.hxx here.
 
@@ -42,9 +42,9 @@ cd $PROJECT_ROOT
 mkdir build
 cd build
 cmake ..
-make apsp -j
+make mssp -j
 
 # If compilation succeeds without errors, you can run your code as before:
 
 cd $PROJECT_ROOT/build
-./bin/apsp ../datasets/chesapeake/chesapeake.mtx
+./bin/mssp ../datasets/chesapeake/chesapeake.mtx

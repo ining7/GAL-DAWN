@@ -11,19 +11,32 @@ namespace BFS_CPU {
 
 float run(Graph::Graph_t& graph, std::string& output_path);
 
-// kernel
-float BFSp(Graph::Graph_t& graph, int source, std::string& output_path);
+float BFS(int* row_ptr,
+          int* col,
+          int row,
+          int source,
+          bool print,
+          std::string& output_path);
 
-float BFSs(Graph::Graph_t& graph, int source, std::string& output_path);
+float BFS_kernel(int* row_ptr,
+                 int* col,
+                 int row,
+                 int source,
+                 bool print,
+                 std::string& output_path);
 
-int SOVM(Graph::Graph_t& graph,
+int SOVM(int* row_ptr,
+         int* col,
+         int row,
          int*& alpha,
          int*& beta,
          int*& distance,
          int step,
          int entry);
 
-bool SOVMP(Graph::Graph_t& graph,
+bool SOVMP(int* row_ptr,
+           int* col,
+           int row,
            bool*& alpha,
            bool*& beta,
            int*& distance,

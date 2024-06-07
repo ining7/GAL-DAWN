@@ -36,7 +36,7 @@ G.remove_edges_from([(node, node) for node in self_loops])
 # print(G.edges())
 
 # print(nx.number_of_edges(graph) )
-# print(nx.is_directed(graph))
+print(nx.is_directed(G))
 
 # 介数中心性
 bc_value = nx.betweenness_centrality(G, normalized=False, weight=None)

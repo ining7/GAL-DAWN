@@ -13,20 +13,26 @@ float DAWN::SSSP_CPU::run(Graph::Graph_t& graph, std::string& output_path) {
     std::cout << "Source is isolated node, please check" << std::endl;
     exit(0);
   }
-  float elapsed_time = DAWN::SSSP_CPU::SSSPp(graph, source, output_path) / 1000;
+  float elapsed_time =
+      DAWN::SSSP_CPU::SSSP(graph.csr.row_ptr, graph.csr.col, graph.csr.val, row,
+                           source, graph.print, output_path) /
+      1000;
   return elapsed_time;
 }
 
-float DAWN::SSSP_CPU::SSSPp(Graph::Graph_t& graph,
-                            int source,
-                            std::string& output_path) {
+float DAWN::SSSP_CPU::SSSP(int* row_ptr,
+                           int* col,
+                           float* val,
+                           int row,
+                           int source,
+                           bool print,
+                           std::string& output_path) {
   int step = 1;
   bool is_converged = false;
-  auto row = graph.rows;
   bool* alpha = new bool[row];
   bool* beta = new bool[row];
   float* distance = new float[row];
-  float elapsed = 0.0f;
+  float elapsed_time = 0.0f;
   float INF = 1.0 * 0xfffffff;
 
   std::fill_n(alpha, row, false);
@@ -34,10 +40,9 @@ float DAWN::SSSP_CPU::SSSPp(Graph::Graph_t& graph,
   std::fill_n(distance, row, INF);
 
 #pragma omp parallel for
-  for (int i = graph.csr.row_ptr[source]; i < graph.csr.row_ptr[source + 1];
-       i++) {
-    distance[graph.csr.col[i]] = graph.csr.val[i];
-    alpha[graph.csr.col[i]] = true;
+  for (int i = row_ptr[source]; i < row_ptr[source + 1]; i++) {
+    distance[col[i]] = val[i];
+    alpha[col[i]] = true;
   }
   distance[source] = 0.0f;
 
@@ -45,20 +50,22 @@ float DAWN::SSSP_CPU::SSSPp(Graph::Graph_t& graph,
   while (step < row) {
     step++;
     if (!(step % 2))
-      is_converged = DAWN::SSSP_CPU::GOVMP(graph, alpha, beta, distance);
+      is_converged =
+          DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, alpha, beta, distance);
     else
-      is_converged = DAWN::SSSP_CPU::GOVMP(graph, beta, alpha, distance);
+      is_converged =
+          DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, beta, alpha, distance);
     if (is_converged) {
       break;
     }
   }
   auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
+  std::chrono::duration<double, std::milli> elapsed_time_tmp = end - start;
+  elapsed_time += elapsed_time_tmp.count();
 
   // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
+  if (print) {
+    printf("Start print\n");
     DAWN::Tool::outfile(row, distance, source, output_path);
   }
 
@@ -69,29 +76,31 @@ float DAWN::SSSP_CPU::SSSPp(Graph::Graph_t& graph,
   delete[] distance;
   distance = nullptr;
 
-  return elapsed;
+  return elapsed_time;
 }
 
-float DAWN::SSSP_CPU::SSSPs(Graph::Graph_t& graph,
-                            int source,
-                            std::string& output_path) {
+float DAWN::SSSP_CPU::SSSP_kernel(int* row_ptr,
+                                  int* col,
+                                  float* val,
+                                  int row,
+                                  int source,
+                                  bool print,
+                                  std::string& output_path) {
   int step = 1;
-  int entry = graph.csr.row_ptr[source + 1] - graph.csr.row_ptr[source];
-  auto row = graph.rows;
+  int entry = row_ptr[source + 1] - row_ptr[source];
   int* alpha = new int[row];
   int* beta = new int[row];
   float* distance = new float[row];
-  float elapsed = 0.0f;
+  float elapsed_time = 0.0f;
   float INF = 1.0 * 0xfffffff;
 
   std::fill_n(alpha, row, false);
   std::fill_n(beta, row, false);
   std::fill_n(distance, row, INF);
 
-  for (int i = graph.csr.row_ptr[source]; i < graph.csr.row_ptr[source + 1];
-       i++) {
-    distance[graph.csr.col[i]] = graph.csr.val[i];
-    alpha[i - graph.csr.row_ptr[source]] = graph.csr.col[i];
+  for (int i = row_ptr[source]; i < row_ptr[source + 1]; i++) {
+    distance[col[i]] = val[i];
+    alpha[i - row_ptr[source]] = col[i];
   }
 
   distance[source] = 0.0f;
@@ -100,20 +109,22 @@ float DAWN::SSSP_CPU::SSSPs(Graph::Graph_t& graph,
   while (step < row) {
     step++;
     if (!(step % 2))
-      entry = DAWN::SSSP_CPU::GOVM(graph, alpha, beta, distance, entry);
+      entry = DAWN::SSSP_CPU::GOVM(row_ptr, col, val, row, alpha, beta,
+                                   distance, entry);
     else
-      entry = DAWN::SSSP_CPU::GOVM(graph, beta, alpha, distance, entry);
+      entry = DAWN::SSSP_CPU::GOVM(row_ptr, col, val, row, beta, alpha,
+                                   distance, entry);
     if (!entry) {
       break;
     }
   }
   auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
+  std::chrono::duration<double, std::milli> elapsed_time_tmp = end - start;
+  elapsed_time += elapsed_time_tmp.count();
 
   // Output
-  if ((graph.prinft) && (source == graph.source)) {
-    printf("Start prinft\n");
+  if (print) {
+    printf("Start print\n");
     DAWN::Tool::outfile(row, distance, source, output_path);
   }
 
@@ -124,22 +135,25 @@ float DAWN::SSSP_CPU::SSSPs(Graph::Graph_t& graph,
   delete[] distance;
   distance = nullptr;
 
-  return elapsed;
+  return elapsed_time;
 }
 
-int DAWN::SSSP_CPU::GOVM(Graph::Graph_t& graph,
+int DAWN::SSSP_CPU::GOVM(int* row_ptr,
+                         int* col,
+                         float* val,
+                         int row,
                          int*& alpha,
                          int*& beta,
                          float*& distance,
                          int entry) {
   int tmpEntry = 0;
   for (int j = 0; j < entry; j++) {
-    int start = graph.csr.row_ptr[alpha[j]];
-    int end = graph.csr.row_ptr[alpha[j] + 1];
+    int start = row_ptr[alpha[j]];
+    int end = row_ptr[alpha[j] + 1];
     if (start != end) {
       for (int k = start; k < end; k++) {
-        int index = graph.csr.col[k];
-        float tmp = distance[j] + graph.csr.val[k];
+        int index = col[k];
+        float tmp = distance[j] + val[k];
         if (distance[index] > tmp) {
           distance[index] = std::min(distance[index], tmp);
           beta[tmpEntry] = index;
@@ -151,21 +165,23 @@ int DAWN::SSSP_CPU::GOVM(Graph::Graph_t& graph,
   return tmpEntry;
 }
 
-bool DAWN::SSSP_CPU::GOVMP(Graph::Graph_t& graph,
+bool DAWN::SSSP_CPU::GOVMP(int* row_ptr,
+                           int* col,
+                           float* val,
+                           int row,
                            bool*& alpha,
                            bool*& beta,
                            float*& distance) {
   bool converged = true;
-  auto row = graph.rows;
 #pragma omp parallel for
   for (int j = 0; j < row; j++) {
     if (alpha[j]) {
-      int start = graph.csr.row_ptr[j];
-      int end = graph.csr.row_ptr[j + 1];
+      int start = row_ptr[j];
+      int end = row_ptr[j + 1];
       if (start != end) {
         for (int k = start; k < end; k++) {
-          int index = graph.csr.col[k];
-          float tmp = distance[j] + graph.csr.val[k];
+          int index = col[k];
+          float tmp = distance[j] + val[k];
           if (distance[index] > tmp) {
             distance[index] = std::min(distance[index], tmp);
             beta[index] = true;

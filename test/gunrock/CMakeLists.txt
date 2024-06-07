@@ -1,5 +1,5 @@
 # begin /* Set the application name. */
-set(APPLICATION_NAME apsp)
+set(APPLICATION_NAME mssp)
 # end /* Set the application name. */
 
 # begin /* Add CUDA executables */
