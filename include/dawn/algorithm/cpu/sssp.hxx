@@ -12,18 +12,38 @@ namespace SSSP_CPU {
 // Shortest Path Algorithm
 float run(Graph::Graph_t& graph, std::string& output_path);
 
-// kernel
-float SSSPs(Graph::Graph_t& graph, int source, std::string& output_path);
+float SSSP(int* row_ptr,
+           int* col,
+           float* val,
+           int row,
+           int source,
+           bool print,
+           std::string& output_path);
 
-float SSSPp(Graph::Graph_t& graph, int source, std::string& output_path);
+float SSSP_kernel(int* row_ptr,
+                  int* col,
+                  float* val,
+                  int row,
+                  int source,
+                  bool print,
+                  std::string& output_path);
 
-int GOVM(Graph::Graph_t& graph,
+int GOVM(int* row_ptr,
+         int* col,
+         float* val,
+         int row,
          int*& alpha,
          int*& beta,
          float*& distance,
          int entry);
 
-bool GOVMP(Graph::Graph_t& graph, bool*& alpha, bool*& beta, float*& distance);
+bool GOVMP(int* row_ptr,
+           int* col,
+           float* val,
+           int row,
+           bool*& alpha,
+           bool*& beta,
+           float*& distance);
 
 }  // namespace SSSP_CPU
 }  // namespace DAWN

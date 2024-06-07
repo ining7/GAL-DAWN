@@ -31,12 +31,11 @@ class Graph_t {
   uint64_t nnz;
   Csr_t csr;
   Coo_t coo;
-  uint64_t entry;
   int thread;
   int interval;
   int stream;
   int block_size;
-  bool prinft;  // prinft the result
+  bool print;  // print the result
   int source;
   bool weighted;
   bool directed;

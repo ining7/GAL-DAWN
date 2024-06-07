@@ -100,17 +100,24 @@ void Graph::createGraph(std::string& input_path, Graph::Graph_t& graph) {
 
   std::getline(file, line);
   std::stringstream ss(line);
-  std::string format;
-  ss >> format;
-  if (format == "%%MatrixMarket") {
-    std::string object, format, datatype, symmetry;
-    ss >> object >> format >> datatype >> symmetry;
+  std::string format, object, matrixtype, datatype, direct;
+  ss >> format >> object >> matrixtype >> datatype >> direct;
+  if ((format == "%%MatrixMarket") && (matrixtype == "coordinate")) {
     if (datatype == "pattern") {
-      graph.weighted = false;
+      if (graph.weighted == true) {
+        std::cout << "This is an unweighted graph, but it has been instructed "
+                     "to use weighted functions for computation. It has been "
+                     "changed to unweight functions."
+                  << std::endl;
+        graph.weighted = false;
+      }
     } else {
-      graph.weighted = true;
+      if (graph.weighted == false)
+        std::cout << "This is a weighted graph, and it has been instructed "
+                     "to use unweighted functions for computation. "
+                  << std::endl;
     }
-    if (symmetry == "symmetric") {
+    if (direct == "symmetric") {
       graph.directed = false;
     } else {
       graph.directed = true;
@@ -132,7 +139,6 @@ void Graph::createGraph(std::string& input_path, Graph::Graph_t& graph) {
   graph.rows = rows;
   graph.cols = cols;
   graph.nnz = nnz;
-  graph.entry = 0;
 
   std::cout << "Read Input Graph" << std::endl;
 

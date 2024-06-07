@@ -44,7 +44,7 @@ float DAWN::BC_CPU::SOVM(int* row_ptr,
                          int source,
                          float*& bc_temp) {
   int step = 1;
-  float elapsed = 0.0f;
+  float elapsed_time = 0.0f;
   bool is_converged = false;
   bool* alpha = new bool[row]();
   bool* beta = new bool[row]();
@@ -95,8 +95,8 @@ float DAWN::BC_CPU::SOVM(int* row_ptr,
   // }
   DAWN::BC_CPU::accumulate(path, path_length, bc_temp, source);
   auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> elapsed_tmp = end - start;
-  elapsed += elapsed_tmp.count();
+  std::chrono::duration<double, std::milli> elapsed_time_tmp = end - start;
+  elapsed_time += elapsed_time_tmp.count();
 
   delete[] alpha;
   alpha = nullptr;
@@ -107,7 +107,7 @@ float DAWN::BC_CPU::SOVM(int* row_ptr,
   delete[] amount;
   amount = nullptr;
 
-  return elapsed;
+  return elapsed_time;
 }
 
 bool DAWN::BC_CPU::kernel(int* row_ptr,
@@ -147,7 +147,7 @@ bool DAWN::BC_CPU::kernel(int* row_ptr,
   while (!tmp.empty()) {
     int through = tmp.front().first;
     int reach = tmp.front().second;
-    if (reach != source) {
+    if ((reach != source) && (through != source)) {
       path[reach].push(through);
       bc_temp[through] += (1.0f / amount[reach]);
       // printf("bc_temp[%d](%f) += (1 / amount[%d])(%f);\n", through,
@@ -179,14 +179,14 @@ void DAWN::BC_CPU::accumulate(std::vector<std::queue<int>>& path,
     path_length.pop_back();
     while (!path[reach].empty()) {
       int through = path[reach].front();
-      // if (through != source) {
-      bc_temp[through] += bc_temp[reach];
-      // printf(
-      //     "{through, reach, bc_temp[reach], bc_temp[through] "
-      //     "}{%d,%d,%lf,%lf}\n",
-      //     through, reach, bc_temp[reach], bc_temp[through]);
-      path[reach].pop();
+      if ((reach != source) && (through != source)) {
+        bc_temp[through] += bc_temp[reach];
+        // printf(
+        //     "{through, reach, bc_temp[reach], bc_temp[through] "
+        //     "}{%d,%d,%lf,%lf}\n",
+        //     through, reach, bc_temp[reach], bc_temp[through]);
+        path[reach].pop();
+      }
     }
-    // }
   }
 }

@@ -119,9 +119,9 @@ float DAWN::SSSP_GPU::kernel(DAWN::Graph::Graph_t& graph,
   elapsed_time += elapsed.count();
 
   // Output
-  if ((graph.prinft) && (source == graph.source)) {
+  if ((graph.print) && (source == graph.source)) {
     thrust::copy(d_distance.begin(), d_distance.end(), h_distance.begin());
-    printf("Start prinft\n");
+    printf("Start print\n");
 
     DAWN::Tool::outfile(graph.rows, h_distance.data(), source, output_path);
   }

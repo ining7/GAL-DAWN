@@ -12,9 +12,8 @@ int main(int argc, char* argv[]) {
   std::string output_path = argv[2];
   // std::string weighted = argv[3];
 
-  graph.stream = 1;
   graph.thread = omp_get_num_threads();
-  graph.prinft = true;
+  graph.print = true;
   graph.interval = 100;
 
   // if (weighted == "true") {
