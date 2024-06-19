@@ -15,7 +15,6 @@ float DAWN::Tool::average(int* result, int n) {
 float DAWN::Tool::average(float* result, int n) {
   int i = 0;
   float sum = 0.0f;
-  float INF = 1.0 * 0xfffffff;
   for (int j = 0; j < n; j++) {
     if (result[j] > 0) {
       sum += result[j];
@@ -55,9 +54,8 @@ void DAWN::Tool::outfile(int n,
   int INF = 0xfffffff;
   std::cout << "Start outfile" << std::endl;
   for (int j = 0; j < n; j++) {
-    if ((source != j) && (result[j] < INF) && (result[j] > 0))
-      outfile << source << " " << j << " " << std::fixed << std::setprecision(6)
-              << result[j] << std::endl;
+    if ((source != j) && (result[j] != 0))
+      outfile << source << " " << j << " " << result[j] << std::endl;
   }
   std::cout << "End outfile" << std::endl;
   outfile.close();
@@ -86,7 +84,7 @@ void DAWN::Tool::outfile(int n, float* result, std::string& output_path) {
   }
   std::cout << "Start outfile" << std::endl;
   for (int j = 0; j < n; j++) {
-    if (result[j] > 0)
+    if (result[j] != 0)
       outfile << j << " " << std::fixed << std::setprecision(6) << result[j]
               << std::endl;
   }

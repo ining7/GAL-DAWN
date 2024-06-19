@@ -133,7 +133,7 @@ float DAWN::CC_GPU::kernel_Weighted(DAWN::Graph::Graph_t& graph,
                                     thrust::device_vector<float> d_val) {
   int step = 1;
   auto row = graph.rows;
-  float INF = 1.0 * 0xfffffff;
+  float INF = std::numeric_limits<float>::max();
 
   thrust::host_vector<bool> h_alpha(row, 0);
   thrust::host_vector<bool> h_beta(row, 0);

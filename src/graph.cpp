@@ -14,8 +14,8 @@ void Graph::transpose_Weighted(int nnz, DAWN::Graph::Coo_t& coo) {
   }
   std::sort(tmp.begin(), tmp.end());
   for (int i = 0; i < nnz; i++) {
-    coo.row[i] = tmp[i].second.first;
-    coo.col[i] = tmp[i].first;
+    coo.row[i] = tmp[i].first;
+    coo.col[i] = tmp[i].second.first;
     coo.val[i] = tmp[i].second.second;
   }
 }
@@ -100,22 +100,24 @@ void Graph::createGraph(std::string& input_path, Graph::Graph_t& graph) {
 
   std::getline(file, line);
   std::stringstream ss(line);
+  bool tmp_weight = false;
   std::string format, object, matrixtype, datatype, direct;
   ss >> format >> object >> matrixtype >> datatype >> direct;
   if ((format == "%%MatrixMarket") && (matrixtype == "coordinate")) {
     if (datatype == "pattern") {
-      if (graph.weighted == true) {
+      tmp_weight = false;
+      if (graph.weighted != tmp_weight) {
         std::cout << "This is an unweighted graph, but it has been instructed "
-                     "to use weighted functions for computation. It has been "
-                     "changed to unweight functions."
+                     "to use weighted functions for computation."
                   << std::endl;
-        graph.weighted = false;
       }
     } else {
-      if (graph.weighted == false)
+      tmp_weight = true;
+      if (graph.weighted != tmp_weight) {
         std::cout << "This is a weighted graph, and it has been instructed "
                      "to use unweighted functions for computation. "
                   << std::endl;
+      }
     }
     if (direct == "symmetric") {
       graph.directed = false;
@@ -333,7 +335,6 @@ void Graph::readGraph_Directed_Weighted(std::string& input_path,
   file.close();
 
   graph.nnz = i;
-  // std::cout << "nnz: " << graph.nnz << std::endl;
 
   transpose_Weighted(graph.nnz, graph.coo);
   coo2Csr_Weighted(graph.rows, graph.nnz, graph.csr, graph.coo);

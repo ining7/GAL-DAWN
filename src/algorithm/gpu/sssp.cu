@@ -45,8 +45,8 @@ __global__ void GOVM(const int* row_ptr,
       for (int k = start; k < end; k++) {
         int index = col[k];
         float tmp = distance[j] + val[k];
-        if (distance[index] > tmp) {
-          atomicMin(&distance[index], tmp);
+        float old_distance = atomicMin(&distance[index], tmp);
+        if (old_distance > tmp) {
           beta[index] = true;
           if ((!ptr[0]) && (index != source))
             ptr[0] = true;
@@ -64,7 +64,7 @@ float DAWN::SSSP_GPU::kernel(DAWN::Graph::Graph_t& graph,
                              thrust::device_vector<float> d_val,
                              std::string& output_path) {
   int step = 1;
-  float INF = 1.0 * 0xfffffff;
+  float INF = std::numeric_limits<float>::max();
 
   thrust::host_vector<bool> h_alpha(graph.rows, 0);
   thrust::host_vector<bool> h_beta(graph.rows, 0);
