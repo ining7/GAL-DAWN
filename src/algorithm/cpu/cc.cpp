@@ -98,7 +98,7 @@ float DAWN::CC_CPU::kernel_Weighted(int* row_ptr,
   bool* alpha = new bool[row];
   bool* beta = new bool[row];
   float* distance = new float[row];
-  float INF = 1.0 * 0xfffffff;
+  float INF = std::numeric_limits<float>::max();
 
   std::fill_n(alpha, row, false);
   std::fill_n(beta, row, false);
@@ -115,11 +115,11 @@ float DAWN::CC_CPU::kernel_Weighted(int* row_ptr,
   while (step < row) {
     step++;
     if (!(step % 2))
-      is_converged =
-          DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, alpha, beta, distance);
+      is_converged = DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, alpha, beta,
+                                           distance, source);
     else
-      is_converged =
-          DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, beta, alpha, distance);
+      is_converged = DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, beta, alpha,
+                                           distance, source);
     if (is_converged) {
       break;
     }

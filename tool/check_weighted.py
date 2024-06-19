@@ -1,26 +1,17 @@
 import networkx as nx
 import numpy as np
 import argparse
+import scipy
+import matplotlib.pyplot as plt
+
 
 # 读取mtx格式的矩阵文件，返回为稀疏矩阵的coo表示格式
 
 
-def read_mtx_file(filename):
-    with open(filename, "r") as f:
-        # 跳过头部注释行
-        while True:
-            line = f.readline()
-            if not line.startswith("%"):
-                break
-        # 读取矩阵规模信息，并生成稀疏矩阵
-        num_rows, num_cols, num_entries = map(int, line.strip().split())
-        coo_rows, coo_cols, coo_data = [], [], []
-        for i in range(num_entries):
-            row, col, data = map(float, f.readline().strip().split())
-            coo_rows.append(int(row - 1))   # mtx从1开始编号，转化为从0开始编号
-            coo_cols.append(int(col - 1))
-            coo_data.append(data)
-    return np.array(coo_rows), np.array(coo_cols), np.array(coo_data)
+def read_mtx(mtx_file_path):
+    sparse_matrix = scipy.io.mmread(mtx_file_path)
+    G = nx.from_scipy_sparse_array(sparse_matrix, create_using=nx.DiGraph)
+    return G
 
 # 计算指定源节点的单源最短路径长度
 
@@ -52,16 +43,16 @@ parser.add_argument("source_node", metavar="SOURCE_NODE",
 # 解析命令行参数
 args = parser.parse_args()
 
-# 获取命令行参数并调用相关函数
-coo_rows, coo_cols, coo_data = read_mtx_file(args.input_file)
-graph = nx.DiGraph()
-for i in range(len(coo_rows)):
-    graph.add_edge(coo_rows[i], coo_cols[i], weight=coo_data[i])
+
+G = read_mtx(args.input_file)
+# 删除从节点到自身的环
+self_loops = list(nx.nodes_with_selfloops(G))
+G.remove_edges_from([(node, node) for node in self_loops])
 
 if args.algorithm == 'sssp':
-    shortest_paths = sssp(graph, args.source_node)
+    shortest_paths = sssp(G, args.source_node)
 if args.algorithm == 'bf':
-    shortest_paths = bf(graph, args.source_node)
+    shortest_paths = bf(G, args.source_node)
 
 # 对所有节点按节点编号进行排序
 sorted_nodes = sorted(shortest_paths.keys())

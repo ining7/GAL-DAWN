@@ -33,7 +33,7 @@ float DAWN::SSSP_CPU::SSSP(int* row_ptr,
   bool* beta = new bool[row];
   float* distance = new float[row];
   float elapsed_time = 0.0f;
-  float INF = 1.0 * 0xfffffff;
+  float INF = std::numeric_limits<float>::max();
 
   std::fill_n(alpha, row, false);
   std::fill_n(beta, row, false);
@@ -50,11 +50,11 @@ float DAWN::SSSP_CPU::SSSP(int* row_ptr,
   while (step < row) {
     step++;
     if (!(step % 2))
-      is_converged =
-          DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, alpha, beta, distance);
+      is_converged = DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, alpha, beta,
+                                           distance, source);
     else
-      is_converged =
-          DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, beta, alpha, distance);
+      is_converged = DAWN::SSSP_CPU::GOVMP(row_ptr, col, val, row, beta, alpha,
+                                           distance, source);
     if (is_converged) {
       break;
     }
@@ -92,7 +92,7 @@ float DAWN::SSSP_CPU::SSSP_kernel(int* row_ptr,
   int* beta = new int[row];
   float* distance = new float[row];
   float elapsed_time = 0.0f;
-  float INF = 1.0 * 0xfffffff;
+  float INF = std::numeric_limits<float>::max();
 
   std::fill_n(alpha, row, false);
   std::fill_n(beta, row, false);
@@ -110,10 +110,10 @@ float DAWN::SSSP_CPU::SSSP_kernel(int* row_ptr,
     step++;
     if (!(step % 2))
       entry = DAWN::SSSP_CPU::GOVM(row_ptr, col, val, row, alpha, beta,
-                                   distance, entry);
+                                   distance, source, entry);
     else
       entry = DAWN::SSSP_CPU::GOVM(row_ptr, col, val, row, beta, alpha,
-                                   distance, entry);
+                                   distance, source, entry);
     if (!entry) {
       break;
     }
@@ -145,6 +145,7 @@ int DAWN::SSSP_CPU::GOVM(int* row_ptr,
                          int*& alpha,
                          int*& beta,
                          float*& distance,
+                         int source,
                          int entry) {
   int tmpEntry = 0;
   for (int j = 0; j < entry; j++) {
@@ -154,7 +155,7 @@ int DAWN::SSSP_CPU::GOVM(int* row_ptr,
       for (int k = start; k < end; k++) {
         int index = col[k];
         float tmp = distance[j] + val[k];
-        if (distance[index] > tmp) {
+        if ((distance[index] > tmp) && (index != source)) {
           distance[index] = std::min(distance[index], tmp);
           beta[tmpEntry] = index;
           ++tmpEntry;
@@ -171,7 +172,8 @@ bool DAWN::SSSP_CPU::GOVMP(int* row_ptr,
                            int row,
                            bool*& alpha,
                            bool*& beta,
-                           float*& distance) {
+                           float*& distance,
+                           int source) {
   bool converged = true;
 #pragma omp parallel for
   for (int j = 0; j < row; j++) {
@@ -182,7 +184,7 @@ bool DAWN::SSSP_CPU::GOVMP(int* row_ptr,
         for (int k = start; k < end; k++) {
           int index = col[k];
           float tmp = distance[j] + val[k];
-          if (distance[index] > tmp) {
+          if ((distance[index] > tmp) && (index != source)) {
             distance[index] = std::min(distance[index], tmp);
             beta[index] = true;
             if (converged)

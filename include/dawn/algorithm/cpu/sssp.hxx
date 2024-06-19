@@ -35,6 +35,7 @@ int GOVM(int* row_ptr,
          int*& alpha,
          int*& beta,
          float*& distance,
+         int source,
          int entry);
 
 bool GOVMP(int* row_ptr,
@@ -43,7 +44,8 @@ bool GOVMP(int* row_ptr,
            int row,
            bool*& alpha,
            bool*& beta,
-           float*& distance);
+           float*& distance,
+           int source);
 
 }  // namespace SSSP_CPU
 }  // namespace DAWN
