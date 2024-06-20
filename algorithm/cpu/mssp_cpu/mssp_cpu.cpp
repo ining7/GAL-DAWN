@@ -7,35 +7,24 @@
 #include <dawn/algorithm/cpu/mssp.hxx>
 
 int main(int argc, char* argv[]) {
+  DAWN::IO::parameters_t params = DAWN::IO::parameters(argc, argv);
   DAWN::Graph::Graph_t graph;
-  std::string input_path = argv[1];
-  std::string output_path = argv[2];
-  std::string print = argv[3];
-  std::string sourceList = argv[4];
-  std::string weighted = argv[5];
+  graph.source = params.source;
+  graph.print = params.print;
+  graph.weighted = params.weighted;
   graph.interval = 100;
-  if (print == "true") {
-    graph.print = true;
-    std::cout << "Print source " << graph.source << std::endl;
-  } else {
-    graph.print = false;
-  }
-  if (weighted == "weighted") {
-    graph.weighted = true;
-  } else {
-    graph.weighted = false;
-  }
   graph.thread = omp_get_num_threads();
-  DAWN::Graph::createGraph(input_path, graph);
-  DAWN::Graph::readList(sourceList, graph);
-  float elapsed_time = DAWN::MSSP_CPU::run(graph, output_path);
+  if (params.sourceList_path.empty()) {
+    std::cerr << "Invalid value for sourceList_path option.\n";
+    exit(EXIT_FAILURE);
+  }
+
+  DAWN::Graph::createGraph(params.input_path, graph);
+  DAWN::IO::readList(params.sourceList_path, graph);
+  float elapsed_time = DAWN::MSSP_CPU::run(graph, params.output_path);
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time);
 
   return 0;
 }
-// ./mssp_cpu $GRAPH_DIR/XX.mtx ../output.txt false ./sourceList.txt
-// unweighted
-
-// ./mssp_cpu $GRAPH_DIR/XX.mtx ../output.txt false ./sourceList.txt weighted

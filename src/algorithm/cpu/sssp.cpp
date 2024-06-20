@@ -66,7 +66,7 @@ float DAWN::SSSP_CPU::SSSP(int* row_ptr,
   // Output
   if (print) {
     printf("Start print\n");
-    DAWN::Tool::outfile(row, distance, source, output_path);
+    DAWN::IO::outfile(row, distance, source, output_path);
   }
 
   delete[] beta;
@@ -125,7 +125,7 @@ float DAWN::SSSP_CPU::SSSP_kernel(int* row_ptr,
   // Output
   if (print) {
     printf("Start print\n");
-    DAWN::Tool::outfile(row, distance, source, output_path);
+    DAWN::IO::outfile(row, distance, source, output_path);
   }
 
   delete[] alpha;

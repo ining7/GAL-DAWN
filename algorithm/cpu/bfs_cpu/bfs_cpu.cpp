@@ -7,24 +7,15 @@
 #include <dawn/algorithm/cpu/bfs.hxx>
 
 int main(int argc, char* argv[]) {
+  DAWN::IO::parameters_t params = DAWN::IO::parameters(argc, argv);
   DAWN::Graph::Graph_t graph;
-  std::string input_path = argv[1];
-  std::string output_path = argv[2];
-  std::string print = argv[3];
-  graph.source = atoi(argv[4]);
-
-  if (print == "true") {
-    graph.print = true;
-    std::cout << "Print source " << graph.source << std::endl;
-  } else {
-    graph.print = false;
-  }
-  graph.thread = omp_get_num_threads();
+  graph.source = params.source;
+  graph.print = params.print;
   graph.weighted = false;
+  graph.thread = omp_get_num_threads();
 
-  DAWN::Graph::createGraph(input_path, graph);
-
-  float elapsed_time = DAWN::BFS_CPU::run(graph, output_path);
+  DAWN::Graph::createGraph(params.input_path, graph);
+  float elapsed_time = DAWN::BFS_CPU::run(graph, params.output_path);
 
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
@@ -32,4 +23,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-// ./bfs_cpu $GRAPH_DIR/XX.mtx ../output.txt false 0

@@ -98,7 +98,7 @@ float DAWN::BFS_GPU::kernel(DAWN::Graph::Graph_t& graph,
     thrust::copy(d_distance.begin(), d_distance.end(), h_distance.begin());
     printf("Start print\n");
 
-    DAWN::Tool::outfile(graph.rows, h_distance.data(), source, output_path);
+    DAWN::IO::outfile(graph.rows, h_distance.data(), source, output_path);
   }
 
   return elapsed_time;

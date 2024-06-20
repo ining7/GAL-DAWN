@@ -30,7 +30,7 @@ float DAWN::BC_CPU::Betweenness_Centrality(DAWN::Graph::Graph_t& graph,
     bc_temp = nullptr;
   }
 
-  DAWN::Tool::outfile(row, bc_values, output_path);
+  DAWN::IO::outfile(row, bc_values, output_path);
 
   delete[] bc_values;
   bc_values = nullptr;

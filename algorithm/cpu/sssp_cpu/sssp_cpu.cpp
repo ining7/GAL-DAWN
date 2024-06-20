@@ -7,24 +7,18 @@
 #include <dawn/algorithm/cpu/sssp.hxx>
 
 int main(int argc, char* argv[]) {
+  DAWN::IO::parameters_t params = DAWN::IO::parameters(argc, argv);
   DAWN::Graph::Graph_t graph;
-  std::string input_path = argv[1];
-  std::string output_path = argv[2];
-  std::string print = argv[3];
+  graph.source = params.source;
+  graph.print = params.print;
   graph.source = atoi(argv[4]);
 
-  if (print == "true") {
-    graph.print = true;
-    std::cout << "Print source " << graph.source << std::endl;
-  } else {
-    graph.print = false;
-  }
   graph.thread = omp_get_num_threads();
   graph.weighted = true;
 
-  DAWN::Graph::createGraph(input_path, graph);
+  DAWN::Graph::createGraph(params.input_path, graph);
 
-  float elapsed_time = DAWN::SSSP_CPU::run(graph, output_path);
+  float elapsed_time = DAWN::SSSP_CPU::run(graph, params.output_path);
 
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);

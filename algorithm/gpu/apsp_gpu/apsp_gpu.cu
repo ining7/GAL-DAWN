@@ -6,40 +6,26 @@
  */
 #include <dawn/algorithm/gpu/apsp.cuh>
 int main(int argc, char* argv[]) {
+  DAWN::IO::parameters_t params = DAWN::IO::parameters(argc, argv);
   DAWN::Graph::Graph_t graph;
-
-  std::string input_path = argv[1];
-  std::string output_path = argv[2];
-  graph.stream = atoi(argv[3]);
-  graph.block_size = atoi(argv[4]);
-  std::string print = argv[5];
-  graph.source = atoi(argv[6]);
-  std::string weighted = argv[7];
-
+  graph.source = params.source;
+  graph.print = params.print;
+  graph.weighted = params.weighted;
+  graph.thread = 1;
+  graph.stream = 4;
+  graph.block_size = 1024;
   graph.interval = 100;
 
-  if (print == "true") {
-    graph.print = true;
-    std::cout << "Print source " << graph.source << std::endl;
-  } else {
-    graph.print = false;
-  }
+  DAWN::Graph::createGraph(params.input_path, graph);
 
-  DAWN::Graph::createGraph(input_path, graph);
-
-  if (weighted == "weighted") {
-    graph.weighted = true;
-
-    float elapsed_time = DAWN::APSP_GPU::run_Weighted(graph, output_path);
-
+  if (graph.weighted) {
+    float elapsed_time =
+        DAWN::APSP_GPU::run_Weighted(graph, params.output_path);
     printf("%-21s%3.5d\n", "Nodes:", graph.rows);
     printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
     printf("%-21s%3.5lf\n", "Time:", elapsed_time);
   } else {
-    graph.weighted = false;
-
-    float elapsed_time = DAWN::APSP_GPU::run(graph, output_path);
-
+    float elapsed_time = DAWN::APSP_GPU::run(graph, params.output_path);
     printf("%-21s%3.5d\n", "Nodes:", graph.rows);
     printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
     printf("%-21s%3.5lf\n", "Time:", elapsed_time);
@@ -47,5 +33,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-//./apsp_gpu $GRAPH_DIR/XXX.mtx ../output.txt 8 1024 false 0 unweighted
-//./apsp_gpu $GRAPH_DIR/XXX.mtx ../output.txt 8 1024 false 0 weighted

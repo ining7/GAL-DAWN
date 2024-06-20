@@ -7,10 +7,8 @@
 #include <dawn/algorithm/cpu/bc.hxx>
 
 int main(int argc, char* argv[]) {
+  DAWN::IO::parameters_t params = DAWN::IO::parameters(argc, argv);
   DAWN::Graph::Graph_t graph;
-  std::string input_path = argv[1];
-  std::string output_path = argv[2];
-  // std::string weighted = argv[3];
 
   graph.thread = omp_get_num_threads();
   graph.print = true;
@@ -27,13 +25,13 @@ int main(int argc, char* argv[]) {
   //   printf("%-21s%3.5lf\n", "Time:", elapsed_time);
   // } else {
   graph.weighted = false;
-  DAWN::Graph::createGraph(input_path, graph);
+  DAWN::Graph::createGraph(params.input_path, graph);
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);
-  float elapsed_time = DAWN::BC_CPU::Betweenness_Centrality(graph, output_path);
+  float elapsed_time =
+      DAWN::BC_CPU::Betweenness_Centrality(graph, params.output_path);
   printf("%-21s%3.5lf\n", "Time:", elapsed_time);
   // }
 
   return 0;
 }
-// ./bc_cpu $GRAPH_DIR/XX.mtx ./output.txt weighted

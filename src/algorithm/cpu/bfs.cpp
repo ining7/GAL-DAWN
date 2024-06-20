@@ -64,7 +64,7 @@ float DAWN::BFS_CPU::BFS(int* row_ptr,
   // Output
   if (print) {
     printf("Start print\n");
-    DAWN::Tool::outfile(row, distance, source, output_path);
+    DAWN::IO::outfile(row, distance, source, output_path);
   }
 
   delete[] beta;
@@ -119,7 +119,7 @@ float DAWN::BFS_CPU::BFS_kernel(int* row_ptr,
   // Output
   if (print) {
     printf("Start print\n");
-    DAWN::Tool::outfile(row, distance, source, output_path);
+    DAWN::IO::outfile(row, distance, source, output_path);
   }
 
   delete[] alpha;
