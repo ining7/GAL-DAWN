@@ -4,5 +4,9 @@
  *
  * @copyright Copyright (c) 2024
  */
+#pragma once
 #include <dawn/graph.hxx>
 #include <dawn/tool.hxx>
+#include <dawn/parameters.hxx>
+#include <dawn/matrix.hxx>
+#include <dawn/io.hxx>

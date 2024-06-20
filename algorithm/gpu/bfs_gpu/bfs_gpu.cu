@@ -7,28 +7,18 @@
 #include <dawn/algorithm/gpu/bfs.cuh>
 
 int main(int argc, char* argv[]) {
+  DAWN::IO::parameters_t params = DAWN::IO::parameters(argc, argv);
   DAWN::Graph::Graph_t graph;
-
-  std::string input_path = argv[1];
-  std::string output_path = argv[2];
-  graph.block_size = atoi(argv[3]);
-  std::string print = argv[4];
-  graph.source = atoi(argv[5]);
-
+  graph.source = params.source;
+  graph.print = params.print;
   graph.thread = 1;
   graph.stream = 1;
+  graph.block_size = 1024;
   graph.weighted = false;
 
-  if (print == "true") {
-    graph.print = true;
-    std::cout << "Print source " << graph.source << std::endl;
-  } else {
-    graph.print = false;
-  }
+  DAWN::Graph::createGraph(params.input_path, graph);
 
-  DAWN::Graph::createGraph(input_path, graph);
-
-  float elapsed_time = DAWN::BFS_GPU::run(graph, output_path);
+  float elapsed_time = DAWN::BFS_GPU::run(graph, params.output_path);
 
   printf("%-21s%3.5d\n", "Nodes:", graph.rows);
   printf("%-21s%3.5ld\n", "Edges:", graph.nnz);

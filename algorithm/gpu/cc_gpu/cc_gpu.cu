@@ -7,31 +7,24 @@
 #include <dawn/algorithm/gpu/cc.cuh>
 
 int main(int argc, char* argv[]) {
+  DAWN::IO::parameters_t params = DAWN::IO::parameters(argc, argv);
   DAWN::Graph::Graph_t graph;
-
-  std::string input_path = argv[1];
-  graph.block_size = atoi(argv[2]);
-  graph.source = atoi(argv[3]);
-  std::string weighted = argv[4];
-
+  graph.source = params.source;
+  graph.print = params.print;
+  graph.weighted = params.weighted;
   graph.thread = 1;
   graph.stream = 1;
+  graph.block_size = 1024;
 
-  DAWN::Graph::createGraph(input_path, graph);
+  DAWN::Graph::createGraph(params.input_path, graph);
 
-  if (weighted == "true") {
-    graph.weighted = true;
-
+  if (graph.weighted) {
     float closeness_centrality =
         DAWN::CC_GPU::run_Weighted(graph, graph.source);
-
     printf("%-21s%3.5d\n", "Source:", graph.source);
     printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
   } else {
-    graph.weighted = false;
-
     float closeness_centrality = DAWN::CC_GPU::run(graph, graph.source);
-
     printf("%-21s%3.5d\n", "Source:", graph.source);
     printf("%-21s%3.5lf\n", "Closeness Centrality:", closeness_centrality);
   }
