@@ -56,7 +56,7 @@ pages = {1–13},
 series = {ICS '24}
 }
 ```
-
+This paper is nominated for the **Best Paper Award** at the 38th ACM International Conference on Supercomputing (ICS) 2024.
 ## Copyright & License
 
 All source code are released under [Apache 2.0](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/blob/4266d98053678ce76e34be64477ac2364f0f4291/LICENSE).
