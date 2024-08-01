@@ -4,18 +4,18 @@ GAL-DAWN is a novel Graph Algorithm Library, with all algorithms developed on th
 
 DAWN is a novel shortest path algorithm that enhances parallelism through the use of matrix operations, thus eliminating the need for priority queues. Prior to this, mainstream research on optimizing shortest path algorithms primarily concentrated on improving the parallel performance of priority queues. For a more in-depth understanding of DAWN, please refer to the papers listed below.
 
-DAWN and [Gunrock](https://github.com/gunrock/gunrock) have a well-established collaborative relationship. DAWN is fully compatible with Gunrock, and dedicated files are included in the main branch of Gunrock. When using the BFS API in Gunrock, the default implementation employs DAWN for unweighted graphs. If you prefer to use the original BFS in Gunrock, please follow the provided instructions to modify the source files accordingly.
+DAWN and [Gunrock](https://github.com/gunrock/gunrock) have a well-established collaborative relationship. DAWN is included in the main branch of Gunrock and since the releases V2.1. When using the API for single-source shortest path tasks in Gunrock, the default implementation employs DAWN. If you prefer to use the original implementations in Gunrock, please follow the provided instructions to modify the source files accordingly.
 
 If you intend to use DAWN as a baseline algorithm and aim to surpass its performance on the GPU, we recommend utilizing the DAWN API available in the Gunrock repository rather than the GPU functions in this repository. The GPU functions here are subject to modifications for testing optimization feasibilities, which may occasionally lead to suboptimal performance and potential misinterpretations of results. Gunrock is a specialized library for graph computing within CUDA-X, and its components are consistently reliable. 
 
-For CPU-based work, the above recommendation does not apply; you can directly use the code from this repository.
+For CPU-based work, the above recommendation does not apply; you can directly use the code from this repository, and also can use the cpu reference implementation of DAWN in the Gunrock.
 
-| [**Examples**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/algorithm) | [**Documentation**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/document) | [**Test**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/test) |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [**Examples**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/algorithm) | [**Documentation**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/document) | [**Test**](https://github.com/lxrzlyr/DAWN-An-Noval-SSSP-APSP-Algorithm/tree/dev/test) |[**Gunrock**](https://github.com/gunrock/gunrock/tree/main/include/gunrock/algorithms)|
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |-------------------------------------------------------------------------------------- |
 - Examples: Demonstrate the usage of algorithms in GAL-DAWN.
 - Document: Provides the detailed description of GAL-DAWN, include the **Quick_Start** and **Code_Guide**. **Quick_Start** provides the guide for quickly working with GAL-DAWN. **Code_Guide** provides the detailed description for how to implement own algorithm in GAL-DAWN.
 - Test: Provides the detailed information of Testing.
-
+- Gunrock: Implementations in the Gunrock.
 We welcome any interest and ideas related to DAWN and its applications. If you are interested in DAWN algorithms and their applications, please feel free to share your thoughts via [email:1289539524@qq.com], and we will do our best to assist you in your research based on DAWN.
 
 
