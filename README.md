@@ -16,6 +16,7 @@ For CPU-based work, the above recommendation does not apply; you can directly us
 - Document: Provides the detailed description of GAL-DAWN, include the **Quick_Start** and **Code_Guide**. **Quick_Start** provides the guide for quickly working with GAL-DAWN. **Code_Guide** provides the detailed description for how to implement own algorithm in GAL-DAWN.
 - Test: Provides the detailed information of Testing.
 - Gunrock: Implementations in the Gunrock.
+
 We welcome any interest and ideas related to DAWN and its applications. If you are interested in DAWN algorithms and their applications, please feel free to share your thoughts via [email:1289539524@qq.com], and we will do our best to assist you in your research based on DAWN.
 
 
